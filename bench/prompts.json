@@ -1,0 +1,104 @@
+{
+  "prompts": [
+    {
+      "id": "math_algebra",
+      "category": "math",
+      "prompt": "Solve for x: 2x + 5 = 13. Show your work step by step."
+    },
+    {
+      "id": "math_geometry",
+      "category": "math",
+      "prompt": "A rectangle has a length of 8 cm and a width of 5 cm. What is its area and perimeter?"
+    },
+    {
+      "id": "physics_kinematics",
+      "category": "physics",
+      "prompt": "An object is thrown upward with an initial velocity of 20 m/s. How long does it take to reach its maximum height? (Use g = 10 m/s²)"
+    },
+    {
+      "id": "physics_energy",
+      "category": "physics",
+      "prompt": "Explain the difference between kinetic and potential energy with examples."
+    },
+    {
+      "id": "biology_photosynthesis",
+      "category": "biology",
+      "prompt": "Describe the process of photosynthesis in plants, including the light-dependent and light-independent reactions."
+    },
+    {
+      "id": "biology_cells",
+      "category": "biology",
+      "prompt": "What are the main differences between prokaryotic and eukaryotic cells?"
+    },
+    {
+      "id": "chemistry_periodic",
+      "category": "chemistry",
+      "prompt": "Explain the periodic table organization and why elements are arranged by atomic number."
+    },
+    {
+      "id": "chemistry_bonding",
+      "category": "chemistry",
+      "prompt": "What is the difference between ionic and covalent bonds? Provide examples of each."
+    },
+    {
+      "id": "history_industrial",
+      "category": "history",
+      "prompt": "What were the major causes and effects of the Industrial Revolution?"
+    },
+    {
+      "id": "history_ww2",
+      "category": "history",
+      "prompt": "Describe the key events that led to the start of World War II."
+    },
+    {
+      "id": "english_literature",
+      "category": "english",
+      "prompt": "Analyze the theme of isolation in the novel 'To Kill a Mockingbird'."
+    },
+    {
+      "id": "english_grammar",
+      "category": "english",
+      "prompt": "Correct the following sentence: 'The team are playing their best game, and they is confident about winning.'"
+    },
+    {
+      "id": "geography_climate",
+      "category": "geography",
+      "prompt": "Explain how ocean currents influence climate patterns around the world."
+    },
+    {
+      "id": "geography_population",
+      "category": "geography",
+      "prompt": "What factors contribute to population growth and urbanization in developing countries?"
+    },
+    {
+      "id": "economics_supply",
+      "category": "economics",
+      "prompt": "Explain the law of supply and demand and how it affects market prices."
+    },
+    {
+      "id": "economics_inflation",
+      "category": "economics",
+      "prompt": "What is inflation and how does it impact consumers and the economy?"
+    },
+    {
+      "id": "psychology_learning",
+      "category": "psychology",
+      "prompt": "Describe the main theories of learning: behaviorism, cognitivism, and constructivism."
+    },
+    {
+      "id": "psychology_memory",
+      "category": "psychology",
+      "prompt": "Explain the different types of memory: sensory, short-term, and long-term."
+    },
+    {
+      "id": "reasoning_logic",
+      "category": "reasoning",
+      "prompt": "If all dogs are animals, and all animals need food, can we conclude that all dogs need food? Explain your reasoning."
+    },
+    {
+      "id": "reasoning_problem",
+      "category": "reasoning",
+      "prompt": "A farmer has 10 apples. He gives half to his friend and eats 1. How many does he have left? Show your calculation."
+    }
+  ]
+}

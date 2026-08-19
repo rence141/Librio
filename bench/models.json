@@ -1,0 +1,54 @@
+{
+  "models": [
+    {
+      "id": "gemma3-1b-q4",
+      "name": "Gemma 3 1B (Q4_K_M)",
+      "size_mb": 600,
+      "min_ram_gb": 4,
+      "tier": "4GB",
+      "format": "gguf",
+      "url": "https://huggingface.co/bartowski/Gemma-3-1B-Instruct-GGUF/resolve/main/Gemma-3-1B-Instruct-Q4_K_M.gguf",
+      "sha256": "placeholder-sha256-gemma3-1b"
+    },
+    {
+      "id": "llama32-1b-q4",
+      "name": "Llama 3.2 1B (Q4_K_M)",
+      "size_mb": 800,
+      "min_ram_gb": 4,
+      "tier": "4GB",
+      "format": "gguf",
+      "url": "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+      "sha256": "placeholder-sha256-llama32-1b"
+    },
+    {
+      "id": "smollm3-1.7b-q4",
+      "name": "SmolLM3 1.7B (Q4_K_M)",
+      "size_mb": 1000,
+      "min_ram_gb": 4,
+      "tier": "4GB",
+      "format": "gguf",
+      "url": "https://huggingface.co/bartowski/SmolLM3-1.7B-Instruct-GGUF/resolve/main/SmolLM3-1.7B-Instruct-Q4_K_M.gguf",
+      "sha256": "placeholder-sha256-smollm3-1.7b"
+    },
+    {
+      "id": "gemma3-4b-q4",
+      "name": "Gemma 3 4B (Q4_K_M)",
+      "size_mb": 2300,
+      "min_ram_gb": 8,
+      "tier": "8GB",
+      "format": "gguf",
+      "url": "https://huggingface.co/bartowski/Gemma-3-4B-Instruct-GGUF/resolve/main/Gemma-3-4B-Instruct-Q4_K_M.gguf",
+      "sha256": "placeholder-sha256-gemma3-4b"
+    },
+    {
+      "id": "qwen3-3b-q4",
+      "name": "Qwen3 3B (Q4_K_M)",
+      "size_mb": 2000,
+      "min_ram_gb": 8,
+      "tier": "8GB",
+      "format": "gguf",
+      "url": "https://huggingface.co/bartowski/Qwen2.5-3B-Instruct-GGUF/resolve/main/Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+      "sha256": "placeholder-sha256-qwen3-3b"
+    }
+  ]
+}

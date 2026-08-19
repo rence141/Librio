@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  flutter:
+    name: Flutter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.9'
+          channel: 'stable'
+      - name: Flutter doctor
+        run: flutter doctor
+      - name: Get dependencies
+        run: cd apps/mobile && flutter pub get
+      - name: Analyze
+        run: cd apps/mobile && flutter analyze
+      - name: Run tests
+        run: cd apps/mobile && flutter test
+
+  node:
+    name: Node.js API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: cd services/api && npm install
+      - name: Build
+        run: cd services/api && npm run build
+      - name: Lint
+        run: cd services/api && npm run lint
+
+  bench:
+    name: Benchmark Harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.9'
+          channel: 'stable'
+      - name: Get dependencies
+        run: cd bench && dart pub get
+      - name: Run benchmark CLI (test)
+        run: cd bench && dart run bin/bench.dart --model gemma3-1b-q4 --backend cpu --device ci-test

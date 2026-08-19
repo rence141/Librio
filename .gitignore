@@ -1,0 +1,54 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Dart / Flutter ---
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/build/
+apps/mobile/.pub-cache/
+apps/mobile/.pub/
+apps/mobile/pubspec.lock
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/build/
+**/pubspec.lock
+
+# --- Node / TypeScript ---
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.log
+npm-debug.log*
+.env
+.env.*
+!.env.example
+coverage/
+.nyc_output/
+
+# --- LLM weights / benchmark artifacts (never commit weights) ---
+*.gguf
+*.litertlm
+*.task
+*.bin
+*.safetensors
+bench/models/
+bench/results/*.json
+!bench/results/.gitkeep
+!bench/models.json
+
+# --- Docker ---
+services/api/postgres-data/
+
+# --- Secrets ---
+*.pem
+*.key
+secrets/
