@@ -4,8 +4,9 @@ Offline-first AI academic tutor. Mobile-first (Flutter) with a Node.js web backe
 
 > Status: **Phase 0 — Setup & Model Selection** (in progress)
 
-See the roadmap: [`Librio_Feasible_Roadmap_Flutter_NodeJS.md`](./Librio_Feasible_Roadmap_Flutter_NodeJS.md)
-See the Phase 0 plan: `~/.devin/plans/plan-85570bbdb476cab4.md`
+See the roadmap: [`Librio_Feasible_Roadmap_Flutter_NodeJS.md`](./Librio_Feasible_Roadmap_Flutter_NodeJS.md)  
+See the Phase 0 plan: `~/.devin/plans/plan-85570bbdb476cab4.md`  
+See AI report guardrails: [`docs/AI_REPORT_TEMPLATE.md`](./docs/AI_REPORT_TEMPLATE.md)
 
 ## Repository layout
 
