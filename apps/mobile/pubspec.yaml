@@ -36,6 +36,7 @@ dependencies:
   
   # Phase 1: Actual LLM inference with GGUF models
   llamadart: ^0.8.19
+  supabase_flutter: ^2.17.2
 
 dev_dependencies:
   flutter_test:
