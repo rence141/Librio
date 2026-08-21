@@ -172,14 +172,16 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
         'status': 'Phase 0 placeholder - actual inference not yet implemented',
       };
 
+      // Save to app's documents directory
       final appDir = await getApplicationDocumentsDirectory();
       final resultsDir = Directory('${appDir.path}/benchmark_results');
       if (!resultsDir.existsSync()) {
         resultsDir.createSync(recursive: true);
       }
 
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
       final file = File(
-          '${resultsDir.path}/Infinix-Note50-$modelId-cpu.json');
+          '${resultsDir.path}/Infinix-Note50-$modelId-cpu-$timestamp.json');
       await file.writeAsString(jsonEncode(result));
 
       _addLog('  [✓] Result saved to: ${file.path}');

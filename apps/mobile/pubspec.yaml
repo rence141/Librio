@@ -33,12 +33,6 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   path_provider: ^2.1.0
-  
-  # On-device LLM inference (GGUF via llama.cpp)
-  # Note: llamadart (GGUF + LiteRT-LM unified) requires native assets on iOS/Android.
-  # For Phase 0 on Windows dev machine, use llm_llamacpp for benchmarking.
-  # Mobile builds will integrate llamadart in Phase 1.
-  llm_llamacpp: ^0.1.9
 
 dev_dependencies:
   flutter_test:
