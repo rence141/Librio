@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:llamadart/llamadart.dart';
 
 class BenchmarkScreen extends StatefulWidget {
   const BenchmarkScreen({super.key});
@@ -15,6 +16,7 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
   String _status = 'Ready to benchmark';
   final List<String> _logs = [];
   bool _isRunning = false;
+  late LlamaEngine _engine;
 
   final List<String> _models = [
     'gemma3-1b-q4',
@@ -29,6 +31,21 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
     'What is the capital of France?',
     'How do plants absorb water?',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeEngine();
+  }
+
+  void _initializeEngine() {
+    try {
+      _engine = LlamaEngine(LlamaBackend());
+      _addLog('LlamaEngine initialized successfully');
+    } catch (e) {
+      _addLog('ERROR: Failed to initialize LlamaEngine: $e');
+    }
+  }
 
   void _addLog(String message) {
     setState(() {
@@ -49,7 +66,7 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
     });
 
     try {
-      _addLog('=== Librio Phase 0 Benchmark ===');
+      _addLog('=== Librio Phase 1 Benchmark (Actual Inference) ===');
       _addLog('Device: Infinix-Note50');
       _addLog('Dart SDK: ${Platform.version}');
       _addLog('');
@@ -87,7 +104,6 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
 
   Future<String> _getDeviceInfo() async {
     try {
-      // This is a placeholder - actual device info would come from device_info_plus
       return 'Infinix-Note50 (Android)';
     } catch (e) {
       return 'Unknown device';
@@ -96,7 +112,6 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
 
   Future<String> _getMemoryInfo() async {
     try {
-      // Placeholder - actual memory info would come from system calls
       return 'RAM: ~4GB available';
     } catch (e) {
       return 'Unknown';
@@ -105,12 +120,29 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
 
   Future<void> _testModel(String modelId) async {
     try {
+      // Map model ID to file path
+      final modelPath = _getModelPath(modelId);
+      _addLog('  [*] Model file: $modelPath');
+
+      // Check if model file exists
+      final modelFile = File(modelPath);
+      if (!modelFile.existsSync()) {
+        _addLog('  [ERROR] Model file not found: $modelPath');
+        _addLog('  [INFO] Phase 1 requires actual GGUF files in bench/models/');
+        return;
+      }
+
       final startTime = DateTime.now();
       _addLog('  [*] Loading model: $modelId');
 
-      // Simulate model loading (Phase 0 placeholder)
-      // In Phase 1, this will actually load the GGUF model with llm_llamacpp
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Load model
+      try {
+        await _engine.loadModel(modelPath);
+      } catch (e) {
+        _addLog('  [ERROR] Failed to load model: $e');
+        _addLog('  [INFO] This may be due to missing native assets or incompatible model format');
+        return;
+      }
 
       final loadTime = DateTime.now().difference(startTime).inMilliseconds;
       _addLog('  [✓] Model loaded in ${loadTime}ms');
@@ -118,46 +150,106 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
       // Test inference on sample prompts
       int totalTokens = 0;
       int totalTime = 0;
+      DateTime? firstTokenTime;
 
       for (int i = 0; i < _prompts.length; i++) {
         final prompt = _prompts[i];
         _addLog('  [*] Prompt ${i + 1}/${_prompts.length}: "$prompt"');
 
         final inferenceStart = DateTime.now();
+        final response = StringBuffer();
+        int promptTokens = 0;
 
-        // Simulate inference (Phase 0 placeholder)
-        // In Phase 1, this will actually run inference with llm_llamacpp
-        await Future.delayed(const Duration(milliseconds: 300));
+        try {
+          await for (final chunk in _engine.create(
+            [
+              LlamaChatMessage.fromText(
+                role: LlamaChatRole.user,
+                text: prompt,
+              ),
+            ],
+            params: const GenerationParams(maxTokens: 50),
+          )) {
+            final text = chunk.choices.first.delta.content;
+            if (text != null) {
+              response.write(text);
+              promptTokens++;
+              
+              // Record first token time
+              if (firstTokenTime == null) {
+                firstTokenTime = DateTime.now();
+              }
+            }
+          }
+        } catch (e) {
+          _addLog('  [ERROR] Inference failed: $e');
+          continue;
+        }
 
         final inferenceTime =
             DateTime.now().difference(inferenceStart).inMilliseconds;
-        final estimatedTokens = 30; // Placeholder
 
-        totalTokens += estimatedTokens;
+        totalTokens += promptTokens;
         totalTime += inferenceTime;
 
         final tokensPerSec =
-            inferenceTime > 0 ? (estimatedTokens * 1000 / inferenceTime) : 0;
+            inferenceTime > 0 ? (promptTokens * 1000.0 / inferenceTime) : 0;
         _addLog(
-            '      Time: ${inferenceTime}ms | Tokens: $estimatedTokens | Speed: ${tokensPerSec.toStringAsFixed(1)} tok/s');
+            '      Time: ${inferenceTime}ms | Tokens: $promptTokens | Speed: ${tokensPerSec.toStringAsFixed(1)} tok/s');
       }
 
       final avgTime = totalTime ~/ _prompts.length;
       final avgSpeed =
           totalTime > 0 ? (totalTokens * 1000.0 / totalTime) : 0.0;
+      final ttft = firstTokenTime != null
+          ? firstTokenTime!.difference(startTime).inMilliseconds
+          : 0;
 
-      _addLog('  [Summary] Avg: ${avgTime}ms | Speed: ${avgSpeed.toStringAsFixed(1)} tok/s');
+      _addLog('  [Summary]');
+      _addLog('    Load time: ${loadTime}ms');
+      _addLog('    TTFT: ${ttft}ms');
+      _addLog('    Avg inference: ${avgTime}ms');
+      _addLog('    Avg speed: ${avgSpeed.toStringAsFixed(1)} tok/s');
 
       // Save result
-      await _saveResult(modelId, loadTime, avgTime, avgSpeed);
+      await _saveResult(modelId, loadTime, ttft, avgTime, avgSpeed);
+
+      // Unload model
+      try {
+        await _engine.unloadModel();
+        _addLog('  [✓] Model unloaded');
+      } catch (e) {
+        _addLog('  [WARNING] Failed to unload model: $e');
+      }
     } catch (e) {
       _addLog('  [ERROR] Failed to test $modelId: $e');
+    }
+  }
+
+  String _getModelPath(String modelId) {
+    // In Phase 1, models should be in bench/models/ directory
+    // For now, return the expected path
+    final filename = _modelIdToFilename(modelId);
+    return '/data/user/0/com.librio.librio/app_flutter/models/$filename';
+  }
+
+  String _modelIdToFilename(String modelId) {
+    switch (modelId) {
+      case 'gemma3-1b-q4':
+        return 'gemma-3-1b-q4_k_m.gguf';
+      case 'llama32-1b-q4':
+        return 'llama-3.2-1b-q4_k_m.gguf';
+      case 'smollm2-1.7b-q4':
+        return 'smollm2-1.7b-q4_k_m.gguf';
+      default:
+        return '$modelId.gguf';
     }
   }
 
   Future<void> _saveResult(
     String modelId,
     int loadTime,
+    int ttft,
     int avgInferenceTime,
     double tokensPerSec,
   ) async {
@@ -166,13 +258,14 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
         'timestamp': DateTime.now().toIso8601String(),
         'device': 'Infinix-Note50',
         'model_id': modelId,
+        'phase': 'Phase 1 - Actual Inference',
         'load_time_ms': loadTime,
+        'ttft_ms': ttft,
         'avg_inference_time_ms': avgInferenceTime,
         'tokens_per_sec': tokensPerSec,
-        'status': 'Phase 0 placeholder - actual inference not yet implemented',
+        'status': 'Phase 1 actual inference results',
       };
 
-      // Save to app's documents directory
       final appDir = await getApplicationDocumentsDirectory();
       final resultsDir = Directory('${appDir.path}/benchmark_results');
       if (!resultsDir.existsSync()) {
@@ -181,7 +274,7 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final file = File(
-          '${resultsDir.path}/Infinix-Note50-$modelId-cpu-$timestamp.json');
+          '${resultsDir.path}/Infinix-Note50-$modelId-phase1-$timestamp.json');
       await file.writeAsString(jsonEncode(result));
 
       _addLog('  [✓] Result saved to: ${file.path}');
@@ -191,10 +284,16 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
   }
 
   @override
+  void dispose() {
+    _engine.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Librio Phase 0 Benchmark'),
+        title: const Text('Librio Phase 1 Benchmark'),
         backgroundColor: Colors.deepPurple,
       ),
       body: Column(
@@ -217,6 +316,11 @@ class _BenchmarkScreenState extends State<BenchmarkScreen> {
                 Text(
                   'Device: Infinix-Note50 | Models: ${_models.length} | Prompts: ${_prompts.length}',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Phase: 1 (Actual Inference with GGUF models)',
+                  style: const TextStyle(fontSize: 12, color: Colors.blue),
                 ),
               ],
             ),

@@ -33,6 +33,9 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   path_provider: ^2.1.0
+  
+  # Phase 1: Actual LLM inference with GGUF models
+  llamadart: ^0.8.19
 
 dev_dependencies:
   flutter_test:
