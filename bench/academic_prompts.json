@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "phase": "Phase 1",
+    "purpose": "Academic prompt test suite for quality evaluation",
+    "total_prompts": 25,
+    "categories": 5,
+    "created_date": "2026-08-22"
+  },
+  "prompts": {
+    "mathematics": [
+      {
+        "id": "math_001",
+        "category": "Algebra",
+        "prompt": "Solve the equation: 3x + 7 = 22. Show your work step by step.",
+        "expected_answer_keywords": ["x = 5", "subtract 7", "divide by 3"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "math_002",
+        "category": "Geometry",
+        "prompt": "A rectangle has a length of 12 cm and a width of 8 cm. What is its area and perimeter?",
+        "expected_answer_keywords": ["area = 96", "perimeter = 40"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "math_003",
+        "category": "Calculus",
+        "prompt": "What is the derivative of f(x) = 3x^2 + 2x + 1?",
+        "expected_answer_keywords": ["f'(x) = 6x + 2", "power rule"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "math_004",
+        "category": "Statistics",
+        "prompt": "If a coin is flipped 100 times, how many times would you expect it to land on heads?",
+        "expected_answer_keywords": ["50", "probability", "0.5"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "math_005",
+        "category": "Number Theory",
+        "prompt": "What are the first 5 prime numbers?",
+        "expected_answer_keywords": ["2", "3", "5", "7", "11"],
+        "difficulty": "easy"
+      }
+    ],
+    "science": [
+      {
+        "id": "sci_001",
+        "category": "Physics",
+        "prompt": "Explain Newton's first law of motion in your own words.",
+        "expected_answer_keywords": ["inertia", "force", "motion", "rest"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "sci_002",
+        "category": "Chemistry",
+        "prompt": "What is the chemical formula for table salt and how is it formed?",
+        "expected_answer_keywords": ["NaCl", "sodium chloride", "ionic bond"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "sci_003",
+        "category": "Biology",
+        "prompt": "What is photosynthesis and why is it important for life on Earth?",
+        "expected_answer_keywords": ["plants", "sunlight", "glucose", "oxygen", "energy"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "sci_004",
+        "category": "Earth Science",
+        "prompt": "What causes the seasons on Earth?",
+        "expected_answer_keywords": ["tilt", "axis", "orbit", "sunlight"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "sci_005",
+        "category": "Physics",
+        "prompt": "What is the relationship between force, mass, and acceleration (F=ma)?",
+        "expected_answer_keywords": ["Newton's second law", "proportional", "force", "mass", "acceleration"],
+        "difficulty": "medium"
+      }
+    ],
+    "humanities": [
+      {
+        "id": "hum_001",
+        "category": "History",
+        "prompt": "What year did Christopher Columbus sail to the Americas and what was the significance?",
+        "expected_answer_keywords": ["1492", "exploration", "New World", "Americas"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "hum_002",
+        "category": "Geography",
+        "prompt": "What is the capital of France and name three major rivers in Europe.",
+        "expected_answer_keywords": ["Paris", "Rhine", "Danube", "Thames"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "hum_003",
+        "category": "English",
+        "prompt": "What is the main theme of Shakespeare's 'Romeo and Juliet'?",
+        "expected_answer_keywords": ["love", "conflict", "family", "tragedy"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "hum_004",
+        "category": "Economics",
+        "prompt": "Explain the basic principle of supply and demand.",
+        "expected_answer_keywords": ["supply", "demand", "price", "equilibrium"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "hum_005",
+        "category": "Psychology",
+        "prompt": "What is the difference between short-term and long-term memory?",
+        "expected_answer_keywords": ["duration", "capacity", "working memory", "storage"],
+        "difficulty": "medium"
+      }
+    ],
+    "reasoning": [
+      {
+        "id": "reas_001",
+        "category": "Logic",
+        "prompt": "If all dogs are animals and Fido is a dog, what can we conclude about Fido?",
+        "expected_answer_keywords": ["Fido is an animal", "logical deduction"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "reas_002",
+        "category": "Problem Solving",
+        "prompt": "A train leaves the station at 2 PM traveling at 60 mph. Another train leaves at 3 PM traveling at 80 mph. When will the second train catch up to the first?",
+        "expected_answer_keywords": ["5 PM", "3 hours", "distance = speed × time"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "reas_003",
+        "category": "Critical Thinking",
+        "prompt": "Why is it important to evaluate the credibility of sources when researching a topic?",
+        "expected_answer_keywords": ["bias", "accuracy", "reliability", "evidence"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "reas_004",
+        "category": "Cause and Effect",
+        "prompt": "What are the major causes of climate change and what are some of its effects?",
+        "expected_answer_keywords": ["greenhouse gases", "fossil fuels", "temperature", "sea level"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "reas_005",
+        "category": "Comparative Analysis",
+        "prompt": "Compare and contrast photosynthesis and cellular respiration.",
+        "expected_answer_keywords": ["energy", "glucose", "oxygen", "carbon dioxide", "opposite"],
+        "difficulty": "hard"
+      }
+    ],
+    "mixed": [
+      {
+        "id": "mix_001",
+        "category": "Interdisciplinary",
+        "prompt": "How does the water cycle relate to weather patterns and climate?",
+        "expected_answer_keywords": ["evaporation", "precipitation", "temperature", "atmosphere"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "mix_002",
+        "category": "Interdisciplinary",
+        "prompt": "Explain how the human circulatory system works and why it's important.",
+        "expected_answer_keywords": ["heart", "blood", "oxygen", "nutrients", "vessels"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "mix_003",
+        "category": "Interdisciplinary",
+        "prompt": "What is the relationship between mathematics and physics?",
+        "expected_answer_keywords": ["equations", "laws", "calculations", "models"],
+        "difficulty": "hard"
+      },
+      {
+        "id": "mix_004",
+        "category": "Interdisciplinary",
+        "prompt": "How has technology changed education over the past 20 years?",
+        "expected_answer_keywords": ["internet", "online learning", "digital", "access"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "mix_005",
+        "category": "Interdisciplinary",
+        "prompt": "What are the ethical implications of artificial intelligence in society?",
+        "expected_answer_keywords": ["bias", "privacy", "automation", "responsibility"],
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "evaluation_criteria": {
+    "factual_accuracy": {
+      "description": "Are the facts and information correct?",
+      "scale": "1-5",
+      "weight": 0.3
+    },
+    "completeness": {
+      "description": "Does the answer address all parts of the question?",
+      "scale": "1-5",
+      "weight": 0.2
+    },
+    "clarity": {
+      "description": "Is the answer clear and well-organized?",
+      "scale": "1-5",
+      "weight": 0.2
+    },
+    "relevance": {
+      "description": "Is the answer relevant to the question asked?",
+      "scale": "1-5",
+      "weight": 0.15
+    },
+    "pedagogical_value": {
+      "description": "Does the answer help a student learn the concept?",
+      "scale": "1-5",
+      "weight": 0.15
+    }
+  },
+  "pass_criteria": {
+    "average_score": 3.5,
+    "minimum_score_per_prompt": 2,
+    "factual_accuracy_minimum": 4.0,
+    "description": "Model must achieve average score ≥3.5, no prompt <2, and factual accuracy ≥4.0"
+  }
+}
