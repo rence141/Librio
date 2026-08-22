@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Librio App Theme with Fredoka font and official gradient colors
 class LibrioTheme {
+  // Font family
+  static const String font = 'Fredoka';
+
   // Colors
   static const Color deepPurple = Color(0xFF7B2CBF);
   static const Color indigo = Color(0xFF4F46E5);
@@ -40,13 +42,11 @@ class LibrioTheme {
 
   /// Get the light theme with Fredoka font
   static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      
+    final base = ThemeData.light(useMaterial3: true);
+    return base.copyWith(
       // Primary color
       primaryColor: deepPurple,
-      
+
       // Color scheme
       colorScheme: const ColorScheme.light(
         primary: deepPurple,
@@ -55,30 +55,46 @@ class LibrioTheme {
         onSurface: deepNavy,
         error: Colors.red,
       ),
-      
+
       // Text theme with Fredoka
-      textTheme: GoogleFonts.fredokaTextTheme(
-        ThemeData.light().textTheme,
+      textTheme: base.textTheme.copyWith(
+        displayLarge: base.textTheme.displayLarge?.copyWith(fontFamily: font),
+        displayMedium: base.textTheme.displayMedium?.copyWith(fontFamily: font),
+        displaySmall: base.textTheme.displaySmall?.copyWith(fontFamily: font),
+        headlineLarge: base.textTheme.headlineLarge?.copyWith(fontFamily: font),
+        headlineMedium: base.textTheme.headlineMedium?.copyWith(fontFamily: font),
+        headlineSmall: base.textTheme.headlineSmall?.copyWith(fontFamily: font),
+        titleLarge: base.textTheme.titleLarge?.copyWith(fontFamily: font),
+        titleMedium: base.textTheme.titleMedium?.copyWith(fontFamily: font),
+        titleSmall: base.textTheme.titleSmall?.copyWith(fontFamily: font),
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(fontFamily: font),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(fontFamily: font),
+        bodySmall: base.textTheme.bodySmall?.copyWith(fontFamily: font),
+        labelLarge: base.textTheme.labelLarge?.copyWith(fontFamily: font),
+        labelMedium: base.textTheme.labelMedium?.copyWith(fontFamily: font),
+        labelSmall: base.textTheme.labelSmall?.copyWith(fontFamily: font),
       ),
-      
+
       // AppBar theme
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.fredoka(
+        titleTextStyle: TextStyle(
+          fontFamily: font,
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: white,
         ),
-        iconTheme: const IconThemeData(color: white),
+        iconTheme: IconThemeData(color: white),
       ),
-      
+
       // Button themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: deepPurple,
           foregroundColor: white,
-          textStyle: GoogleFonts.fredoka(
+          textStyle: const TextStyle(
+            fontFamily: font,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -88,18 +104,19 @@ class LibrioTheme {
           ),
         ),
       ),
-      
+
       // Text button theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: deepPurple,
-          textStyle: GoogleFonts.fredoka(
+          textStyle: const TextStyle(
+            fontFamily: font,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
-      
+
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -115,20 +132,23 @@ class LibrioTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: deepPurple, width: 2),
         ),
-        labelStyle: GoogleFonts.fredoka(
+        labelStyle: const TextStyle(
+          fontFamily: font,
           fontSize: 14,
-          color: Colors.grey[600],
+          color: Colors.grey,
         ),
-        hintStyle: GoogleFonts.fredoka(
+        hintStyle: const TextStyle(
+          fontFamily: font,
           fontSize: 14,
-          color: Colors.grey[400],
+          color: Colors.grey,
         ),
       ),
-      
+
       // Chip theme
       chipTheme: ChipThemeData(
         backgroundColor: Colors.grey[100]!,
-        labelStyle: GoogleFonts.fredoka(
+        labelStyle: const TextStyle(
+          fontFamily: font,
           fontSize: 14,
           color: deepNavy,
         ),
@@ -137,20 +157,22 @@ class LibrioTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      
+
       // Dialog theme
-      dialogTheme: DialogThemeData(
-        titleTextStyle: GoogleFonts.fredoka(
+      dialogTheme: const DialogThemeData(
+        titleTextStyle: TextStyle(
+          fontFamily: font,
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: deepNavy,
         ),
-        contentTextStyle: GoogleFonts.fredoka(
+        contentTextStyle: TextStyle(
+          fontFamily: font,
           fontSize: 16,
           color: deepNavy,
         ),
       ),
-      
+
       // Scaffold background
       scaffoldBackgroundColor: white,
     );
@@ -164,7 +186,8 @@ class LibrioTheme {
     double letterSpacing = 0,
     double height = 1.5,
   }) {
-    return GoogleFonts.fredoka(
+    return TextStyle(
+      fontFamily: font,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -179,7 +202,8 @@ class LibrioTheme {
     FontWeight fontWeight = FontWeight.bold,
     Color color = deepNavy,
   }) {
-    return GoogleFonts.fredoka(
+    return TextStyle(
+      fontFamily: font,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -191,7 +215,8 @@ class LibrioTheme {
     double fontSize = 14,
     Color color = deepNavy,
   }) {
-    return GoogleFonts.fredoka(
+    return TextStyle(
+      fontFamily: font,
       fontSize: fontSize,
       color: color,
     );
@@ -202,7 +227,8 @@ class LibrioTheme {
     double fontSize = 16,
     Color color = white,
   }) {
-    return GoogleFonts.fredoka(
+    return TextStyle(
+      fontFamily: font,
       fontSize: fontSize,
       fontWeight: FontWeight.w600,
       color: color,

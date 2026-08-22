@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/debug_logger.dart';
 import '../models/document.dart';
 import 'database_service.dart';
 import 'embeddings_service.dart';
@@ -32,13 +32,9 @@ class RagService {
       
       _isInitialized = true;
       
-      if (kDebugMode) {
-        print('✅ RAG service initialized');
-      }
+      DebugLogger.info("RagService", "✅ RAG service initialized");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to initialize RAG: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to initialize RAG: $e");
       rethrow;
     }
   }
@@ -76,15 +72,11 @@ class RagService {
       // Save to database
       await _databaseService.addDocument(document);
       
-      if (kDebugMode) {
-        print('✅ Document added: $id');
-      }
+      DebugLogger.info("RagService", "✅ Document added: $id");
       
       return document;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to add document: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to add document: $e");
       rethrow;
     }
   }
@@ -109,9 +101,7 @@ class RagService {
       final allDocuments = await _databaseService.getDocuments(category: category);
       
       if (allDocuments.isEmpty) {
-        if (kDebugMode) {
-          print('⚠️ No documents found in knowledge base');
-        }
+        DebugLogger.info("RagService", "⚠️ No documents found in knowledge base");
         return [];
       }
       
@@ -132,15 +122,11 @@ class RagService {
           .take(topK)
           .toList();
       
-      if (kDebugMode) {
-        print('✅ Retrieved ${filtered.length} documents for query');
-      }
+      DebugLogger.info("RagService", "✅ Retrieved ${filtered.length} documents for query");
       
       return filtered;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to retrieve context: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to retrieve context: $e");
       rethrow;
     }
   }
@@ -173,9 +159,7 @@ class RagService {
     try {
       return await _databaseService.getDocuments(category: category);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get documents: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to get documents: $e");
       rethrow;
     }
   }
@@ -185,13 +169,9 @@ class RagService {
     try {
       await _databaseService.deleteDocument(id);
       
-      if (kDebugMode) {
-        print('✅ Document deleted: $id');
-      }
+      DebugLogger.info("RagService", "✅ Document deleted: $id");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to delete document: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to delete document: $e");
       rethrow;
     }
   }
@@ -201,13 +181,9 @@ class RagService {
     try {
       await _databaseService.clearDocuments();
       
-      if (kDebugMode) {
-        print('✅ All documents cleared');
-      }
+      DebugLogger.info("RagService", "✅ All documents cleared");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to clear documents: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to clear documents: $e");
       rethrow;
     }
   }
@@ -218,9 +194,7 @@ class RagService {
       final documents = await _databaseService.getDocuments(category: category);
       return documents.length;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get document count: $e');
-      }
+      DebugLogger.info("RagService", "❌ Failed to get document count: $e");
       return 0;
     }
   }

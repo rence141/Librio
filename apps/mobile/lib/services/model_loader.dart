@@ -1,108 +1,104 @@
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../utils/debug_logger.dart';
 
 /// Model loader service for LLM initialization
 class ModelLoader {
   static const String modelFileName = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
-  static const String modelUrl = 'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf';
-  
+  static const String modelUrl =
+      'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf';
+
   // HuggingFace repo for automatic download
   static const String huggingFaceRepo = 'vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF';
   static const String huggingFaceFile = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
-  
+
   bool _modelLoaded = false;
   String? _modelPath;
-  
+
   /// Check if model is loaded
   bool get isModelLoaded => _modelLoaded;
-  
+
   /// Get model path
   String? get modelPath => _modelPath;
-  
+
   /// Initialize and load model
   Future<bool> loadModel() async {
+    const tag = 'ModelLoader';
     try {
-      if (kDebugMode) {
-        print('🤖 Starting model initialization...');
-      }
-      
+      DebugLogger.info(tag, 'Starting model initialization...');
+
       // Get app documents directory
       final appDir = await getApplicationDocumentsDirectory();
       final modelsDir = Directory('${appDir.path}/models');
-      
+
+      DebugLogger.info(tag, 'App documents dir: ${appDir.path}');
+      DebugLogger.info(tag, 'Models dir: ${modelsDir.path}');
+
       // Create models directory if it doesn't exist
       if (!modelsDir.existsSync()) {
         modelsDir.createSync(recursive: true);
-        if (kDebugMode) {
-          print('📁 Created models directory: ${modelsDir.path}');
-        }
+        DebugLogger.info(tag, 'Created models directory: ${modelsDir.path}');
       }
-      
+
       _modelPath = '${modelsDir.path}/$modelFileName';
-      
+
       // Check if model already exists
       final modelFile = File(_modelPath!);
       if (modelFile.existsSync()) {
-        if (kDebugMode) {
-          print('✅ Model found at: $_modelPath');
-        }
+        final size = await modelFile.length();
+        final sizeMB = (size / 1024 / 1024).toStringAsFixed(1);
+        DebugLogger.success(tag, 'Model found at: $_modelPath ($sizeMB MB)');
         _modelLoaded = true;
         return true;
       }
-      
+
       // Model not found, provide download instructions
-      if (kDebugMode) {
-        print('⚠️ Model not found at: $_modelPath');
-        print('📥 To download the model:');
-        print('   Option 1: Automatic download on first app run (requires internet)');
-        print('   Option 2: Manual download from:');
-        print('   $modelUrl');
-        print('   Then place at: $_modelPath');
-        print('');
-        print('Model: Gemma 3 1B Thinking (Q4_K_M)');
-        print('Size: ~806 MB');
-        print('Source: vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF');
-      }
-      
-      // Return false - model needs to be downloaded
-      // App will show helpful message to user
+      DebugLogger.warning(tag, 'Model not found at: $_modelPath');
+      DebugLogger.warning(tag, 'To download: $modelUrl');
+      DebugLogger.warning(tag, 'Then place at: $_modelPath');
+      DebugLogger.warning(tag, 'Model: Gemma 3 1B Thinking (Q4_K_M) ~806 MB');
+
       return false;
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Model initialization failed: $e');
-      }
+    } catch (e, st) {
+      DebugLogger.error(tag, 'Model initialization failed', e, st);
       return false;
     }
   }
-  
+
   /// Check if model file exists
   Future<bool> modelExists() async {
+    const tag = 'ModelLoader';
     if (_modelPath == null) {
+      DebugLogger.info(tag, 'modelExists: path is null, calling loadModel()');
       await loadModel();
     }
-    
-    if (_modelPath == null) return false;
-    
+
+    if (_modelPath == null) {
+      DebugLogger.warning(tag, 'modelExists: path still null after loadModel()');
+      return false;
+    }
+
     final file = File(_modelPath!);
-    return file.existsSync();
+    final exists = file.existsSync();
+    DebugLogger.info(tag, 'modelExists: $exists at $_modelPath');
+    return exists;
   }
-  
+
   /// Get model file size
   Future<int> getModelFileSize() async {
     if (_modelPath == null) return 0;
-    
+
     final file = File(_modelPath!);
     if (!file.existsSync()) return 0;
-    
+
     return file.lengthSync();
   }
-  
+
   /// Get model info
   Future<Map<String, dynamic>> getModelInfo() async {
     final exists = await modelExists();
     final size = await getModelFileSize();
-    
+
     return {
       'name': modelFileName,
       'path': _modelPath,

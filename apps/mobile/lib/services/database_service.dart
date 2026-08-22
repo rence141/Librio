@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/debug_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/conversation.dart';
@@ -25,9 +25,7 @@ class DatabaseService {
       final databasePath = await getDatabasesPath();
       final path = join(databasePath, 'librio.db');
       
-      if (kDebugMode) {
-        print('📦 Initializing database at: $path');
-      }
+      DebugLogger.info("DatabaseService", "Initializing database at: $path");
       
       _database = await openDatabase(
         path,
@@ -37,13 +35,9 @@ class DatabaseService {
       
       _isInitialized = true;
       
-      if (kDebugMode) {
-        print('✅ Database initialized successfully');
-      }
+      DebugLogger.success("DatabaseService", "Database initialized successfully");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Database initialization failed: $e');
-      }
+      DebugLogger.error("DatabaseService", "Database initialization failed: $e");
       rethrow;
     }
   }
@@ -103,13 +97,9 @@ class DatabaseService {
         ON documents(source)
       ''');
       
-      if (kDebugMode) {
-        print('✅ Database tables created');
-      }
+      DebugLogger.success("DatabaseService", "Database tables created");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to create tables: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to create tables: $e");
       rethrow;
     }
   }
@@ -132,15 +122,11 @@ class DatabaseService {
         conversation.toJson(),
       );
       
-      if (kDebugMode) {
-        print('✅ Conversation created: $id');
-      }
+      DebugLogger.success("DatabaseService", "Conversation created: $id");
       
       return conversation;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to create conversation: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to create conversation: $e");
       rethrow;
     }
   }
@@ -155,9 +141,7 @@ class DatabaseService {
       
       return results.map((row) => Conversation.fromJson(row)).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get conversations: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to get conversations: $e");
       rethrow;
     }
   }
@@ -175,9 +159,7 @@ class DatabaseService {
       
       return Conversation.fromJson(results.first);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get conversation: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to get conversation: $e");
       rethrow;
     }
   }
@@ -192,13 +174,9 @@ class DatabaseService {
         whereArgs: [conversation.id],
       );
       
-      if (kDebugMode) {
-        print('✅ Conversation updated: ${conversation.id}');
-      }
+      DebugLogger.success("DatabaseService", "Conversation updated: ${conversation.id}");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to update conversation: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to update conversation: $e");
       rethrow;
     }
   }
@@ -212,13 +190,9 @@ class DatabaseService {
         whereArgs: [id],
       );
       
-      if (kDebugMode) {
-        print('✅ Conversation deleted: $id');
-      }
+      DebugLogger.success("DatabaseService", "Conversation deleted: $id");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to delete conversation: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to delete conversation: $e");
       rethrow;
     }
   }
@@ -254,15 +228,11 @@ class DatabaseService {
         whereArgs: [conversationId],
       );
       
-      if (kDebugMode) {
-        print('✅ Message added: $id');
-      }
+      DebugLogger.success("DatabaseService", "Message added: $id");
       
       return message;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to add message: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to add message: $e");
       rethrow;
     }
   }
@@ -279,9 +249,7 @@ class DatabaseService {
       
       return results.map((row) => Message.fromJson(row)).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get messages: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to get messages: $e");
       rethrow;
     }
   }
@@ -295,13 +263,9 @@ class DatabaseService {
         whereArgs: [conversationId],
       );
       
-      if (kDebugMode) {
-        print('✅ Messages deleted for conversation: $conversationId');
-      }
+      DebugLogger.success("DatabaseService", "Messages deleted for conversation: $conversationId");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to delete messages: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to delete messages: $e");
       rethrow;
     }
   }
@@ -314,13 +278,9 @@ class DatabaseService {
         document.toJson(),
       );
       
-      if (kDebugMode) {
-        print('✅ Document added: ${document.id}');
-      }
+      DebugLogger.success("DatabaseService", "Document added: ${document.id}");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to add document: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to add document: $e");
       rethrow;
     }
   }
@@ -346,9 +306,7 @@ class DatabaseService {
       
       return results.map((row) => Document.fromJson(row)).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get documents: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to get documents: $e");
       rethrow;
     }
   }
@@ -366,9 +324,7 @@ class DatabaseService {
       
       return Document.fromJson(results.first);
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to get document: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to get document: $e");
       rethrow;
     }
   }
@@ -382,13 +338,9 @@ class DatabaseService {
         whereArgs: [id],
       );
       
-      if (kDebugMode) {
-        print('✅ Document deleted: $id');
-      }
+      DebugLogger.success("DatabaseService", "Document deleted: $id");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to delete document: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to delete document: $e");
       rethrow;
     }
   }
@@ -398,13 +350,9 @@ class DatabaseService {
     try {
       await _database.delete('documents');
       
-      if (kDebugMode) {
-        print('✅ All documents cleared');
-      }
+      DebugLogger.success("DatabaseService", "All documents cleared");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to clear documents: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to clear documents: $e");
       rethrow;
     }
   }
@@ -415,13 +363,9 @@ class DatabaseService {
       await _database.close();
       _isInitialized = false;
       
-      if (kDebugMode) {
-        print('✅ Database closed');
-      }
+      DebugLogger.success("DatabaseService", "Database closed");
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to close database: $e');
-      }
+      DebugLogger.error("DatabaseService", "Failed to close database: $e");
       rethrow;
     }
   }

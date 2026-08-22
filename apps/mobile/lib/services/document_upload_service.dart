@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/debug_logger.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../models/document.dart';
@@ -24,9 +24,7 @@ class DocumentUploadService {
     _ragService = ragService;
     _isInitialized = true;
     
-    if (kDebugMode) {
-      print('✅ Document upload service initialized');
-    }
+    DebugLogger.info("DocumentUpload", "✅ Document upload service initialized");
   }
   
   /// Pick and upload a document
@@ -41,9 +39,7 @@ class DocumentUploadService {
       );
       
       if (result == null || result.files.isEmpty) {
-        if (kDebugMode) {
-          print('⚠️ No file selected');
-        }
+        DebugLogger.info("DocumentUpload", "⚠️ No file selected");
         return null;
       }
       
@@ -80,15 +76,11 @@ class DocumentUploadService {
         category: category,
       );
       
-      if (kDebugMode) {
-        print('✅ Document uploaded: ${document.id}');
-      }
+      DebugLogger.info("DocumentUpload", "✅ Document uploaded: ${document.id}");
       
       return document;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to upload document: $e');
-      }
+      DebugLogger.info("DocumentUpload", "❌ Failed to upload document: $e");
       rethrow;
     }
   }
@@ -100,9 +92,7 @@ class DocumentUploadService {
       final content = await file.readAsString();
       return content;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to extract text from TXT: $e');
-      }
+      DebugLogger.info("DocumentUpload", "❌ Failed to extract text from TXT: $e");
       rethrow;
     }
   }
@@ -126,9 +116,7 @@ class DocumentUploadService {
       
       return content;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to extract text from PDF: $e');
-      }
+      DebugLogger.info("DocumentUpload", "❌ Failed to extract text from PDF: $e");
       rethrow;
     }
   }
@@ -152,9 +140,7 @@ class DocumentUploadService {
       
       return content;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Failed to extract text from DOCX: $e');
-      }
+      DebugLogger.info("DocumentUpload", "❌ Failed to extract text from DOCX: $e");
       rethrow;
     }
   }
@@ -183,9 +169,7 @@ class DocumentUploadService {
       
       return textParts.join('\n');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ PDF text extraction failed, returning empty: $e');
-      }
+      DebugLogger.info("DocumentUpload", "⚠️ PDF text extraction failed, returning empty: $e");
       return '';
     }
   }
@@ -209,9 +193,7 @@ class DocumentUploadService {
       
       return textParts.join(' ');
     } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ DOCX text extraction failed, returning empty: $e');
-      }
+      DebugLogger.info("DocumentUpload", "⚠️ DOCX text extraction failed, returning empty: $e");
       return '';
     }
   }

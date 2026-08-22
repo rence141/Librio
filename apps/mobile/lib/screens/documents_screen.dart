@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/document.dart';
 import '../services/rag_service.dart';
 import '../services/document_upload_service.dart';
@@ -209,7 +208,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         ),
         title: Text(
           'Knowledge Base',
-          style: GoogleFonts.fredoka(
+          style: TextStyle(fontFamily: 'Fredoka', 
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -260,7 +259,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               '${_documents.length} document${_documents.length != 1 ? 's' : ''}',
-              style: GoogleFonts.fredoka(
+              style: TextStyle(fontFamily: 'Fredoka', 
                 fontSize: 12,
                 color: Colors.grey,
               ),
@@ -338,7 +337,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           doc.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.fredoka(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,20 +347,20 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               doc.preview,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.fredoka(fontSize: 12),
+              style: TextStyle(fontFamily: 'Fredoka', fontSize: 12),
             ),
             const SizedBox(height: 4),
             Row(
               children: [
                 Chip(
                   label: Text(doc.category),
-                  labelStyle: GoogleFonts.fredoka(fontSize: 10),
+                  labelStyle: TextStyle(fontFamily: 'Fredoka', fontSize: 10),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
                 const SizedBox(width: 8),
                 Chip(
                   label: Text(doc.source),
-                  labelStyle: GoogleFonts.fredoka(fontSize: 10),
+                  labelStyle: TextStyle(fontFamily: 'Fredoka', fontSize: 10),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
               ],
@@ -389,7 +388,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           const SizedBox(height: 16),
           Text(
             'No Documents',
-            style: GoogleFonts.fredoka(
+            style: TextStyle(fontFamily: 'Fredoka', 
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -398,7 +397,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           const SizedBox(height: 8),
           Text(
             'Upload documents to build your knowledge base',
-            style: GoogleFonts.fredoka(
+            style: TextStyle(fontFamily: 'Fredoka', 
               fontSize: 14,
               color: Colors.grey,
             ),
