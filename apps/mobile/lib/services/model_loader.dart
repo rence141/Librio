@@ -66,6 +66,15 @@ class ModelLoader {
       isOnline: true,
     ),
     AiModel(
+      id: 'gemini-2.5-flash-lite',
+      name: 'Gemini 2.5 Flash-Lite',
+      fileName: '',
+      url: '',
+      description: 'Online. Fastest, most efficient.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
       id: 'gpt-5.4',
       name: 'GPT-5.4',
       fileName: '',
