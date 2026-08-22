@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/llm_service.dart';
 import '../services/online_llm_service.dart';
 import '../services/model_loader.dart';
@@ -47,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isSearchingMaterials = false;
   bool _canStop = false;
   bool _isInitialized = false;
+  final List<String> _pendingAttachments = []; // paths of images/files to send
   bool _isOffline = true; // Default to offline (local model)
 
   // Generated flashcards from chat (pending save)
@@ -176,14 +180,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage() async {
     final userMessage = _messageController.text.trim();
-    if (userMessage.isEmpty || _isGenerating) return;
+    final attachments = List<String>.from(_pendingAttachments);
+    if (userMessage.isEmpty && attachments.isEmpty) return;
+    if (_isGenerating) return;
 
     _messageController.clear();
+    _pendingAttachments.clear();
 
     final userChatMessage = ChatMessage(
       text: userMessage,
       isUser: true,
       timestamp: DateTime.now(),
+      attachmentPaths: attachments,
     );
 
     setState(() {
@@ -693,14 +701,62 @@ class _ChatScreenState extends State<ChatScreen> {
                 color: _userBubbleColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
-                message.text,
-                style: const TextStyle(
-                  fontFamily: 'Fredoka',
-                  color: Colors.black87,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Attachment thumbnails
+                  if (message.attachmentPaths.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.end,
+                      children: message.attachmentPaths.map((path) {
+                        final isImage = path.toLowerCase().endsWith('.jpg') ||
+                            path.toLowerCase().endsWith('.jpeg') ||
+                            path.toLowerCase().endsWith('.png') ||
+                            path.toLowerCase().endsWith('.gif') ||
+                            path.toLowerCase().endsWith('.webp');
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: isImage
+                              ? Image.file(File(path), width: 120, height: 120, fit: BoxFit.cover)
+                              : Container(
+                                  width: 120,
+                                  height: 60,
+                                  color: Colors.grey[300],
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.insert_drive_file, size: 20),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          path.split('/').last.split('\\').last,
+                                          style: const TextStyle(fontSize: 11),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        );
+                      }).toList(),
+                    ),
+                    if (message.text.isNotEmpty) const SizedBox(height: 8),
+                  ],
+                  // Message text
+                  if (message.text.isNotEmpty)
+                    Text(
+                      message.text,
+                      style: const TextStyle(
+                        fontFamily: 'Fredoka',
+                        color: Colors.black87,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -1187,6 +1243,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildComposer() {
     final hasText = _messageController.text.trim().isNotEmpty;
+    final hasAttachments = _pendingAttachments.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -1196,7 +1253,62 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Attachment previews
+            if (hasAttachments)
+              Container(
+                padding: const EdgeInsets.only(bottom: 8),
+                height: 80,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _pendingAttachments.length,
+                  itemBuilder: (context, index) {
+                    final path = _pendingAttachments[index];
+                    final isImage = path.toLowerCase().endsWith('.jpg') ||
+                        path.toLowerCase().endsWith('.jpeg') ||
+                        path.toLowerCase().endsWith('.png') ||
+                        path.toLowerCase().endsWith('.gif') ||
+                        path.toLowerCase().endsWith('.webp');
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: isImage
+                                ? Image.file(File(path), width: 70, height: 70, fit: BoxFit.cover)
+                                : Container(
+                                    width: 70,
+                                    height: 70,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.insert_drive_file, size: 28),
+                                  ),
+                          ),
+                          Positioned(
+                            top: 2,
+                            right: 2,
+                            child: GestureDetector(
+                              onTap: () => _removeAttachment(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            // Input row
+            Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // + button (attachments) — same height as send button
@@ -1253,18 +1365,20 @@ class _ChatScreenState extends State<ChatScreen> {
               height: 44,
               child: IconButton(
                 icon: _canStop
-                    ? Icon(Icons.stop, color: hasText || _canStop ? Colors.white : Colors.grey[500], size: 20)
-                    : Icon(Icons.arrow_upward, color: hasText || _canStop ? Colors.white : Colors.grey[500], size: 20),
-                onPressed: _canStop ? _stopGeneration : (hasText ? _sendMessage : null),
+                    ? Icon(Icons.stop, color: hasText || hasAttachments || _canStop ? Colors.white : Colors.grey[500], size: 20)
+                    : Icon(Icons.arrow_upward, color: hasText || hasAttachments || _canStop ? Colors.white : Colors.grey[500], size: 20),
+                onPressed: _canStop ? _stopGeneration : ((hasText || hasAttachments) ? _sendMessage : null),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 style: IconButton.styleFrom(
-                  backgroundColor: hasText || _canStop ? _deepPurple : Colors.grey[200],
+                  backgroundColor: hasText || hasAttachments || _canStop ? _deepPurple : Colors.grey[200],
                   shape: const CircleBorder(),
                 ),
               ),
             ),
-          ],
+          ], // Row children
+            ), // Row
+          ], // Column children
         ),
       ),
     );
@@ -1295,23 +1409,77 @@ class _ChatScreenState extends State<ChatScreen> {
               leading: const Icon(Icons.upload_file, color: _deepPurple),
               title: const Text('Upload file', style: TextStyle(fontFamily: 'Fredoka')),
               subtitle: const Text('PDF, DOCX, TXT', style: TextStyle(fontFamily: 'Fredoka', fontSize: 12)),
-              onTap: () => Navigator.pop(context),
+              onTap: () { Navigator.pop(context); _pickFile(); },
             ),
             ListTile(
               leading: const Icon(Icons.photo_library, color: _deepPurple),
               title: const Text('Photo', style: TextStyle(fontFamily: 'Fredoka')),
-              onTap: () => Navigator.pop(context),
+              onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: _deepPurple),
               title: const Text('Camera', style: TextStyle(fontFamily: 'Fredoka')),
-              onTap: () => Navigator.pop(context),
+              onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
             ),
             const SizedBox(height: 8),
           ],
         ),
       ),
     );
+  }
+
+  /// Pick an image from gallery or camera
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final xFile = await picker.pickImage(source: source, maxWidth: 1024, imageQuality: 85);
+      if (xFile == null) return;
+
+      setState(() {
+        _pendingAttachments.add(xFile.path);
+      });
+      DebugLogger.info('ChatScreen', 'Image attached: ${xFile.path}');
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Image pick failed', e, st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
+    }
+  }
+
+  /// Pick a document file (PDF, DOCX, TXT)
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'docx', 'txt', 'md'],
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final path = result.files.first.path;
+      if (path == null) return;
+
+      setState(() {
+        _pendingAttachments.add(path);
+      });
+      DebugLogger.info('ChatScreen', 'File attached: $path');
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'File pick failed', e, st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick file: $e')),
+        );
+      }
+    }
+  }
+
+  /// Remove a pending attachment
+  void _removeAttachment(int index) {
+    setState(() {
+      _pendingAttachments.removeAt(index);
+    });
   }
 
   // ============ Model Selector ============

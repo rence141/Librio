@@ -113,6 +113,7 @@ class ChatMessage {
   final DateTime timestamp;
   bool isStreaming;
   final List<Document> sources;
+  final List<String> attachmentPaths; // local file paths for images/files
 
   ChatMessage({
     required this.text,
@@ -120,5 +121,6 @@ class ChatMessage {
     required this.timestamp,
     this.isStreaming = false,
     this.sources = const [],
+    this.attachmentPaths = const [],
   });
 }
