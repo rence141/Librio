@@ -9,10 +9,10 @@ export class SupabaseService {
 
   constructor() {
     const url = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+    const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
 
     if (!url || !serviceKey) {
-      throw new Error('Missing Supabase credentials');
+      throw new Error('Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_SECRET_KEY');
     }
 
     this.client = createClient(url, serviceKey);
@@ -377,5 +377,15 @@ export class SupabaseService {
   }
 }
 
-// Export singleton instance
-export const supabaseService = new SupabaseService();
+// Lazy singleton instance
+let instance: SupabaseService | null = null;
+
+export function getSupabaseService(): SupabaseService {
+  if (!instance) {
+    instance = new SupabaseService();
+  }
+  return instance;
+}
+
+// Export singleton (lazy initialized)
+export const supabaseService = getSupabaseService();

@@ -1,14 +1,15 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response, NextFunction } from 'express';
 import pinoHttp from 'pino-http';
-import dotenv from 'dotenv';
 import cors from 'cors';
 
-// Import routes
+// Import routes (after dotenv.config())
 import authRoutes from './routes/auth.routes';
 import supabaseRoutes from './routes/supabase.routes';
 import adminRoutes from './routes/admin.routes';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
