@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
 import 'screens/chat_screen.dart';
+import 'screens/intro_splash_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
 import 'utils/debug_logger.dart';
 
@@ -22,7 +24,7 @@ void main() async {
 
   DebugLogger.info('Main', 'Starting Librio app...');
 
-  // Initialize services
+  // Initialize services in parallel with the intro splash
   DebugLogger.info('Main', 'Initializing model loader...');
   final modelLoader = ModelLoader();
   await modelLoader.loadModel();
@@ -33,20 +35,26 @@ void main() async {
 
   DebugLogger.success('Main', 'All services initialized, launching app...');
 
+  // Check if onboarding is needed
+  final needsOnboarding = !await OnboardingScreen.hasCompleted();
+
   runApp(LibrioApp(
     modelLoader: modelLoader,
     llmService: llmService,
+    needsOnboarding: needsOnboarding,
   ));
 }
 
 class LibrioApp extends StatelessWidget {
   final ModelLoader modelLoader;
   final LlmService llmService;
+  final bool needsOnboarding;
 
   const LibrioApp({
     super.key,
     required this.modelLoader,
     required this.llmService,
+    required this.needsOnboarding,
   });
 
   @override
@@ -54,7 +62,10 @@ class LibrioApp extends StatelessWidget {
     return MaterialApp(
       title: 'Librio',
       theme: LibrioTheme.lightTheme,
-      home: ChatScreen(llmService: llmService),
+      home: _AppEntry(
+        llmService: llmService,
+        needsOnboarding: needsOnboarding,
+      ),
       builder: (context, widget) {
         // Catch widget build errors
         ErrorWidget.builder = (details) {
@@ -99,5 +110,54 @@ class LibrioApp extends StatelessWidget {
         return widget ?? const SizedBox.shrink();
       },
     );
+  }
+}
+
+/// Entry widget that routes through intro splash → onboarding (if needed) → chat.
+class _AppEntry extends StatefulWidget {
+  final LlmService llmService;
+  final bool needsOnboarding;
+
+  const _AppEntry({
+    required this.llmService,
+    required this.needsOnboarding,
+  });
+
+  @override
+  State<_AppEntry> createState() => _AppEntryState();
+}
+
+class _AppEntryState extends State<_AppEntry> {
+  bool _showSplash = true;
+  bool _showOnboarding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _showOnboarding = widget.needsOnboarding;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Step 1: Intro splash animation
+    if (_showSplash) {
+      return IntroSplashScreen(
+        onComplete: () {
+          setState(() => _showSplash = false);
+        },
+      );
+    }
+
+    // Step 2: Onboarding (first launch only)
+    if (_showOnboarding) {
+      return OnboardingScreen(
+        onComplete: () {
+          setState(() => _showOnboarding = false);
+        },
+      );
+    }
+
+    // Step 3: Main chat screen
+    return ChatScreen(llmService: widget.llmService);
   }
 }
