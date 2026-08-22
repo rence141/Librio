@@ -39,9 +39,13 @@ void main() async {
   final modelLoader = ModelLoader();
   await modelLoader.loadModel();
 
-  DebugLogger.info('Main', 'Initializing LLM service...');
+  // Local LLM only works on native platforms (Android/iOS/desktop)
+  // Web uses online models only
   final llmService = LlmService();
-  await llmService.initialize(modelLoader);
+  if (!kIsWeb) {
+    DebugLogger.info('Main', 'Initializing LLM service...');
+    await llmService.initialize(modelLoader);
+  }
 
   DebugLogger.success('Main', 'All services initialized, launching app...');
 

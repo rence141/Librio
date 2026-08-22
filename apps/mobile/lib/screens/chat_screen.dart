@@ -86,6 +86,22 @@ class _ChatScreenState extends State<ChatScreen> {
       _databaseService = DatabaseService();
       await _databaseService.initialize();
 
+      // If database isn't available (web without wasm), skip DB-dependent services
+      if (!_databaseService.isAvailable) {
+        DebugLogger.warning(tag, 'Database not available — running in limited mode');
+        // Create a default in-memory conversation
+        _currentConversation = Conversation(
+          id: 'web-session',
+          title: 'New Chat',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        // Check model status
+        _isOffline = _currentModelIsOnline ? false : !widget.llmService.isInitialized;
+        setState(() => _isInitialized = true);
+        return;
+      }
+
       _embeddingsService = EmbeddingsService();
       _ragService = RagService();
       await _ragService.initialize(_databaseService, _embeddingsService);

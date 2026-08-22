@@ -1,4 +1,5 @@
 import '../utils/debug_logger.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/conversation.dart';
@@ -8,23 +9,32 @@ import '../models/flashcard.dart';
 /// Database service for managing conversations and messages
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
-  
+
   factory DatabaseService() {
     return _instance;
   }
-  
+
   DatabaseService._internal();
-  
+
   late Database _database;
   bool _isInitialized = false;
-  
+
+  /// Whether database is available (false on web without wasm setup)
+  bool get isAvailable => _isInitialized;
+
   /// Initialize the database
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
+      // Web requires sqflite_common_ffi_web setup (sqlite3.wasm)
+      // If not configured, skip database — app still works with online models
+      if (kIsWeb) {
+        DebugLogger.info("DatabaseService", "Web platform — attempting database init");
+      }
+
       final databasePath = await getDatabasesPath();
-      final path = join(databasePath, 'librio.db');
+      final path = kIsWeb ? 'librio_web.db' : join(databasePath, 'librio.db');
       
       DebugLogger.info("DatabaseService", "Initializing database at: $path");
       
@@ -40,6 +50,10 @@ class DatabaseService {
       DebugLogger.success("DatabaseService", "Database initialized successfully");
     } catch (e) {
       DebugLogger.error("DatabaseService", "Database initialization failed: $e");
+      if (kIsWeb) {
+        DebugLogger.warning("DatabaseService", "Web database unavailable — app will work in limited mode (online models only)");
+        return; // Don't rethrow on web — allow app to run without DB
+      }
       rethrow;
     }
   }
