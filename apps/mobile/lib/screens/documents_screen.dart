@@ -191,11 +191,25 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Color(0xFF7B2CBF), // Deep Purple
+                Color(0xFF4F46E5), // Indigo
+                Color(0xFF3B82F6), // Bright Blue
+                Color(0xFF06B6D4), // Cyan
+              ],
+              stops: [0.0, 0.33, 0.66, 1.0],
+            ),
+          ),
+        ),
         title: const Text(
           'Knowledge Base',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -204,7 +218,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         actions: [
           if (_documents.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_sweep, color: Colors.red),
+              icon: const Icon(Icons.delete_sweep, color: Colors.white),
               onPressed: _clearAllDocuments,
               tooltip: 'Clear all documents',
             ),
@@ -268,10 +282,31 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _uploadDocument,
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF7B2CBF), // Deep Purple
+              Color(0xFF06B6D4), // Cyan
+            ],
+          ),
+          borderRadius: BorderRadius.circular(56),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7B2CBF).withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _uploadDocument,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

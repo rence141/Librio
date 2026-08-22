@@ -271,18 +271,60 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Color(0xFF7B2CBF), // Deep Purple
+                Color(0xFF4F46E5), // Indigo
+                Color(0xFF3B82F6), // Bright Blue
+                Color(0xFF06B6D4), // Cyan
+              ],
+              stops: [0.0, 0.33, 0.66, 1.0],
+            ),
+          ),
+        ),
         title: Row(
           children: [
             Image.asset(
               'assets/logo.png',
               height: 32,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback: Gradient circle with "L"
+                return Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF7B2CBF),
+                        Color(0xFF06B6D4),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'L',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(width: 12),
             const Text(
               'Librio',
               style: TextStyle(
-                color: Colors.black,
+                color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -400,8 +442,22 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.blue[600],
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFF7B2CBF), // Deep Purple
+                        Color(0xFF06B6D4), // Cyan
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7B2CBF).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.send),
@@ -418,51 +474,102 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/logo.png',
-            width: 120,
-            height: 120,
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Welcome to Librio',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF8FAFC), // Soft White
+            Color(0xFFFFFFFF), // White
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/logo.png',
+              width: 120,
+              height: 120,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback: Gradient circle with "L"
+                return Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF7B2CBF),
+                        Color(0xFF06B6D4),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'L',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 60,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Your AI academic tutor',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
+            const SizedBox(height: 24),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Color(0xFF7B2CBF),
+                  Color(0xFF06B6D4),
+                ],
+              ).createShader(bounds),
+              child: const Text(
+                'Welcome to Librio',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Ask me anything about:',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+            const SizedBox(height: 12),
+            Text(
+              'Your AI academic tutor',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _buildSuggestionChip('📐 Math'),
-              _buildSuggestionChip('🔬 Science'),
-              _buildSuggestionChip('📚 History'),
-              _buildSuggestionChip('🌍 Geography'),
-            ],
-          ),
-        ],
+            const SizedBox(height: 32),
+            Text(
+              'Ask me anything about:',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildSuggestionChip('📐 Math'),
+                _buildSuggestionChip('🔬 Science'),
+                _buildSuggestionChip('📚 History'),
+                _buildSuggestionChip('🌍 Geography'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -471,18 +578,29 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
+        gradient: const LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Color(0xFF7B2CBF), // Deep Purple
+            Color(0xFF06B6D4), // Cyan
+          ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7B2CBF).withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontSize: 14,
-          color: Colors.black87,
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
