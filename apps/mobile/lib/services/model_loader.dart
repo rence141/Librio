@@ -1,21 +1,55 @@
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../utils/debug_logger.dart';
 
-/// Model loader service for LLM initialization
-class ModelLoader {
-  // Qwen2.5-Coder-3B-Instruct (Q4_K_M) — coding-tuned variant with stronger
-  // reasoning and instruction-following than base Qwen2.5-3B
-  static const String modelFileName = 'qwen2.5-coder-3b-instruct-q4_k_m.gguf';
-  static const String modelUrl =
-      'https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf';
+/// Available AI models for on-device inference.
+class AiModel {
+  final String id;
+  final String name;
+  final String fileName;
+  final String url;
+  final String description;
+  final String sizeLabel;
 
-  // HuggingFace repo for automatic download
-  static const String huggingFaceRepo = 'Qwen/Qwen2.5-Coder-3B-Instruct-GGUF';
-  static const String huggingFaceFile = 'qwen2.5-coder-3b-instruct-q4_k_m.gguf';
+  const AiModel({
+    required this.id,
+    required this.name,
+    required this.fileName,
+    required this.url,
+    required this.description,
+    required this.sizeLabel,
+  });
+}
+
+/// Model loader service for LLM initialization.
+/// Supports multiple models with switching via shared_preferences.
+class ModelLoader {
+  // Available models — user can switch between these
+  static const List<AiModel> availableModels = [
+    AiModel(
+      id: 'qwen2.5-coder-3b',
+      name: 'Qwen2.5 Coder 3B',
+      fileName: 'qwen2.5-coder-3b-instruct-q4_k_m.gguf',
+      url: 'https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf',
+      description: 'Coding-tuned. Stronger reasoning, less hallucination.',
+      sizeLabel: '~2.0 GB',
+    ),
+    AiModel(
+      id: 'gemma-3-1b',
+      name: 'Gemma 3 1B',
+      fileName: 'gemma-3-1b-thinking-v2-q4_k_m.gguf',
+      url: 'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf',
+      description: 'Fastest. Lightweight. Good for simple questions.',
+      sizeLabel: '~806 MB',
+    ),
+  ];
+
+  static const String _prefKey = 'selected_model_id';
 
   bool _modelLoaded = false;
   String? _modelPath;
+  AiModel? _selectedModel;
 
   /// Check if model is loaded
   bool get isModelLoaded => _modelLoaded;
@@ -23,11 +57,60 @@ class ModelLoader {
   /// Get model path
   String? get modelPath => _modelPath;
 
-  /// Initialize and load model
+  /// Get the currently selected model
+  AiModel? get selectedModel => _selectedModel;
+
+  /// Get the selected model ID from preferences, or default to first.
+  Future<String> _getSelectedModelId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_prefKey) ?? availableModels.first.id;
+  }
+
+  /// Set the selected model ID in preferences.
+  Future<void> setSelectedModel(String modelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefKey, modelId);
+  }
+
+  /// Get the model by ID, or null if not found.
+  AiModel? getModelById(String id) {
+    try {
+      return availableModels.firstWhere((m) => m.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Check which models are present on disk.
+  Future<Map<String, bool>> getAvailableModels() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final modelsDir = Directory('${appDir.path}/models');
+    final result = <String, bool>{};
+
+    for (final model in availableModels) {
+      final file = File('${modelsDir.path}/${model.fileName}');
+      result[model.id] = file.existsSync();
+    }
+
+    return result;
+  }
+
+  /// Initialize and load the selected model
   Future<bool> loadModel() async {
     const tag = 'ModelLoader';
     try {
       DebugLogger.info(tag, 'Starting model initialization...');
+
+      // Get selected model
+      final modelId = await _getSelectedModelId();
+      _selectedModel = getModelById(modelId);
+
+      if (_selectedModel == null) {
+        DebugLogger.warning(tag, 'Selected model not found: $modelId, using default');
+        _selectedModel = availableModels.first;
+      }
+
+      DebugLogger.info(tag, 'Selected model: ${_selectedModel!.name}');
 
       // Get app documents directory
       final appDir = await getApplicationDocumentsDirectory();
@@ -42,7 +125,7 @@ class ModelLoader {
         DebugLogger.info(tag, 'Created models directory: ${modelsDir.path}');
       }
 
-      _modelPath = '${modelsDir.path}/$modelFileName';
+      _modelPath = '${modelsDir.path}/${_selectedModel!.fileName}';
 
       // Check if model already exists
       final modelFile = File(_modelPath!);
@@ -56,9 +139,9 @@ class ModelLoader {
 
       // Model not found, provide download instructions
       DebugLogger.warning(tag, 'Model not found at: $_modelPath');
-      DebugLogger.warning(tag, 'To download: $modelUrl');
+      DebugLogger.warning(tag, 'To download: ${_selectedModel!.url}');
       DebugLogger.warning(tag, 'Then place at: $_modelPath');
-      DebugLogger.warning(tag, 'Model: Qwen2.5-Coder-3B Instruct (Q4_K_M) ~2.0 GB');
+      DebugLogger.warning(tag, 'Model: ${_selectedModel!.name} (${_selectedModel!.sizeLabel})');
 
       return false;
     } catch (e, st) {
@@ -102,7 +185,8 @@ class ModelLoader {
     final size = await getModelFileSize();
 
     return {
-      'name': modelFileName,
+      'name': _selectedModel?.fileName ?? 'unknown',
+      'displayName': _selectedModel?.name ?? 'Unknown',
       'path': _modelPath,
       'exists': exists,
       'size': size,

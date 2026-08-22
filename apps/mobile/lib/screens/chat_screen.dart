@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../services/llm_service.dart';
+import '../services/model_loader.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
 import '../services/embeddings_service.dart';
@@ -59,7 +60,9 @@ class _ChatScreenState extends State<ChatScreen> {
   late Conversation _currentConversation;
 
   // Model info
-  final String _currentModelName = 'Gemma 3 1B';
+  String _currentModelName = 'Loading...';
+  String _currentModelId = '';
+  Map<String, bool> _installedModels = {};
 
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
@@ -98,6 +101,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Check model status
       _isOffline = !widget.llmService.isInitialized;
+
+      // Load model info for selector
+      final modelLoader = ModelLoader();
+      _installedModels = await modelLoader.getAvailableModels();
+      final info = await modelLoader.getModelInfo();
+      _currentModelName = info['displayName'] as String? ?? 'Unknown';
+      _currentModelId = modelLoader.selectedModel?.id ?? '';
 
       setState(() => _isInitialized = true);
     } catch (e, st) {
@@ -1312,58 +1322,92 @@ class _ChatScreenState extends State<ChatScreen> {
   // ============ Model Selector ============
 
   void _showModelSelector() {
+    final modelLoader = ModelLoader();
+    final models = ModelLoader.availableModels;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Choose AI Model',
-                style: TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Choose AI Model',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            // Local model
-            _modelOption(
-              name: 'Gemma 3 1B',
-              subtitle: 'Offline • 4 GB RAM+',
-              isSelected: true,
-              isInstalled: true,
-              icon: Icons.check_circle,
-            ),
-            _modelOption(
-              name: 'Advanced Online',
-              subtitle: 'Better reasoning • Internet required',
-              isSelected: false,
-              isInstalled: false,
-              icon: Icons.cloud_outlined,
-            ),
-            _modelOption(
-              name: 'Premium Online',
-              subtitle: 'Best quality • Premium tier',
-              isSelected: false,
-              isInstalled: false,
-              icon: Icons.workspace_premium_outlined,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings, color: Colors.grey),
-              title: const Text('Manage models', style: TextStyle(fontFamily: 'Fredoka')),
-              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-              onTap: () => Navigator.pop(context),
-            ),
-            const SizedBox(height: 8),
-          ],
+              ...models.map((model) {
+                final isInstalled = _installedModels[model.id] ?? false;
+                final isSelected = model.id == _currentModelId;
+                return _modelOption(
+                  name: model.name,
+                  subtitle: '${model.description} • ${model.sizeLabel}${isInstalled ? "" : " (not installed)"}',
+                  isSelected: isSelected,
+                  isInstalled: isInstalled,
+                  icon: isInstalled
+                      ? (isSelected ? Icons.check_circle : Icons.cloud_done)
+                      : Icons.cloud_download,
+                  onTap: () async {
+                    if (!isInstalled) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${model.name} is not installed. Download ${model.fileName} and place in models folder.'),
+                          duration: const Duration(seconds: 4),
+                          action: SnackBarAction(
+                            label: 'Copy URL',
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: model.url));
+                            },
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    if (isSelected) {
+                      Navigator.pop(context);
+                      return;
+                    }
+                    // Switch model
+                    await modelLoader.setSelectedModel(model.id);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Switched to ${model.name}. Restart app to apply.'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                    setState(() {
+                      _currentModelId = model.id;
+                      _currentModelName = model.name;
+                    });
+                  },
+                );
+              }),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.info_outline, color: Colors.grey),
+                title: const Text('Models run fully offline on your device', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13)),
+                subtitle: Text(
+                  'To install: download GGUF file and place in app models folder',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -1375,6 +1419,7 @@ class _ChatScreenState extends State<ChatScreen> {
     required bool isSelected,
     required bool isInstalled,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
     return ListTile(
       leading: Icon(
@@ -1397,7 +1442,7 @@ class _ChatScreenState extends State<ChatScreen> {
       trailing: isSelected
           ? const Icon(Icons.check, color: _deepPurple)
           : null,
-      onTap: () => Navigator.pop(context),
+      onTap: onTap,
     );
   }
 
