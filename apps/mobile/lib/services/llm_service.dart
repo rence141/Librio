@@ -302,4 +302,12 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
     _engine = null;
     _isInitialized = false;
   }
+
+  /// Generate a short conversation title from the first user message.
+  /// For local models, uses a simple word-count fallback (no extra inference).
+  Future<String> generateTitle(String userMessage) async {
+    final words = userMessage.trim().split(RegExp(r'\s+'));
+    if (words.length <= 7) return userMessage.trim();
+    return words.take(7).join(' ');
+  }
 }

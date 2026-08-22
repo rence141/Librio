@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/llm_service.dart';
 import '../services/online_llm_service.dart';
+import '../services/online_model_config.dart';
 import '../services/model_loader.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -249,6 +250,11 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         await _databaseService.addMessage(_currentConversation.id, response, false);
         _scrollToBottom();
+
+        // Auto-generate title if this is the first exchange
+        if (_currentConversation.title == 'New Chat' && _databaseService.isAvailable) {
+          _autoGenerateTitle(userMessage);
+        }
       } else {
         // Cancelled — discard partial response, remove empty placeholder
         setState(() {
@@ -269,6 +275,36 @@ class _ChatScreenState extends State<ChatScreen> {
         _canStop = false;
         _isSearchingMaterials = false;
       });
+    }
+  }
+
+  /// Auto-generate a conversation title from the first user message.
+  /// Uses online model if available, otherwise falls back to word truncation.
+  Future<void> _autoGenerateTitle(String userMessage) async {
+    try {
+      String title;
+
+      if (_currentModelIsOnline && OnlineModelConfig.hasKey) {
+        final onlineService = OnlineLlmService();
+        title = await onlineService.generateTitle(userMessage);
+      } else {
+        title = await widget.llmService.generateTitle(userMessage);
+      }
+
+      // Update conversation in DB
+      final updated = _currentConversation.copyWith(title: title);
+      await _databaseService.updateConversation(updated);
+
+      setState(() {
+        _currentConversation = updated;
+      });
+
+      // Refresh conversation list in drawer
+      await _loadConversations();
+
+      DebugLogger.info('ChatScreen', 'Auto-generated title: $title');
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Title generation failed', e, st);
     }
   }
 

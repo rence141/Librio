@@ -148,4 +148,63 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
       yield 'Error connecting to FreeLLMAPI: $e';
     }
   }
+
+  /// Generate a short conversation title from the first user message.
+  /// Returns 3-7 words, no quotes.
+  Future<String> generateTitle(String userMessage, {String model = 'gemini-3.6-flash'}) async {
+    const tag = 'OnlineLlm';
+
+    if (!OnlineModelConfig.hasKey) {
+      return _fallbackTitle(userMessage);
+    }
+
+    try {
+      final url = Uri.parse('${OnlineModelConfig.baseUrl}/chat/completions');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${OnlineModelConfig.apiKey}',
+        },
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'Generate a concise conversation title from the user\'s message. Rules: 3-7 words max, describe the main topic, no quotes, no "Chat" or "Conversation", use Title Case. Return ONLY the title, nothing else.'
+            },
+            {'role': 'user', 'content': userMessage},
+          ],
+          'temperature': 0.3,
+          'max_tokens': 30,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final choices = data['choices'] as List?;
+        if (choices != null && choices.isNotEmpty) {
+          final title = (choices[0]['message']['content'] ?? '').trim();
+          if (title.isNotEmpty) {
+            // Clean up: remove quotes, limit length
+            final cleaned = title.replaceAll('"', '').replaceAll("'", '').replaceAll('`', '').trim();
+            DebugLogger.info(tag, 'Generated title: $cleaned');
+            return cleaned;
+          }
+        }
+      }
+    } catch (e) {
+      DebugLogger.error(tag, 'Title generation failed', e, null);
+    }
+
+    return _fallbackTitle(userMessage);
+  }
+
+  /// Fallback: derive a title from the first few words of the message
+  String _fallbackTitle(String userMessage) {
+    final words = userMessage.trim().split(RegExp(r'\s+'));
+    if (words.length <= 7) return userMessage.trim();
+    return words.take(7).join(' ');
+  }
 }
