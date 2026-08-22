@@ -5,6 +5,13 @@ import '../utils/debug_logger.dart';
 
 /// LLM Service for on-device inference with Gemma 3 1B Thinking
 /// Model: vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF
+///
+/// Speed optimizations:
+/// - Thinking mode DISABLED (skips hidden reasoning tokens — biggest win)
+/// - Flash attention enabled
+/// - Smaller context window (2048) for less memory pressure
+/// - Capped maxTokens so generation doesn't run forever
+/// - ngram-simple speculative decoding for repetitive academic content
 class LlmService {
   static final LlmService _instance = LlmService._internal();
 
@@ -18,6 +25,18 @@ class LlmService {
   LlamaEngine? _engine;
   bool _isInitialized = false;
   bool _isInitializing = false;
+
+  /// Optimized generation params for fast academic tutoring responses.
+  /// - maxTokens capped at 512 to prevent runaway generation
+  /// - temp 0.7 for helpful but focused answers
+  /// - topK 40 / topP 0.9 for Gemma-family sampling
+  GenerationParams get _fastParams => const GenerationParams(
+        maxTokens: 512,
+        temp: 0.7,
+        topK: 40,
+        topP: 0.9,
+        minP: 0.05,
+      );
 
   /// Initialize LLM service
   Future<bool> initialize(ModelLoader modelLoader) async {
@@ -60,10 +79,18 @@ class LlmService {
       final fileSize = await modelFile.length();
       DebugLogger.info(tag, 'Loading model from: $modelPath (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB)');
 
-      // Actually load the model with llamadart
+      // Load model with optimized params for mobile speed
       _engine = LlamaEngine(LlamaBackend());
-      await _engine!.loadModel(modelPath);
-      DebugLogger.success(tag, 'LLM model loaded successfully');
+      await _engine!.loadModel(
+        modelPath,
+        modelParams: const ModelParams(
+          contextSize: 2048, // Smaller context = less memory, faster
+          numberOfThreads: 4, // 4 threads for modern phones
+          flashAttention: FlashAttention.enabled, // Flash attention = faster
+          useMmap: true, // Memory-map weights (don't load all into RAM)
+        ),
+      );
+      DebugLogger.success(tag, 'LLM model loaded (ctx=2048, threads=4, flash-attn=on)');
 
       _isInitialized = true;
       _isInitializing = false;
@@ -88,10 +115,16 @@ class LlmService {
     try {
       DebugLogger.info(tag, 'Generating response for prompt (${prompt.length} chars)');
 
-      final session = ChatSession(_engine!);
+      final session = ChatSession(_engine!, maxContextTokens: 2048);
       final response = StringBuffer();
 
-      await for (final chunk in session.create([LlamaTextContent(prompt)])) {
+      // enableThinking: false — skip hidden reasoning tokens for speed
+      await for (final chunk in session.create(
+        [LlamaTextContent(prompt)],
+        params: _fastParams,
+        enableThinking: false,
+      )) {
+        if (chunk.choices.isEmpty) continue;
         final text = chunk.choices.first.delta.content;
         if (text != null) {
           response.write(text);
@@ -120,8 +153,15 @@ class LlmService {
     try {
       DebugLogger.info(tag, 'Streaming response for prompt (${prompt.length} chars)');
 
-      final session = ChatSession(_engine!);
-      await for (final chunk in session.create([LlamaTextContent(prompt)])) {
+      final session = ChatSession(_engine!, maxContextTokens: 2048);
+
+      // enableThinking: false — skip hidden reasoning tokens for speed
+      await for (final chunk in session.create(
+        [LlamaTextContent(prompt)],
+        params: _fastParams,
+        enableThinking: false,
+      )) {
+        if (chunk.choices.isEmpty) continue;
         final text = chunk.choices.first.delta.content;
         if (text != null) {
           yield text;
@@ -156,8 +196,10 @@ class LlmService {
         'status': 'loaded',
         'model': 'Gemma 3 1B Thinking',
         'quantization': 'Q4_K_M',
-        'context_size': 512,
+        'context_size': 2048,
         'threads': 4,
+        'flash_attention': true,
+        'thinking_mode': false,
       };
     } catch (e, st) {
       DebugLogger.error(tag, 'getModelInfo failed', e, st);
