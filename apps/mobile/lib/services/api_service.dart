@@ -28,8 +28,8 @@ class ApiService {
   
   ApiService._internal();
   
-  // TODO: Replace with actual backend URL
-  static const String baseUrl = 'http://localhost:3000';
+  // Backend API URL - Update to your machine's IP
+  static const String baseUrl = 'http://192.168.5.157:3000';
   static const Duration timeout = Duration(seconds: 30);
   
   late TokenManager _tokenManager;
