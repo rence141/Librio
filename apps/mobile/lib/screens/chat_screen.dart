@@ -9,6 +9,8 @@ import '../services/document_upload_service.dart';
 import '../models/conversation.dart';
 import '../models/document.dart';
 import '../utils/debug_logger.dart';
+import '../widgets/crystal_loader.dart';
+import '../widgets/llm_markdown.dart';
 import 'documents_screen.dart';
 import 'flashcard_review_screen.dart';
 
@@ -170,7 +172,7 @@ class _ChatScreenState extends State<ChatScreen> {
         prompt = _ragService.buildPromptWithContext(userMessage, documents);
       }
 
-      // Create a placeholder AI message for streaming
+      // Create a placeholder AI message (empty — not shown until complete)
       final aiChatMessage = ChatMessage(
         text: '',
         isUser: false,
@@ -181,26 +183,37 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(aiChatMessage));
       _scrollToBottom();
 
-      // Stream the response
+      // Buffer the full response — do NOT update UI during generation.
+      // Streaming is kept internally for cancellation and progress, but
+      // the user only sees "Librio is thinking..." until complete.
       final responseBuffer = StringBuffer();
       await for (final chunk in widget.llmService.streamResponse(prompt)) {
         if (!_isGenerating) break; // User pressed stop
         responseBuffer.write(chunk);
-        setState(() {
-          _messages.last.text = responseBuffer.toString();
-        });
-        _scrollToBottom();
+        // No setState here — no partial text display
       }
 
-      final response = responseBuffer.toString();
-      setState(() {
-        _messages.last.text = response;
-        _messages.last.isStreaming = false;
-        _isGenerating = false;
-        _canStop = false;
-      });
-
-      await _databaseService.addMessage(_currentConversation.id, response, false);
+      // Generation complete (or cancelled)
+      if (_isGenerating) {
+        // Completed normally — show the full response
+        final response = responseBuffer.toString();
+        setState(() {
+          _messages.last.text = response;
+          _messages.last.isStreaming = false;
+          _isGenerating = false;
+          _canStop = false;
+        });
+        await _databaseService.addMessage(_currentConversation.id, response, false);
+        _scrollToBottom();
+      } else {
+        // Cancelled — discard partial response, remove empty placeholder
+        setState(() {
+          if (_messages.isNotEmpty && !_messages.last.isUser) {
+            _messages.removeLast();
+          }
+          _canStop = false;
+        });
+      }
     } catch (e, st) {
       DebugLogger.error('ChatScreen', 'Generation failed', e, st);
       setState(() {
@@ -216,12 +229,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _stopGeneration() {
+    // Just flip the flag — _sendMessage handles cleanup
     setState(() {
       _isGenerating = false;
-      _canStop = false;
-      if (_messages.isNotEmpty && !_messages.last.isUser && _messages.last.isStreaming) {
-        _messages.last.isStreaming = false;
-      }
     });
   }
 
@@ -527,21 +537,38 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildGeneratingIndicator() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLogoMark(36),
-          const SizedBox(width: 12),
-          if (_isSearchingMaterials)
-            const Text(
-              'Searching your materials...',
-              style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
-            )
-          else
-            const Text(
-              'Librio is thinking...',
-              style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
+          const Text(
+            'Librio',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black54,
             ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Column(
+              children: [
+                CrystalLoader(size: 80),
+                const SizedBox(height: 12),
+                if (_isSearchingMaterials)
+                  const Text(
+                    'Searching your materials...',
+                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: Colors.grey),
+                  )
+                else
+                  const Text(
+                    'Librio is thinking...',
+                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: Colors.grey),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -607,20 +634,13 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          // Content
-          if (message.text.isEmpty && message.isStreaming)
-            _buildStreamingCursor()
-          else
-            MarkdownBody(
+          // Content — rendered through normalize → parse → render pipeline
+          if (message.text.isNotEmpty)
+            LlmMarkdown(
               data: message.text,
               selectable: true,
               styleSheet: _markdownStyle(),
             ),
-          // Streaming cursor
-          if (message.isStreaming && message.text.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            _buildStreamingCursor(),
-          ],
           // Sources (RAG)
           if (message.sources.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -634,17 +654,6 @@ class _ChatScreenState extends State<ChatScreen> {
             _buildStudyActions(),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildStreamingCursor() {
-    return const Text(
-      '▌',
-      style: TextStyle(
-        fontFamily: 'Fredoka',
-        fontSize: 15,
-        color: _deepPurple,
       ),
     );
   }
@@ -1423,7 +1432,10 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.removeLast());
     }
 
-    setState(() => _isGenerating = true);
+    setState(() {
+      _isGenerating = true;
+      _canStop = true;
+    });
     _scrollToBottom();
 
     try {
@@ -1443,24 +1455,38 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(aiChatMessage));
       _scrollToBottom();
 
+      // Buffer — no partial UI updates
       final responseBuffer = StringBuffer();
       await for (final chunk in widget.llmService.streamResponse(prompt)) {
         if (!_isGenerating) break;
         responseBuffer.write(chunk);
-        setState(() => _messages.last.text = responseBuffer.toString());
-        _scrollToBottom();
       }
 
-      final response = responseBuffer.toString();
-      setState(() {
-        _messages.last.text = response;
-        _messages.last.isStreaming = false;
-        _isGenerating = false;
-      });
-      await _databaseService.addMessage(_currentConversation.id, response, false);
+      if (_isGenerating) {
+        final response = responseBuffer.toString();
+        setState(() {
+          _messages.last.text = response;
+          _messages.last.isStreaming = false;
+          _isGenerating = false;
+          _canStop = false;
+        });
+        await _databaseService.addMessage(_currentConversation.id, response, false);
+        _scrollToBottom();
+      } else {
+        // Cancelled — remove placeholder
+        setState(() {
+          if (_messages.isNotEmpty && !_messages.last.isUser) {
+            _messages.removeLast();
+          }
+          _canStop = false;
+        });
+      }
     } catch (e, st) {
       DebugLogger.error('ChatScreen', 'Retry failed', e, st);
-      setState(() => _isGenerating = false);
+      setState(() {
+        _isGenerating = false;
+        _canStop = false;
+      });
     }
   }
 }
