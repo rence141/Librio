@@ -42,6 +42,8 @@ dependencies:
   
   # Authentication & State Management
   jwt_decoder: ^2.0.1
+  provider: ^6.4.0
+  google_sign_in: ^6.2.0
   
   # UI & Navigation
   go_router: ^13.0.0
