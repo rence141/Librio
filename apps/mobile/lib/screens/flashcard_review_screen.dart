@@ -225,10 +225,46 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Add flashcards from your study materials to start reviewing.',
+                'Create flashcards to start studying.',
                 style: TextStyle(
                     fontFamily: 'Fredoka', color: Colors.grey[600], fontSize: 14),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              // Create manually button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _showCreateFlashcardDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Manually',
+                      style: TextStyle(fontFamily: 'Fredoka', fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Generate from chat button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, 'generate'),
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Generate from Chat',
+                      style: TextStyle(fontFamily: 'Fredoka', fontSize: 16)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _deepPurple,
+                    side: const BorderSide(color: _deepPurple, width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ),
             ],
           ),
@@ -608,6 +644,148 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  /// Show dialog to create a flashcard manually
+  void _showCreateFlashcardDialog() {
+    final questionController = TextEditingController();
+    final answerController = TextEditingController();
+    final deckController = TextEditingController();
+    String selectedType = 'identification'; // identification or multiple_choice
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Create Flashcard',
+              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Deck name
+                const Text('Deck Name',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: deckController,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Biology 101',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                ),
+                const SizedBox(height: 16),
+                // Type selector
+                const Text('Type',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(label: Text('Identification'), value: 'identification'),
+                    ButtonSegment(label: Text('Multiple Choice'), value: 'multiple_choice'),
+                  ],
+                  selected: {selectedType},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    setState(() => selectedType = newSelection.first);
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Question
+                const Text('Question',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: questionController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter the question',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                // Answer
+                const Text('Answer',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: answerController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter the answer',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel',
+                  style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final question = questionController.text.trim();
+                final answer = answerController.text.trim();
+                final deck = deckController.text.trim().isEmpty
+                    ? 'Default'
+                    : deckController.text.trim();
+
+                if (question.isEmpty || answer.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill in all fields')),
+                  );
+                  return;
+                }
+
+                // Create flashcard
+                final card = Flashcard(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  question: question,
+                  answer: answer,
+                  type: selectedType == 'multiple_choice'
+                      ? FlashcardType.multipleChoice
+                      : FlashcardType.identification,
+                  deck: deck,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                  reviewCount: 0,
+                  correctCount: 0,
+                  options: [],
+                  correctOptionIndex: 0,
+                );
+
+                await widget.databaseService.addFlashcard(card);
+                if (mounted) {
+                  Navigator.pop(context);
+                  _loadData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Flashcard created!')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Create',
+                  style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
