@@ -42,9 +42,7 @@ class LibrioApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: modelLoader.isModelLoaded
-          ? ChatScreen(llmService: llmService)
-          : const SplashScreen(),
+      home: ChatScreen(llmService: llmService),
     );
   }
 }
