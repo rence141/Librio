@@ -1379,20 +1379,58 @@ class _ChatScreenState extends State<ChatScreen> {
                       Navigator.pop(context);
                       return;
                     }
-                    // Switch model
+                    // Switch model at runtime — no restart needed
                     await modelLoader.setSelectedModel(model.id);
                     if (!context.mounted) return;
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Switched to ${model.name}. Restart app to apply.'),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
+
+                    // Show loading indicator while switching
                     setState(() {
-                      _currentModelId = model.id;
-                      _currentModelName = model.name;
+                      _isOffline = true;
+                      _currentModelName = 'Switching...';
                     });
+
+                    // Reload model loader with new selection
+                    final newLoader = ModelLoader();
+                    final loaded = await newLoader.loadModel();
+                    if (!loaded) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${model.name} could not be loaded.')),
+                        );
+                        setState(() {
+                          _isOffline = !widget.llmService.isInitialized;
+                          _currentModelName = _currentModelId.isEmpty ? 'Unknown' : ModelLoader().getModelById(_currentModelId)?.name ?? 'Unknown';
+                        });
+                      }
+                      return;
+                    }
+
+                    // Hot-swap the model in LLM service
+                    final success = await widget.llmService.switchModel(newLoader);
+                    if (!mounted) return;
+
+                    if (success) {
+                      setState(() {
+                        _currentModelId = model.id;
+                        _currentModelName = model.name;
+                        _isOffline = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Switched to ${model.name}'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _isOffline = !widget.llmService.isInitialized;
+                        _currentModelName = 'Error';
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to switch to ${model.name}.')),
+                      );
+                    }
                   },
                 );
               }),

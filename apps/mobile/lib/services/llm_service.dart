@@ -133,6 +133,61 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
     }
   }
 
+  /// Switch to a different model at runtime (no app restart needed).
+  /// Unloads the current engine and loads the new model.
+  Future<bool> switchModel(ModelLoader modelLoader) async {
+    const tag = 'LlmService';
+    DebugLogger.info(tag, 'Switching model...');
+
+    // Check if model exists
+    final modelExists = await modelLoader.modelExists();
+    if (!modelExists) {
+      DebugLogger.warning(tag, 'New model not found');
+      return false;
+    }
+
+    final modelPath = modelLoader.modelPath;
+    if (modelPath == null) {
+      DebugLogger.warning(tag, 'Could not determine new model path');
+      return false;
+    }
+
+    final modelFile = File(modelPath);
+    if (!modelFile.existsSync()) {
+      DebugLogger.warning(tag, 'New model file does not exist at: $modelPath');
+      return false;
+    }
+
+    // Unload current engine
+    await _engine?.dispose();
+    _engine = null;
+    _isInitialized = false;
+
+    // Load new model
+    try {
+      _modelLoader = modelLoader;
+      final fileSize = await modelFile.length();
+      DebugLogger.info(tag, 'Loading new model: $modelPath (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB)');
+
+      _engine = LlamaEngine(LlamaBackend());
+      await _engine!.loadModel(
+        modelPath,
+        modelParams: const ModelParams(
+          contextSize: 2048,
+          numberOfThreads: 4,
+          flashAttention: FlashAttention.enabled,
+          useMmap: true,
+        ),
+      );
+      DebugLogger.success(tag, 'New model loaded');
+      _isInitialized = true;
+      return true;
+    } catch (e, st) {
+      DebugLogger.error(tag, 'Failed to load new model', e, st);
+      return false;
+    }
+  }
+
   /// Generate response from prompt
   Future<String> generateResponse(String prompt) async {
     const tag = 'LlmService';
