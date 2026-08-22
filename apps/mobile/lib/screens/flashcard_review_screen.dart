@@ -387,8 +387,39 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             style: const TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
         subtitle: Text('$typeLabel • ${card.deck}',
             style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: Colors.grey[600])),
-        trailing: Text('${card.correctCount}/${card.reviewCount}',
-            style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey[500], fontSize: 12)),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'edit') {
+              _showEditFlashcardDialog(card);
+            } else if (value == 'delete') {
+              _showDeleteConfirmation(card);
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 18, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Edit', style: TextStyle(fontFamily: 'Fredoka')),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 18, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Delete', style: TextStyle(fontFamily: 'Fredoka')),
+                ],
+              ),
+            ),
+          ],
+          child: Text('${card.correctCount}/${card.reviewCount}',
+              style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey[500], fontSize: 12)),
+        ),
       ),
     );
   }
@@ -788,6 +819,193 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Show dialog to edit an existing flashcard
+  void _showEditFlashcardDialog(Flashcard card) {
+    final questionController = TextEditingController(text: card.question);
+    final answerController = TextEditingController(text: card.answer);
+    final deckController = TextEditingController(text: card.deck);
+    String selectedType = card.type == FlashcardType.multipleChoice
+        ? 'multiple_choice'
+        : 'identification';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Edit Flashcard',
+              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Deck name
+                const Text('Deck Name',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: deckController,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Biology 101',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                ),
+                const SizedBox(height: 16),
+                // Type selector
+                const Text('Type',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(label: Text('Short Answer'), value: 'identification'),
+                      ButtonSegment(label: Text('Multiple Choice'), value: 'multiple_choice'),
+                    ],
+                    selected: {selectedType},
+                    onSelectionChanged: (Set<String> newSelection) {
+                      setState(() => selectedType = newSelection.first);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Question
+                const Text('Question',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: questionController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter the question',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                // Answer
+                const Text('Answer',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: answerController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter the answer',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel',
+                  style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final question = questionController.text.trim();
+                final answer = answerController.text.trim();
+                final deck = deckController.text.trim().isEmpty
+                    ? 'Default'
+                    : deckController.text.trim();
+
+                if (question.isEmpty || answer.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill in all fields')),
+                  );
+                  return;
+                }
+
+                // Update flashcard
+                final updatedCard = Flashcard(
+                  id: card.id,
+                  question: question,
+                  answer: answer,
+                  type: selectedType == 'multiple_choice'
+                      ? FlashcardType.multipleChoice
+                      : FlashcardType.identification,
+                  deck: deck,
+                  createdAt: card.createdAt,
+                  updatedAt: DateTime.now(),
+                  reviewCount: card.reviewCount,
+                  correctCount: card.correctCount,
+                  options: card.options,
+                  correctOptionIndex: card.correctOptionIndex,
+                );
+
+                await widget.databaseService.updateFlashcard(updatedCard);
+                if (mounted) {
+                  Navigator.pop(context);
+                  _loadData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Flashcard updated!')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Update',
+                  style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show delete confirmation dialog
+  void _showDeleteConfirmation(Flashcard card) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Flashcard?',
+            style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to delete "${card.question.length > 50 ? card.question.substring(0, 50) + '...' : card.question}"?',
+          style: const TextStyle(fontFamily: 'Fredoka'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel',
+                style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await widget.databaseService.deleteFlashcard(card.id);
+              if (mounted) {
+                Navigator.pop(context);
+                _loadData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Flashcard deleted')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete',
+                style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

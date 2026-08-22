@@ -510,6 +510,21 @@ class DatabaseService {
     }
   }
 
+  Future<void> updateFlashcard(Flashcard card) async {
+    try {
+      await _database.update(
+        'flashcards',
+        card.toJson(),
+        where: 'id = ?',
+        whereArgs: [card.id],
+      );
+      DebugLogger.success("DatabaseService", "Flashcard updated: ${card.id}");
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to update flashcard: $e");
+      rethrow;
+    }
+  }
+
   Future<void> clearFlashcards({String? deck}) async {
     try {
       if (deck == null) {
