@@ -3,15 +3,18 @@ import 'package:llamadart/llamadart.dart';
 import 'model_loader.dart';
 import '../utils/debug_logger.dart';
 
-/// LLM Service for on-device inference with Qwen2.5-3B Instruct
-/// Model: Qwen/Qwen2.5-3B-Instruct (Q4_K_M GGUF, ~1.9 GB)
+/// LLM Service for on-device inference with Qwen3-4B
+/// Model: Qwen/Qwen3-4B (Q4_K_M GGUF, ~2.5 GB)
 ///
-/// Why Qwen2.5-3B over Gemma 3 1B:
-/// - Significantly better reasoning, math, and factual accuracy
-/// - Better instruction following (less hallucination)
-/// - Still mobile-friendly (~1.9 GB, runs on phone CPU)
+/// Why Qwen3-4B:
+/// - Latest Qwen generation (surpasses Qwen2.5 instruct models)
+/// - Thinking mode for complex reasoning (disabled for speed)
+/// - Better math, coding, and factual accuracy than Qwen2.5-3B
+/// - Still mobile-friendly (~2.5 GB, runs on Android with 8GB RAM)
+/// - Apache 2.0 license
 ///
 /// Speed optimizations:
+/// - Thinking mode DISABLED (skip reasoning tokens for speed)
 /// - Flash attention enabled
 /// - Context window 2048 (balances memory and conversation length)
 /// - Capped maxTokens so generation doesn't run forever
@@ -217,7 +220,7 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
     try {
       return {
         'status': 'loaded',
-        'model': 'Qwen2.5-3B Instruct',
+        'model': 'Qwen3-4B',
         'quantization': 'Q4_K_M',
         'context_size': 2048,
         'threads': 4,
