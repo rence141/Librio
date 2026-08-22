@@ -530,7 +530,7 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          _buildLogoMark(28),
+          _buildLogoMark(36),
           const SizedBox(width: 12),
           if (_isSearchingMaterials)
             const Text(
@@ -1373,29 +1373,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildLogoMark(double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_deepPurple, _cyan],
-        ),
-        borderRadius: BorderRadius.circular(size * 0.25),
-      ),
-      child: Center(
-        child: Image.asset(
-          'assets/logo.png',
-          width: size * 0.6,
-          height: size * 0.6,
-          errorBuilder: (context, error, stackTrace) => Text(
-            'L',
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              color: Colors.white,
-              fontSize: size * 0.5,
-              fontWeight: FontWeight.bold,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * 0.25),
+      child: Image.asset(
+        'assets/logo.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_deepPurple, _cyan],
+            ),
+            borderRadius: BorderRadius.circular(size * 0.25),
+          ),
+          child: Center(
+            child: Text(
+              'L',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                color: Colors.white,
+                fontSize: size * 0.5,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
