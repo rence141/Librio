@@ -1,3 +1,5 @@
+import 'document.dart';
+
 /// Conversation model for storing chat history
 class Conversation {
   final String id;
@@ -106,13 +108,17 @@ class Message {
 
 /// Lightweight UI model for displaying chat messages
 class ChatMessage {
-  final String text;
+  String text;
   final bool isUser;
   final DateTime timestamp;
+  bool isStreaming;
+  final List<Document> sources;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.isStreaming = false,
+    this.sources = const [],
   });
 }
