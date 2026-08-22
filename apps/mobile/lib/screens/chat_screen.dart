@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/llm_service.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -7,6 +8,7 @@ import '../services/document_upload_service.dart';
 import '../models/conversation.dart';
 import '../utils/debug_logger.dart';
 import 'documents_screen.dart';
+import 'flashcard_review_screen.dart';
 
 /// Chat screen - Main interface for Librio
 class ChatScreen extends StatefulWidget {
@@ -256,6 +258,17 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _openFlashcardReview() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FlashcardReviewScreen(
+          databaseService: _databaseService,
+        ),
+      ),
+    );
+  }
+
   Future<void> _startNewConversation() async {
     const tag = 'ChatScreen';
     try {
@@ -357,13 +370,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  String _formatTime(DateTime timestamp) {
-    final hour = timestamp.hour > 12 ? timestamp.hour - 12 : timestamp.hour;
-    final period = timestamp.hour >= 12 ? 'PM' : 'AM';
-    final minute = timestamp.minute.toString().padLeft(2, '0');
-    return '$hour:$minute $period';
-  }
-
   String _formatConversationDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
@@ -406,10 +412,12 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          tooltip: 'Chat history',
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+            tooltip: 'Chat history',
+          ),
         ),
         title: Row(
           children: [
@@ -432,6 +440,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.style, color: Colors.white),
+            onPressed: _openFlashcardReview,
+            tooltip: 'Flashcard review',
+          ),
           IconButton(
             icon: const Icon(Icons.library_books, color: Colors.white),
             onPressed: _openDocumentsScreen,
@@ -559,6 +572,20 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             onTap: _startNewConversation,
+          ),
+          ListTile(
+            leading: const Icon(Icons.style, color: _deepPurple),
+            title: const Text(
+              'Flashcard Review',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _openFlashcardReview();
+            },
           ),
           const Divider(height: 1),
           // Conversations list
@@ -832,88 +859,208 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!message.isUser) ...[
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_deepPurple, _cyan],
+    if (message.isUser) {
+      // User message: right-aligned bubble, no timestamp
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [_deepPurple, _cyan],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Image.asset(
-                  'assets/logo.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (context, error, stackTrace) => const Text(
-                    'L',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                child: Text(
+                  message.text,
+                  style: const TextStyle(
+                    fontFamily: 'Fredoka',
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.4,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
           ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: message.isUser
-                    ? const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [_deepPurple, _cyan],
-                      )
-                    : null,
-                color: message.isUser ? null : Colors.grey[100],
-                borderRadius: BorderRadius.circular(16),
+        ),
+      );
+    }
+
+    // AI message: no bubble, plain text + action buttons (ChatGPT style)
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AI avatar
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_deepPurple, _cyan],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: message.isUser ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/logo.png',
+                width: 20,
+                height: 20,
+                errorBuilder: (context, error, stackTrace) => const Text(
+                  'L',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatTime(message.timestamp),
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: message.isUser
-                          ? Colors.white70
-                          : Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-          if (message.isUser) const SizedBox(width: 8),
+          const SizedBox(width: 12),
+          // Text + actions
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SelectableText(
+                  message.text,
+                  style: const TextStyle(
+                    fontFamily: 'Fredoka',
+                    color: Colors.black87,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildAiActions(message),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildAiActions(ChatMessage message) {
+    return Wrap(
+      spacing: 4,
+      children: [
+        _actionButton(
+          icon: Icons.copy_outlined,
+          label: 'Copy',
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: message.text));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Copied to clipboard'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          },
+        ),
+        _actionButton(
+          icon: Icons.thumb_up_outlined,
+          label: 'Rate',
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Thanks for rating!'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          },
+        ),
+        _actionButton(
+          icon: Icons.refresh,
+          label: 'Try again',
+          onTap: () => _retryLastMessage(),
+        ),
+      ],
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Colors.grey[500]),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 12,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Retry the last user message
+  Future<void> _retryLastMessage() async {
+    // Find the last user message
+    String? lastUserMessage;
+    for (int i = _messages.length - 1; i >= 0; i--) {
+      if (_messages[i].isUser) {
+        lastUserMessage = _messages[i].text;
+        break;
+      }
+    }
+    if (lastUserMessage == null) return;
+
+    // Remove the last AI message (if any)
+    if (_messages.isNotEmpty && !_messages.last.isUser) {
+      setState(() => _messages.removeLast());
+    }
+
+    setState(() => _isLoading = true);
+    _scrollToBottom();
+
+    try {
+      final documents = await _ragService.retrieveContext(lastUserMessage);
+      String prompt = lastUserMessage;
+      if (documents.isNotEmpty) {
+        prompt = _ragService.buildPromptWithContext(lastUserMessage, documents);
+      }
+      final response = await widget.llmService.generateResponse(prompt);
+      final aiChatMessage = ChatMessage(
+        text: response,
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+      setState(() {
+        _messages.add(aiChatMessage);
+        _isLoading = false;
+      });
+      await _databaseService.addMessage(_currentConversation.id, response, false);
+      _scrollToBottom();
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Retry failed', e, st);
+      setState(() => _isLoading = false);
+    }
   }
 }

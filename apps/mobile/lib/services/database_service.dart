@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/conversation.dart';
 import '../models/document.dart';
+import '../models/flashcard.dart';
 
 /// Database service for managing conversations and messages
 class DatabaseService {
@@ -95,6 +96,29 @@ class DatabaseService {
       await db.execute('''
         CREATE INDEX idx_documents_source 
         ON documents(source)
+      ''');
+      
+      // Create flashcards table for review
+      await db.execute('''
+        CREATE TABLE flashcards (
+          id TEXT PRIMARY KEY,
+          question TEXT NOT NULL,
+          answer TEXT NOT NULL,
+          options TEXT NOT NULL DEFAULT '',
+          correct_option_index INTEGER NOT NULL DEFAULT 0,
+          type TEXT NOT NULL,
+          deck TEXT NOT NULL DEFAULT 'Default',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          review_count INTEGER NOT NULL DEFAULT 0,
+          correct_count INTEGER NOT NULL DEFAULT 0,
+          last_reviewed TEXT
+        )
+      ''');
+      
+      await db.execute('''
+        CREATE INDEX idx_flashcards_deck 
+        ON flashcards(deck)
       ''');
       
       DebugLogger.success("DatabaseService", "Database tables created");
@@ -366,6 +390,88 @@ class DatabaseService {
       DebugLogger.success("DatabaseService", "Database closed");
     } catch (e) {
       DebugLogger.error("DatabaseService", "Failed to close database: $e");
+      rethrow;
+    }
+  }
+
+  // ============ Flashcards ============
+
+  Future<void> addFlashcard(Flashcard card) async {
+    try {
+      await _database.insert('flashcards', card.toJson(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      DebugLogger.success("DatabaseService", "Flashcard added: ${card.id}");
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to add flashcard: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<Flashcard>> getFlashcards({String? deck}) async {
+    try {
+      final results = deck == null
+          ? await _database.query('flashcards', orderBy: 'created_at DESC')
+          : await _database.query('flashcards',
+              where: 'deck = ?', whereArgs: [deck], orderBy: 'created_at DESC');
+      return results.map((row) => Flashcard.fromJson(row)).toList();
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to get flashcards: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<String>> getFlashcardDecks() async {
+    try {
+      final results = await _database
+          .rawQuery('SELECT DISTINCT deck FROM flashcards ORDER BY deck ASC');
+      return results.map((row) => row['deck'] as String).toList();
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to get decks: $e");
+      return [];
+    }
+  }
+
+  Future<void> updateFlashcardReview(String id, bool correct) async {
+    try {
+      await _database.rawUpdate('''
+        UPDATE flashcards 
+        SET review_count = review_count + 1,
+            correct_count = correct_count + ?,
+            last_reviewed = ?,
+            updated_at = ?
+        WHERE id = ?
+      ''', [
+        correct ? 1 : 0,
+        DateTime.now().toIso8601String(),
+        DateTime.now().toIso8601String(),
+        id,
+      ]);
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to update review: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFlashcard(String id) async {
+    try {
+      await _database.delete('flashcards', where: 'id = ?', whereArgs: [id]);
+      DebugLogger.success("DatabaseService", "Flashcard deleted: $id");
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to delete flashcard: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> clearFlashcards({String? deck}) async {
+    try {
+      if (deck == null) {
+        await _database.delete('flashcards');
+      } else {
+        await _database.delete('flashcards', where: 'deck = ?', whereArgs: [deck]);
+      }
+      DebugLogger.success("DatabaseService", "Flashcards cleared");
+    } catch (e) {
+      DebugLogger.error("DatabaseService", "Failed to clear flashcards: $e");
       rethrow;
     }
   }

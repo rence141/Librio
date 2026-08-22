@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:llamadart/llamadart.dart';
 import 'model_loader.dart';
 import '../utils/debug_logger.dart';
 
@@ -14,7 +15,7 @@ class LlmService {
   LlmService._internal();
 
   late ModelLoader _modelLoader;
-  dynamic _model; // Llama model instance
+  LlamaEngine? _engine;
   bool _isInitialized = false;
   bool _isInitializing = false;
 
@@ -59,18 +60,14 @@ class LlmService {
       final fileSize = await modelFile.length();
       DebugLogger.info(tag, 'Loading model from: $modelPath (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB)');
 
-      // Load model with llamadart
-      // For now, just mark as loaded without actually loading the model
-      // The actual Llama.load() would be called here in production
-      // _model = await Llama.load(...);
-
-      // Simulated model load for testing
-      _model = {}; // Placeholder object
+      // Actually load the model with llamadart
+      _engine = LlamaEngine(LlamaBackend());
+      await _engine!.loadModel(modelPath);
+      DebugLogger.success(tag, 'LLM model loaded successfully');
 
       _isInitialized = true;
       _isInitializing = false;
 
-      DebugLogger.success(tag, 'LLM model loaded successfully');
       return true;
     } catch (e, st) {
       DebugLogger.error(tag, 'Failed to initialize LLM', e, st);
@@ -83,7 +80,7 @@ class LlmService {
   Future<String> generateResponse(String prompt) async {
     const tag = 'LlmService';
 
-    if (!_isInitialized || _model == null) {
+    if (!_isInitialized || _engine == null) {
       DebugLogger.warning(tag, 'generateResponse called but model not initialized');
       return 'Model not initialized. Please ensure the model file is bundled with the app.';
     }
@@ -91,17 +88,19 @@ class LlmService {
     try {
       DebugLogger.info(tag, 'Generating response for prompt (${prompt.length} chars)');
 
-      // Generate completion
-      final completion = await _model!.complete(
-        prompt: prompt,
-        temperature: 0.7,
-        topP: 0.9,
-        topK: 40,
-        maxTokens: 256,
-      );
+      final session = ChatSession(_engine!);
+      final response = StringBuffer();
 
-      DebugLogger.success(tag, 'Response generated (${completion.length} chars)');
-      return completion;
+      await for (final chunk in session.create([LlamaTextContent(prompt)])) {
+        final text = chunk.choices.first.delta.content;
+        if (text != null) {
+          response.write(text);
+        }
+      }
+
+      final result = response.toString();
+      DebugLogger.success(tag, 'Response generated (${result.length} chars)');
+      return result;
     } catch (e, st) {
       DebugLogger.error(tag, 'Generation failed', e, st);
       return 'Error generating response: $e';
@@ -112,7 +111,7 @@ class LlmService {
   Stream<String> streamResponse(String prompt) async* {
     const tag = 'LlmService';
 
-    if (!_isInitialized || _model == null) {
+    if (!_isInitialized || _engine == null) {
       DebugLogger.warning(tag, 'streamResponse called but model not initialized');
       yield 'Model not initialized. Please ensure the model file is bundled with the app.';
       return;
@@ -121,14 +120,12 @@ class LlmService {
     try {
       DebugLogger.info(tag, 'Streaming response for prompt (${prompt.length} chars)');
 
-      await for (final token in _model!.completeStream(
-        prompt: prompt,
-        temperature: 0.7,
-        topP: 0.9,
-        topK: 40,
-        maxTokens: 256,
-      )) {
-        yield token;
+      final session = ChatSession(_engine!);
+      await for (final chunk in session.create([LlamaTextContent(prompt)])) {
+        final text = chunk.choices.first.delta.content;
+        if (text != null) {
+          yield text;
+        }
       }
 
       DebugLogger.success(tag, 'Stream complete');
@@ -147,7 +144,7 @@ class LlmService {
   /// Get model info
   Future<Map<String, dynamic>> getModelInfo() async {
     const tag = 'LlmService';
-    if (_model == null) {
+    if (_engine == null) {
       return {
         'status': 'not_loaded',
         'message': 'Model not loaded',
@@ -176,11 +173,11 @@ class LlmService {
     const tag = 'LlmService';
     DebugLogger.info(tag, 'Disposing resources');
     try {
-      _model?.dispose();
+      _engine?.dispose();
     } catch (e, st) {
       DebugLogger.error(tag, 'Dispose failed', e, st);
     }
-    _model = null;
+    _engine = null;
     _isInitialized = false;
   }
 }
