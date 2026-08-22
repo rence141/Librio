@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/llm_service.dart';
 import '../services/database_service.dart';
+import '../services/rag_service.dart';
+import '../services/embeddings_service.dart';
 import '../models/conversation.dart';
 
 /// Chat screen - Main interface for Librio
@@ -22,6 +24,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
   late DatabaseService _databaseService;
+  late RagService _ragService;
+  late EmbeddingsService _embeddingsService;
   late Conversation _currentConversation;
 
   @override
@@ -34,6 +38,11 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       _databaseService = DatabaseService();
       await _databaseService.initialize();
+      
+      // Initialize embeddings and RAG
+      _embeddingsService = EmbeddingsService();
+      _ragService = RagService();
+      await _ragService.initialize(_databaseService, _embeddingsService);
       
       // Create or get the current conversation
       final conversations = await _databaseService.getConversations();
@@ -130,8 +139,17 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
+      // Retrieve context from knowledge base
+      final documents = await _ragService.retrieveContext(userMessage);
+      
+      // Build prompt with context
+      String prompt = userMessage;
+      if (documents.isNotEmpty) {
+        prompt = _ragService.buildPromptWithContext(userMessage, documents);
+      }
+      
       // Get response from LLM
-      final response = await widget.llmService.generateResponse(userMessage);
+      final response = await widget.llmService.generateResponse(prompt);
 
       final aiChatMessage = ChatMessage(
         text: response,

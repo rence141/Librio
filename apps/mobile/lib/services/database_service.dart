@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/conversation.dart';
+import '../models/document.dart';
 
 /// Database service for managing conversations and messages
 class DatabaseService {
@@ -76,6 +77,30 @@ class DatabaseService {
       await db.execute('''
         CREATE INDEX idx_messages_conversation_id 
         ON messages(conversation_id)
+      ''');
+      
+      // Create documents table for RAG
+      await db.execute('''
+        CREATE TABLE documents (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          embedding TEXT NOT NULL,
+          source TEXT NOT NULL,
+          category TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+      
+      // Create indexes for documents
+      await db.execute('''
+        CREATE INDEX idx_documents_category 
+        ON documents(category)
+      ''');
+      
+      await db.execute('''
+        CREATE INDEX idx_documents_source 
+        ON documents(source)
       ''');
       
       if (kDebugMode) {
@@ -276,6 +301,109 @@ class DatabaseService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Failed to delete messages: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Add a document to the knowledge base
+  Future<void> addDocument(Document document) async {
+    try {
+      await _database.insert(
+        'documents',
+        document.toJson(),
+      );
+      
+      if (kDebugMode) {
+        print('✅ Document added: ${document.id}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to add document: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Get documents from knowledge base
+  Future<List<Document>> getDocuments({String? category}) async {
+    try {
+      List<Map<String, dynamic>> results;
+      
+      if (category != null) {
+        results = await _database.query(
+          'documents',
+          where: 'category = ?',
+          whereArgs: [category],
+          orderBy: 'created_at DESC',
+        );
+      } else {
+        results = await _database.query(
+          'documents',
+          orderBy: 'created_at DESC',
+        );
+      }
+      
+      return results.map((row) => Document.fromJson(row)).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to get documents: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Get a specific document
+  Future<Document?> getDocument(String id) async {
+    try {
+      final results = await _database.query(
+        'documents',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      
+      if (results.isEmpty) return null;
+      
+      return Document.fromJson(results.first);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to get document: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Delete a document
+  Future<void> deleteDocument(String id) async {
+    try {
+      await _database.delete(
+        'documents',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      
+      if (kDebugMode) {
+        print('✅ Document deleted: $id');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to delete document: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Clear all documents
+  Future<void> clearDocuments() async {
+    try {
+      await _database.delete('documents');
+      
+      if (kDebugMode) {
+        print('✅ All documents cleared');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to clear documents: $e');
       }
       rethrow;
     }

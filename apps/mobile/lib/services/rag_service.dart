@@ -1,306 +1,227 @@
-import 'dart:typed_data';
-import 'package:sqlite3/sqlite3.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
+import '../models/document.dart';
+import 'database_service.dart';
+import 'embeddings_service.dart';
 
-/// Document in the knowledge base
-class Document {
-  final int? id;
-  final String title;
-  final String content;
-  final List<double> embedding;
-  final String source;
-  final String category;
-  final DateTime createdAt;
-
-  Document({
-    this.id,
-    required this.title,
-    required this.content,
-    required this.embedding,
-    required this.source,
-    required this.category,
-    DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
-
-  /// Calculate cosine similarity with another embedding
-  static double cosineSimilarity(List<double> a, List<double> b) {
-    if (a.length != b.length) {
-      throw ArgumentError('Embeddings must have same dimension');
-    }
-
-    double dotProduct = 0;
-    double normA = 0;
-    double normB = 0;
-
-    for (int i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-
-    normA = normA > 0 ? normA.sqrt() : 1;
-    normB = normB > 0 ? normB.sqrt() : 1;
-
-    return dotProduct / (normA * normB);
+/// RAG (Retrieval-Augmented Generation) service for document-grounded responses
+class RagService {
+  static final RagService _instance = RagService._internal();
+  
+  factory RagService() {
+    return _instance;
   }
-}
-
-/// RAG Service for retrieval-augmented generation
-class RAGService {
-  late Database _db;
-  late Directory _dbDir;
-  static const String _dbName = 'librio_rag.db';
-  static const int _embeddingDim = 384; // all-MiniLM-L6-v2 dimension
-
+  
+  RagService._internal();
+  
+  late DatabaseService _databaseService;
+  late EmbeddingsService _embeddingsService;
+  bool _isInitialized = false;
+  
   /// Initialize RAG service
-  Future<void> init() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    _dbDir = Directory('${appDir.path}/rag');
-
-    if (!_dbDir.existsSync()) {
-      _dbDir.createSync(recursive: true);
+  Future<void> initialize(
+    DatabaseService databaseService,
+    EmbeddingsService embeddingsService,
+  ) async {
+    if (_isInitialized) return;
+    
+    try {
+      _databaseService = databaseService;
+      _embeddingsService = embeddingsService;
+      
+      await _embeddingsService.initialize();
+      
+      _isInitialized = true;
+      
+      if (kDebugMode) {
+        print('✅ RAG service initialized');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to initialize RAG: $e');
+      }
+      rethrow;
     }
-
-    final dbPath = '${_dbDir.path}/$_dbName';
-    _db = sqlite3.open(dbPath);
-
-    _createTables();
   }
-
-  /// Create database tables
-  void _createTables() {
-    _db.execute('''
-      CREATE TABLE IF NOT EXISTS documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        embedding BLOB NOT NULL,
-        source TEXT NOT NULL,
-        category TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    ''');
-
-    _db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_category ON documents(category)
-    ''');
-
-    _db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_source ON documents(source)
-    ''');
-
-    _db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_created_at ON documents(created_at)
-    ''');
-  }
-
+  
   /// Add a document to the knowledge base
-  Future<int> addDocument(Document doc) async {
-    final stmt = _db.prepare('''
-      INSERT INTO documents (title, content, embedding, source, category)
-      VALUES (?, ?, ?, ?, ?)
-    ''');
-
-    try {
-      stmt.bind([
-        doc.title,
-        doc.content,
-        _embeddingToBlob(doc.embedding),
-        doc.source,
-        doc.category,
-      ]);
-
-      stmt.step();
-      final id = _db.lastInsertRowid;
-      return id.toInt();
-    } finally {
-      stmt.dispose();
-    }
-  }
-
-  /// Search for similar documents
-  Future<List<Document>> search(
-    List<double> queryEmbedding, {
-    int topK = 5,
-    String? category,
-    double similarityThreshold = 0.5,
+  Future<Document> addDocument({
+    required String title,
+    required String content,
+    required String source,
+    required String category,
   }) async {
-    final query = category != null
-        ? 'SELECT * FROM documents WHERE category = ? ORDER BY created_at DESC'
-        : 'SELECT * FROM documents ORDER BY created_at DESC';
-
-    final stmt = _db.prepare(query);
     try {
-      if (category != null) {
-        stmt.bind([category]);
+      if (!_isInitialized) {
+        throw Exception('RAG service not initialized');
       }
-
-      final results = <Document>[];
-      final similarities = <double>[];
-
-      while (stmt.step()) {
-        final row = stmt.getRow();
-        final embedding = _blobToEmbedding(row['embedding'] as Uint8List);
-        final similarity = Document.cosineSimilarity(queryEmbedding, embedding);
-
-        if (similarity >= similarityThreshold) {
-          results.add(Document(
-            id: row['id'] as int,
-            title: row['title'] as String,
-            content: row['content'] as String,
-            embedding: embedding,
-            source: row['source'] as String,
-            category: row['category'] as String,
-            createdAt: DateTime.parse(row['created_at'] as String),
-          ));
-          similarities.add(similarity);
+      
+      // Generate embedding
+      _embeddingsService.updateVocabulary(content);
+      final embedding = _embeddingsService.embed(content);
+      
+      // Create document
+      final now = DateTime.now();
+      final id = 'doc_${now.millisecondsSinceEpoch}';
+      
+      final document = Document(
+        id: id,
+        title: title,
+        content: content,
+        embedding: embedding,
+        source: source,
+        category: category,
+        createdAt: now,
+      );
+      
+      // Save to database
+      await _databaseService.addDocument(document);
+      
+      if (kDebugMode) {
+        print('✅ Document added: $id');
+      }
+      
+      return document;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to add document: $e');
+      }
+      rethrow;
+    }
+  }
+  
+  /// Retrieve relevant documents for a query
+  Future<List<Document>> retrieveContext(
+    String query, {
+    int topK = 3,
+    String? category,
+    double similarityThreshold = 0.3,
+  }) async {
+    try {
+      if (!_isInitialized) {
+        throw Exception('RAG service not initialized');
+      }
+      
+      // Generate query embedding
+      _embeddingsService.updateVocabulary(query);
+      final queryEmbedding = _embeddingsService.embed(query);
+      
+      // Get all documents
+      final allDocuments = await _databaseService.getDocuments(category: category);
+      
+      if (allDocuments.isEmpty) {
+        if (kDebugMode) {
+          print('⚠️ No documents found in knowledge base');
         }
+        return [];
       }
-
-      // Sort by similarity (descending) and return top K
-      final indexed = List.generate(results.length, (i) => i);
-      indexed.sort((a, b) => similarities[b].compareTo(similarities[a]));
-
-      return indexed.take(topK).map((i) => results[i]).toList();
-    } finally {
-      stmt.dispose();
+      
+      // Calculate similarity for each document
+      for (final doc in allDocuments) {
+        doc.similarity = _embeddingsService.cosineSimilarity(
+          queryEmbedding,
+          doc.embedding,
+        );
+      }
+      
+      // Sort by similarity (descending)
+      allDocuments.sort((a, b) => b.similarity.compareTo(a.similarity));
+      
+      // Filter by threshold and return top-K
+      final filtered = allDocuments
+          .where((doc) => doc.similarity >= similarityThreshold)
+          .take(topK)
+          .toList();
+      
+      if (kDebugMode) {
+        print('✅ Retrieved ${filtered.length} documents for query');
+      }
+      
+      return filtered;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to retrieve context: $e');
+      }
+      rethrow;
     }
   }
-
-  /// Get all documents in a category
-  Future<List<Document>> getDocumentsByCategory(String category) async {
-    final stmt = _db.prepare(
-      'SELECT * FROM documents WHERE category = ? ORDER BY created_at DESC',
-    );
-
+  
+  /// Build prompt with context
+  String buildPromptWithContext(String query, List<Document> documents) {
+    if (documents.isEmpty) {
+      return query;
+    }
+    
+    final contextBuilder = StringBuffer();
+    contextBuilder.writeln('Based on the following information:');
+    contextBuilder.writeln();
+    
+    for (int i = 0; i < documents.length; i++) {
+      final doc = documents[i];
+      contextBuilder.writeln('${i + 1}. ${doc.title}');
+      contextBuilder.writeln('   ${doc.preview}');
+      contextBuilder.writeln('   (Source: ${doc.source}, Similarity: ${(doc.similarity * 100).toStringAsFixed(1)}%)');
+      contextBuilder.writeln();
+    }
+    
+    contextBuilder.writeln('Question: $query');
+    
+    return contextBuilder.toString();
+  }
+  
+  /// Get all documents
+  Future<List<Document>> getAllDocuments({String? category}) async {
     try {
-      stmt.bind([category]);
-
-      final results = <Document>[];
-      while (stmt.step()) {
-        final row = stmt.getRow();
-        results.add(Document(
-          id: row['id'] as int,
-          title: row['title'] as String,
-          content: row['content'] as String,
-          embedding: _blobToEmbedding(row['embedding'] as Uint8List),
-          source: row['source'] as String,
-          category: row['category'] as String,
-          createdAt: DateTime.parse(row['created_at'] as String),
-        ));
+      return await _databaseService.getDocuments(category: category);
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to get documents: $e');
       }
-
-      return results;
-    } finally {
-      stmt.dispose();
+      rethrow;
     }
   }
-
-  /// Get document count
-  Future<int> getDocumentCount() async {
-    final result = _db.select('SELECT COUNT(*) as count FROM documents');
-    return result.first['count'] as int;
-  }
-
-  /// Get document count by category
-  Future<Map<String, int>> getDocumentCountByCategory() async {
-    final result = _db.select(
-      'SELECT category, COUNT(*) as count FROM documents GROUP BY category',
-    );
-
-    final counts = <String, int>{};
-    for (final row in result) {
-      counts[row['category'] as String] = row['count'] as int;
-    }
-
-    return counts;
-  }
-
+  
   /// Delete a document
-  Future<void> deleteDocument(int id) async {
-    _db.execute('DELETE FROM documents WHERE id = ?', [id]);
+  Future<void> deleteDocument(String id) async {
+    try {
+      await _databaseService.deleteDocument(id);
+      
+      if (kDebugMode) {
+        print('✅ Document deleted: $id');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to delete document: $e');
+      }
+      rethrow;
+    }
   }
-
+  
   /// Clear all documents
-  Future<void> clearAll() async {
-    _db.execute('DELETE FROM documents');
-  }
-
-  /// Build RAG prompt with retrieved context
-  String buildRAGPrompt(
-    String query,
-    List<Document> contextDocs,
-  ) {
-    final contextStr = contextDocs
-        .asMap()
-        .entries
-        .map((e) => '''
-[Document ${e.key + 1}]
-Title: ${e.value.title}
-Source: ${e.value.source}
-Content: ${e.value.content}
-''')
-        .join('\n');
-
-    return '''You are an academic tutor. Use the provided context to answer questions accurately and helpfully. If the context doesn't contain relevant information, say so.
-
-Context:
-$contextStr
-
-User: $query''';
-  }
-
-  /// Convert embedding to blob for storage
-  Uint8List _embeddingToBlob(List<double> embedding) {
-    if (embedding.length != _embeddingDim) {
-      throw ArgumentError(
-        'Embedding must have $_embeddingDim dimensions, got ${embedding.length}',
-      );
+  Future<void> clearDocuments() async {
+    try {
+      await _databaseService.clearDocuments();
+      
+      if (kDebugMode) {
+        print('✅ All documents cleared');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to clear documents: $e');
+      }
+      rethrow;
     }
-
-    final buffer = ByteData(_embeddingDim * 8); // 8 bytes per double
-    for (int i = 0; i < embedding.length; i++) {
-      buffer.setFloat64(i * 8, embedding[i], Endian.little);
-    }
-
-    return buffer.buffer.asUint8List();
   }
-
-  /// Convert blob back to embedding
-  List<double> _blobToEmbedding(Uint8List blob) {
-    if (blob.length != _embeddingDim * 8) {
-      throw ArgumentError(
-        'Blob must have ${_embeddingDim * 8} bytes, got ${blob.length}',
-      );
+  
+  /// Get document count
+  Future<int> getDocumentCount({String? category}) async {
+    try {
+      final documents = await _databaseService.getDocuments(category: category);
+      return documents.length;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to get document count: $e');
+      }
+      return 0;
     }
-
-    final buffer = ByteData.view(blob.buffer);
-    final embedding = <double>[];
-
-    for (int i = 0; i < _embeddingDim; i++) {
-      embedding.add(buffer.getFloat64(i * 8, Endian.little));
-    }
-
-    return embedding;
-  }
-
-  /// Get database statistics
-  Future<Map<String, dynamic>> getStats() async {
-    final docCount = await getDocumentCount();
-    final countByCategory = await getDocumentCountByCategory();
-
-    return {
-      'total_documents': docCount,
-      'documents_by_category': countByCategory,
-      'embedding_dimension': _embeddingDim,
-      'database_path': '${_dbDir.path}/$_dbName',
-    };
-  }
-
-  /// Close database
-  void close() {
-    _db.dispose();
   }
 }
