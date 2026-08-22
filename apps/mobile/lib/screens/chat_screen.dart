@@ -14,7 +14,6 @@ import '../models/document.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
-import 'documents_screen.dart';
 import 'flashcard_review_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Librio
@@ -273,18 +272,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // ============ Navigation ============
-
-  void _openDocumentsScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DocumentsScreen(
-          ragService: _ragService,
-          uploadService: _uploadService,
-        ),
-      ),
-    );
-  }
 
   void _openFlashcardReview() {
     Navigator.push(
@@ -643,9 +630,6 @@ class _ChatScreenState extends State<ChatScreen> {
               case 'clear':
                 _clearConversation();
                 break;
-              case 'documents':
-                _openDocumentsScreen();
-                break;
               case 'flashcards':
                 _openFlashcardReview();
                 break;
@@ -653,7 +637,6 @@ class _ChatScreenState extends State<ChatScreen> {
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'flashcards', child: Text('Flashcard Review')),
-            const PopupMenuItem(value: 'documents', child: Text('Knowledge Base')),
             const PopupMenuItem(value: 'clear', child: Text('Clear Conversation')),
           ],
         ),
@@ -1317,7 +1300,7 @@ class _ChatScreenState extends State<ChatScreen> {
               leading: const Icon(Icons.upload_file, color: _deepPurple),
               title: const Text('Upload file', style: TextStyle(fontFamily: 'Fredoka')),
               subtitle: const Text('PDF, DOCX, TXT', style: TextStyle(fontFamily: 'Fredoka', fontSize: 12)),
-              onTap: () { Navigator.pop(context); _openDocumentsScreen(); },
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library, color: _deepPurple),
@@ -1328,11 +1311,6 @@ class _ChatScreenState extends State<ChatScreen> {
               leading: const Icon(Icons.camera_alt, color: _deepPurple),
               title: const Text('Camera', style: TextStyle(fontFamily: 'Fredoka')),
               onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.folder_outlined, color: _deepPurple),
-              title: const Text('Choose material', style: TextStyle(fontFamily: 'Fredoka')),
-              onTap: () { Navigator.pop(context); _openDocumentsScreen(); },
             ),
             const SizedBox(height: 8),
           ],
@@ -1591,19 +1569,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            // Use materials link
-            TextButton.icon(
-              onPressed: _openDocumentsScreen,
-              icon: Icon(Icons.folder_outlined, size: 18, color: Colors.grey[500]),
-              label: Text(
-                'Use my materials',
-                style: TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
+            // Suggestion chips
           ],
         ),
       ),
@@ -1691,12 +1657,6 @@ class _ChatScreenState extends State<ChatScreen> {
             leading: Icon(Icons.style_outlined, color: Colors.grey[600]),
             title: const Text('Flashcard Review', style: TextStyle(fontFamily: 'Fredoka')),
             onTap: () { Navigator.pop(context); _openFlashcardReview(); },
-          ),
-          // Materials
-          ListTile(
-            leading: Icon(Icons.folder_outlined, color: Colors.grey[600]),
-            title: const Text('Materials', style: TextStyle(fontFamily: 'Fredoka')),
-            onTap: () { Navigator.pop(context); _openDocumentsScreen(); },
           ),
           const Divider(),
           // Recent conversations
