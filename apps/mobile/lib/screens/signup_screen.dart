@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../services/token_manager.dart';
+import '../services/auth_service.dart';
 
 /// Signup screen
 class SignupScreen extends StatefulWidget {
   final TokenManager tokenManager;
+  final AuthService authService;
   
   const SignupScreen({
     super.key,
     required this.tokenManager,
+    required this.authService,
   });
 
   @override
@@ -53,21 +56,19 @@ class _SignupScreenState extends State<SignupScreen> {
     });
     
     try {
-      // TODO: Implement actual signup with backend
-      // For now, simulate successful signup
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Save dummy tokens
-      await widget.tokenManager.saveTokens(
-        token: 'dummy_token_${DateTime.now().millisecondsSinceEpoch}',
-        refreshToken: 'dummy_refresh_token',
-        userId: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        userEmail: emailController.text,
+      // Attempt signup with backend
+      final result = await widget.authService.signup(
+        email: emailController.text,
+        password: passwordController.text,
       );
       
-      if (mounted) {
-        // Navigate to home screen
-        Navigator.of(context).pushReplacementNamed('/home');
+      if (result.success) {
+        if (mounted) {
+          // Navigate to home screen
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } else {
+        setState(() => errorMessage = result.error ?? 'Signup failed');
       }
     } catch (e) {
       setState(() => errorMessage = 'Signup failed: $e');

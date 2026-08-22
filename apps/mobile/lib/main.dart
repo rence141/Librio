@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'services/model_loader.dart';
 import 'services/token_manager.dart';
+import 'services/api_service.dart';
+import 'services/auth_service.dart';
+import 'services/content_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
@@ -17,20 +20,38 @@ void main() async {
   final modelLoader = ModelLoader();
   await modelLoader.loadModel();
   
+  final apiService = ApiService();
+  await apiService.initialize(tokenManager);
+  
+  final authService = AuthService();
+  await authService.initialize(apiService, tokenManager);
+  
+  final contentService = ContentService();
+  await contentService.initialize(apiService);
+  
   runApp(LibrioApp(
     tokenManager: tokenManager,
     modelLoader: modelLoader,
+    apiService: apiService,
+    authService: authService,
+    contentService: contentService,
   ));
 }
 
 class LibrioApp extends StatelessWidget {
   final TokenManager tokenManager;
   final ModelLoader modelLoader;
+  final ApiService apiService;
+  final AuthService authService;
+  final ContentService contentService;
   
   const LibrioApp({
     super.key,
     required this.tokenManager,
     required this.modelLoader,
+    required this.apiService,
+    required this.authService,
+    required this.contentService,
   });
 
   @override
@@ -56,19 +77,30 @@ class LibrioApp extends StatelessWidget {
             return HomeScreen(
               tokenManager: tokenManager,
               modelLoader: modelLoader,
+              contentService: contentService,
             );
           }
           
-          return LoginScreen(tokenManager: tokenManager);
+          return LoginScreen(
+            tokenManager: tokenManager,
+            authService: authService,
+          );
         },
       ),
       routes: {
         '/home': (context) => HomeScreen(
           tokenManager: tokenManager,
           modelLoader: modelLoader,
+          contentService: contentService,
         ),
-        '/login': (context) => LoginScreen(tokenManager: tokenManager),
-        '/signup': (context) => SignupScreen(tokenManager: tokenManager),
+        '/login': (context) => LoginScreen(
+          tokenManager: tokenManager,
+          authService: authService,
+        ),
+        '/signup': (context) => SignupScreen(
+          tokenManager: tokenManager,
+          authService: authService,
+        ),
       },
     );
   }

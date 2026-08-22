@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import '../services/token_manager.dart';
 import '../services/model_loader.dart';
+import '../services/content_service.dart';
 import 'topics_screen.dart';
 
 /// Home screen - main app interface
 class HomeScreen extends StatefulWidget {
   final TokenManager tokenManager;
   final ModelLoader modelLoader;
+  final ContentService contentService;
   
   const HomeScreen({
     super.key,
     required this.tokenManager,
     required this.modelLoader,
+    required this.contentService,
   });
 
   @override
