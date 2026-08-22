@@ -53,3 +53,15 @@ services/api/postgres-data/
 *.key
 secrets/
 apps/mobile/lib/services/online_model_config.dart
+
+# --- Google OAuth (NEVER COMMIT!) ---
+google-services.json
+client_secret_*.json
+**/google-services.json
+**/client_secret_*.json
+
+# --- Keystores (NEVER COMMIT!) ---
+*.jks
+*.keystore
+**/android/app/*.jks
+**/android/app/*.keystore
