@@ -4,16 +4,15 @@ import '../utils/debug_logger.dart';
 
 /// Model loader service for LLM initialization
 class ModelLoader {
-  // Qwen3-4B (Q4_K_M) — latest Qwen generation, significantly smarter than
-  // Qwen2.5-3B while still mobile-friendly (~2.5 GB)
-  // Has thinking mode for complex reasoning (we disable for speed)
-  static const String modelFileName = 'qwen3-4b-q4_k_m.gguf';
+  // Qwen2.5-Coder-3B-Instruct (Q4_K_M) — coding-tuned variant with stronger
+  // reasoning and instruction-following than base Qwen2.5-3B
+  static const String modelFileName = 'qwen2.5-coder-3b-instruct-q4_k_m.gguf';
   static const String modelUrl =
-      'https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/qwen3-4b-q4_k_m.gguf';
+      'https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf';
 
   // HuggingFace repo for automatic download
-  static const String huggingFaceRepo = 'Qwen/Qwen3-4B-GGUF';
-  static const String huggingFaceFile = 'qwen3-4b-q4_k_m.gguf';
+  static const String huggingFaceRepo = 'Qwen/Qwen2.5-Coder-3B-Instruct-GGUF';
+  static const String huggingFaceFile = 'qwen2.5-coder-3b-instruct-q4_k_m.gguf';
 
   bool _modelLoaded = false;
   String? _modelPath;
@@ -59,7 +58,7 @@ class ModelLoader {
       DebugLogger.warning(tag, 'Model not found at: $_modelPath');
       DebugLogger.warning(tag, 'To download: $modelUrl');
       DebugLogger.warning(tag, 'Then place at: $_modelPath');
-      DebugLogger.warning(tag, 'Model: Qwen3-4B (Q4_K_M) ~2.5 GB');
+      DebugLogger.warning(tag, 'Model: Qwen2.5-Coder-3B Instruct (Q4_K_M) ~2.0 GB');
 
       return false;
     } catch (e, st) {

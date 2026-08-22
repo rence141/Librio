@@ -3,14 +3,14 @@ import 'package:llamadart/llamadart.dart';
 import 'model_loader.dart';
 import '../utils/debug_logger.dart';
 
-/// LLM Service for on-device inference with Qwen3-4B
-/// Model: Qwen/Qwen3-4B (Q4_K_M GGUF, ~2.5 GB)
+/// LLM Service for on-device inference with Qwen2.5-Coder-3B-Instruct
+/// Model: Qwen/Qwen2.5-Coder-3B-Instruct (Q4_K_M GGUF, ~2.0 GB)
 ///
-/// Why Qwen3-4B:
-/// - Latest Qwen generation (surpasses Qwen2.5 instruct models)
-/// - Thinking mode for complex reasoning (disabled for speed)
-/// - Better math, coding, and factual accuracy than Qwen2.5-3B
-/// - Still mobile-friendly (~2.5 GB, runs on Android with 8GB RAM)
+/// Why Qwen2.5-Coder-3B:
+/// - Coding-tuned variant with stronger reasoning and instruction-following
+/// - Better at structured thinking (math, logic, step-by-step)
+/// - Less prone to hallucination than base Qwen2.5-3B
+/// - Mobile-friendly (~2.0 GB, runs on Android)
 /// - Apache 2.0 license
 ///
 /// Speed optimizations:
@@ -220,7 +220,7 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
     try {
       return {
         'status': 'loaded',
-        'model': 'Qwen3-4B',
+        'model': 'Qwen2.5-Coder-3B',
         'quantization': 'Q4_K_M',
         'context_size': 2048,
         'threads': 4,
