@@ -85,7 +85,7 @@ class _CrystalLoaderState extends State<CrystalLoader>
                           width: crystalSize,
                           height: crystalSize,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(crystalSize * 0.3),
+                            borderRadius: BorderRadius.zero,
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
