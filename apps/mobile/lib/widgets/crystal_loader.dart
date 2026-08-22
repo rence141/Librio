@@ -90,10 +90,8 @@ class _CrystalLoaderState extends State<CrystalLoader>
                 opacity: opacity,
                 child: Transform.scale(
                   scale: scale,
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..rotateZ(spinAngle), // rotateZ(spin) — flat 2D squares
+                  child: Transform.rotate(
+                    angle: spinAngle,
                     child: Container(
                       width: crystalSize,
                       height: crystalSize,
