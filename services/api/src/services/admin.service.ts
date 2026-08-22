@@ -477,16 +477,24 @@ export class AdminService {
     try {
       const { data, error } = await this.supabase
         .from('sync_queue')
-        .select('status, count(*)')
-        .group_by('status');
+        .select('status');
 
       if (error) throw error;
 
-      return {
-        pending: data?.find((d) => d.status === 'pending')?.count || 0,
-        synced: data?.find((d) => d.status === 'synced')?.count || 0,
-        failed: data?.find((d) => d.status === 'failed')?.count || 0,
+      // Count statuses manually
+      const statusCounts = {
+        pending: 0,
+        synced: 0,
+        failed: 0,
       };
+
+      (data || []).forEach((item: any) => {
+        if (item.status in statusCounts) {
+          statusCounts[item.status as keyof typeof statusCounts]++;
+        }
+      });
+
+      return statusCounts;
     } catch (error) {
       logger.error('Error getting sync queue status:', error);
       throw error;

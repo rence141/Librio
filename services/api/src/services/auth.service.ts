@@ -216,12 +216,12 @@ export class AuthService {
         sub: userId,
         email,
       },
-      this.jwtSecret,
+      this.jwtSecret as string,
       {
-        expiresIn: this.accessTokenExpiry,
+        expiresIn: this.accessTokenExpiry as string,
         issuer: 'librio',
         audience: 'librio-api',
-      },
+      } as any,
     );
   }
 
@@ -234,12 +234,12 @@ export class AuthService {
         sub: userId,
         email,
       },
-      this.jwtRefreshSecret,
+      this.jwtRefreshSecret as string,
       {
-        expiresIn: this.refreshTokenExpiry,
+        expiresIn: this.refreshTokenExpiry as string,
         issuer: 'librio',
         audience: 'librio-api',
-      },
+      } as any,
     );
   }
 
