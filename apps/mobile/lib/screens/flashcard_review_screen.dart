@@ -684,15 +684,18 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                 const Text('Type',
                     style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(label: Text('Identification'), value: 'identification'),
-                    ButtonSegment(label: Text('Multiple Choice'), value: 'multiple_choice'),
-                  ],
-                  selected: {selectedType},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    setState(() => selectedType = newSelection.first);
-                  },
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(label: Text('Short Answer'), value: 'identification'),
+                      ButtonSegment(label: Text('Multiple Choice'), value: 'multiple_choice'),
+                    ],
+                    selected: {selectedType},
+                    onSelectionChanged: (Set<String> newSelection) {
+                      setState(() => selectedType = newSelection.first);
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // Question
