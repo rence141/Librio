@@ -1895,36 +1895,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildLogoMark(double size) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.25),
-      child: Image.asset(
-        'assets/logo.png',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_deepPurple, _cyan],
-            ),
-            borderRadius: BorderRadius.circular(size * 0.25),
-          ),
-          child: Center(
-            child: Text(
-              'L',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                color: Colors.white,
-                fontSize: size * 0.5,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
+    return Text(
+      'Librio',
+      style: TextStyle(
+        fontFamily: 'Fredoka',
+        fontSize: size,
+        fontWeight: FontWeight.bold,
+        background: Paint()
+          ..color = _deepPurple
+          ..strokeWidth = 0,
+        color: Colors.white,
       ),
     );
   }
