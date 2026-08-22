@@ -105,17 +105,18 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
   }
 
   void _nextCard() {
-    if (_currentIndex < _cards.length - 1) {
+    if (_currentIndex >= _cards.length - 1) {
+      // Last card — finish review
+      setState(() => _isReviewing = false);
+      _showResults();
+    } else {
+      // More cards — go to next
       setState(() {
         _currentIndex++;
         _selectedOption = null;
         _answeredCorrectly = null;
         _textController.clear();
       });
-    } else {
-      // Review complete
-      setState(() => _isReviewing = false);
-      _showResults();
     }
   }
 
@@ -150,10 +151,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _isReviewing = false);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text('Done',
                 style: TextStyle(fontFamily: 'Fredoka')),
           ),
@@ -550,7 +548,12 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _nextCard,
+                onPressed: _currentIndex >= _cards.length - 1
+                    ? () {
+                        setState(() => _isReviewing = false);
+                        _showResults();
+                      }
+                    : _nextCard,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _deepPurple,
                   foregroundColor: Colors.white,
