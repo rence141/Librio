@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/content_packs.dart';
+import '../models/content_models.dart';
 
 /// Topics screen - displays topics for a subject
 class TopicsScreen extends StatefulWidget {
@@ -153,8 +153,16 @@ class _ProblemsScreenState extends State<ProblemsScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.topic.name),
-        subtitle: Text('Problem ${_currentProblemIndex + 1}/${widget.topic.problems.length}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.topic.name),
+            Text(
+              'Problem ${_currentProblemIndex + 1}/${widget.topic.problems.length}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(

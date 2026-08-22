@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../data/content_packs.dart';
+import '../models/content_models.dart';
 import 'api_service.dart';
 
 /// Content Service for managing educational content
