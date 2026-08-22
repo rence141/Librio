@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
@@ -8,8 +9,17 @@ import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
 import 'utils/debug_logger.dart';
 
+// Web database support
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize sqflite for web
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
 
   // Global error handler for Flutter framework errors
   FlutterError.onError = (details) {
