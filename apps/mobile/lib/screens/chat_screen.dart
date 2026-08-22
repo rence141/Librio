@@ -1219,7 +1219,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   maxHeight: 120,
                 ),
                 decoration: BoxDecoration(
-                  color: _surfaceColor,
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: Colors.grey[200]!, width: 1),
                 ),
