@@ -1,15 +1,40 @@
 // Simple logger wrapper using console
+// Supports both string and pino-style object logging:
+//   logger.info('message')
+//   logger.info({ userId: '123' }, 'message')
 export const logger = {
-  info: (msg: string, ...args: any[]) => console.log(`[INFO] ${msg}`, ...args),
-  error: (msg: string, err?: any) => {
-    if (err instanceof Error) {
-      console.error(`[ERROR] ${msg}:`, err.message, err.stack);
+  info: (msgOrObj: string | Record<string, unknown>, ...args: any[]) => {
+    if (typeof msgOrObj === 'string') {
+      console.log(`[INFO] ${msgOrObj}`, ...args);
     } else {
-      console.error(`[ERROR] ${msg}`, err);
+      console.log(`[INFO]`, msgOrObj, ...args);
     }
   },
-  warn: (msg: string, ...args: any[]) => console.warn(`[WARN] ${msg}`, ...args),
-  debug: (msg: string, ...args: any[]) => console.log(`[DEBUG] ${msg}`, ...args),
+  error: (msgOrObj: string | Record<string, unknown>, err?: any) => {
+    if (typeof msgOrObj === 'string') {
+      if (err instanceof Error) {
+        console.error(`[ERROR] ${msgOrObj}:`, err.message, err.stack);
+      } else {
+        console.error(`[ERROR] ${msgOrObj}`, err);
+      }
+    } else {
+      console.error(`[ERROR]`, msgOrObj, err);
+    }
+  },
+  warn: (msgOrObj: string | Record<string, unknown>, ...args: any[]) => {
+    if (typeof msgOrObj === 'string') {
+      console.warn(`[WARN] ${msgOrObj}`, ...args);
+    } else {
+      console.warn(`[WARN]`, msgOrObj, ...args);
+    }
+  },
+  debug: (msgOrObj: string | Record<string, unknown>, ...args: any[]) => {
+    if (typeof msgOrObj === 'string') {
+      console.log(`[DEBUG] ${msgOrObj}`, ...args);
+    } else {
+      console.log(`[DEBUG]`, msgOrObj, ...args);
+    }
+  },
 };
 
 export default logger;

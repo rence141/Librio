@@ -34,7 +34,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   path_provider: ^2.1.0
   shared_preferences: ^2.2.2
-  http: ^1.1.0
+  http: ^1.6.0
   
   # Phase 1: Actual LLM inference with GGUF models
   llamadart: ^0.8.19

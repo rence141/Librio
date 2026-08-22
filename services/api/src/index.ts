@@ -10,6 +10,8 @@ import cors from 'cors';
 import authRoutes from './routes/auth.routes';
 import supabaseRoutes from './routes/supabase.routes';
 import adminRoutes from './routes/admin.routes';
+import aiRoutes from './routes/ai.routes';
+import documentRoutes from './routes/documents.routes';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -31,9 +33,9 @@ app.use(cors({
   credentials: true,
 }));
 
-// JSON parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// JSON parsing — limit body size to prevent abuse
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -56,9 +58,19 @@ app.get('/api/v1/status', (_req: Request, res: Response) => {
   res.json({
     service: 'librio-api',
     version: '1.0.0',
-    phase: 'Phase 3 - Production',
+    phase: 'Phase 3 - Production Guardrails',
     environment: nodeEnv,
     timestamp: new Date().toISOString(),
+    features: {
+      aiGuardrails: true,
+      rateLimiting: true,
+      tokenQuotas: true,
+      concurrencyLimits: true,
+      globalSpendingCap: true,
+      abuseDetection: true,
+      safetyChecks: true,
+      documentLimits: true,
+    },
   });
 });
 
@@ -66,6 +78,8 @@ app.get('/api/v1/status', (_req: Request, res: Response) => {
 app.use('/auth', authRoutes);
 app.use('/content', supabaseRoutes);
 app.use('/admin', adminRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/documents', documentRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -78,25 +92,30 @@ app.get('/', (_req: Request, res: Response) => {
       auth: '/auth',
       content: '/content',
       admin: '/admin',
+      ai: '/api/v1/ai',
+      documents: '/api/v1/documents',
     },
   });
 });
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Not found',
     path: _req.path,
     method: _req.method,
   });
 });
 
-// Error handler
+// Error handler — never expose stack traces in production
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(nodeEnv === 'development' && { stack: err.stack }),
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: err.message || 'Internal server error',
+      ...(nodeEnv === 'development' && { stack: err.stack }),
+    },
   });
 });
 
@@ -106,6 +125,7 @@ const server = app.listen(port, () => {
   console.log(`📍 Environment: ${nodeEnv}`);
   console.log(`🔗 Health check: http://localhost:${port}/health`);
   console.log(`📚 API docs: http://localhost:${port}/`);
+  console.log(`🛡️  AI Guardrails: enabled`);
 });
 
 // Graceful shutdown
