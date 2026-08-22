@@ -744,32 +744,32 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Attachment thumbnails
                   if (message.attachmentPaths.isNotEmpty) ...[
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
+                      spacing: 8,
+                      runSpacing: 8,
                       alignment: WrapAlignment.end,
                       children: message.attachmentPaths.map((path) {
-                        final isImage = path.toLowerCase().endsWith('.jpg') ||
-                            path.toLowerCase().endsWith('.jpeg') ||
-                            path.toLowerCase().endsWith('.png') ||
-                            path.toLowerCase().endsWith('.gif') ||
-                            path.toLowerCase().endsWith('.webp');
+                        final isImage = _isImagePath(path);
                         return ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: isImage
-                              ? Image.file(File(path), width: 120, height: 120, fit: BoxFit.cover)
+                              ? Image.file(File(path), width: 140, height: 140, fit: BoxFit.cover)
                               : Container(
-                                  width: 120,
-                                  height: 60,
-                                  color: Colors.grey[300],
+                                  width: 140,
+                                  height: 56,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  color: Colors.grey[200],
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.insert_drive_file, size: 20),
-                                      const SizedBox(width: 4),
+                                      Icon(_fileIcon(path), size: 20, color: Colors.grey[600]),
+                                      const SizedBox(width: 8),
                                       Flexible(
                                         child: Text(
                                           path.split('/').last.split('\\').last,
-                                          style: const TextStyle(fontSize: 11),
+                                          style: TextStyle(
+                                            fontFamily: 'Fredoka',
+                                            fontSize: 12,
+                                            color: Colors.grey[700],
+                                          ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -779,7 +779,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         );
                       }).toList(),
                     ),
-                    if (message.text.isNotEmpty) const SizedBox(height: 8),
+                    if (message.text.isNotEmpty) const SizedBox(height: 10),
                   ],
                   // Message text
                   if (message.text.isNotEmpty)
@@ -1294,53 +1294,75 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             // Attachment previews
             if (hasAttachments)
-              Container(
+              Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _pendingAttachments.length,
-                  itemBuilder: (context, index) {
-                    final path = _pendingAttachments[index];
-                    final isImage = path.toLowerCase().endsWith('.jpg') ||
-                        path.toLowerCase().endsWith('.jpeg') ||
-                        path.toLowerCase().endsWith('.png') ||
-                        path.toLowerCase().endsWith('.gif') ||
-                        path.toLowerCase().endsWith('.webp');
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: isImage
-                                ? Image.file(File(path), width: 70, height: 70, fit: BoxFit.cover)
-                                : Container(
-                                    width: 70,
-                                    height: 70,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.insert_drive_file, size: 28),
-                                  ),
-                          ),
-                          Positioned(
-                            top: 2,
-                            right: 2,
-                            child: GestureDetector(
-                              onTap: () => _removeAttachment(index),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
+                child: SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _pendingAttachments.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final path = _pendingAttachments[index];
+                      final isImage = _isImagePath(path);
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => _removeAttachment(index),
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey[300]!, width: 1),
+                            ),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(11),
+                                  child: isImage
+                                      ? Image.file(File(path), fit: BoxFit.cover)
+                                      : Container(
+                                          color: Colors.grey[100],
+                                          child: Icon(
+                                            _fileIcon(path),
+                                            size: 24,
+                                            color: Colors.grey[500],
+                                          ),
+                                        ),
                                 ),
-                                child: const Icon(Icons.close, size: 14, color: Colors.white),
-                              ),
+                                // Remove overlay
+                                Positioned.fill(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(11),
+                                      color: Colors.black.withValues(alpha: 0.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(2),
+                                      child: Align(
+                                        alignment: Alignment.topRight,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.close, size: 12, color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             // Input row
@@ -1516,6 +1538,25 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _pendingAttachments.removeAt(index);
     });
+  }
+
+  /// Check if a file path is an image
+  bool _isImagePath(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp');
+  }
+
+  /// Get the appropriate icon for a file type
+  IconData _fileIcon(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.pdf')) return Icons.picture_as_pdf;
+    if (lower.endsWith('.docx') || lower.endsWith('.doc')) return Icons.description;
+    if (lower.endsWith('.txt') || lower.endsWith('.md')) return Icons.article;
+    return Icons.insert_drive_file;
   }
 
   // ============ Model Selector ============
