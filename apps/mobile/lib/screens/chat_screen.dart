@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/llm_service.dart';
+import '../services/database_service.dart';
+import '../models/conversation.dart';
 
 /// Chat screen - Main interface for Librio
 class ChatScreen extends StatefulWidget {
@@ -19,23 +21,85 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
+  late DatabaseService _databaseService;
+  late Conversation _currentConversation;
 
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    _initializeDatabase();
+  }
+
+  Future<void> _initializeDatabase() async {
+    try {
+      _databaseService = DatabaseService();
+      await _databaseService.initialize();
+      
+      // Create or get the current conversation
+      final conversations = await _databaseService.getConversations();
+      
+      if (conversations.isEmpty) {
+        // Create a new conversation
+        _currentConversation = await _databaseService.createConversation('Chat');
+        _addWelcomeMessage();
+      } else {
+        // Use the most recent conversation
+        _currentConversation = conversations.first;
+        await _loadConversationHistory();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Database error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadConversationHistory() async {
+    try {
+      final messages = await _databaseService.getMessages(_currentConversation.id);
+      
+      setState(() {
+        _messages.clear();
+        for (final msg in messages) {
+          _messages.add(
+            ChatMessage(
+              text: msg.content,
+              isUser: msg.isUser,
+              timestamp: msg.createdAt,
+            ),
+          );
+        }
+      });
+      
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load history: $e')),
+        );
+      }
+    }
   }
 
   void _addWelcomeMessage() {
+    final welcomeMessage = ChatMessage(
+      text: 'Hello! I\'m Librio, your AI academic tutor. Ask me anything about math, science, or other subjects.',
+      isUser: false,
+      timestamp: DateTime.now(),
+    );
+    
     setState(() {
-      _messages.add(
-        ChatMessage(
-          text: 'Hello! I\'m Librio, your AI academic tutor. Ask me anything about math, science, or other subjects.',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      _messages.add(welcomeMessage);
     });
+    
+    // Save welcome message to database
+    _databaseService.addMessage(
+      _currentConversation.id,
+      welcomeMessage.text,
+      false,
+    );
   }
 
   Future<void> _sendMessage() async {
@@ -44,17 +108,24 @@ class _ChatScreenState extends State<ChatScreen> {
     final userMessage = _messageController.text;
     _messageController.clear();
 
+    final userChatMessage = ChatMessage(
+      text: userMessage,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+
     // Add user message
     setState(() {
-      _messages.add(
-        ChatMessage(
-          text: userMessage,
-          isUser: true,
-          timestamp: DateTime.now(),
-        ),
-      );
+      _messages.add(userChatMessage);
       _isLoading = true;
     });
+
+    // Save user message to database
+    await _databaseService.addMessage(
+      _currentConversation.id,
+      userMessage,
+      true,
+    );
 
     _scrollToBottom();
 
@@ -62,30 +133,44 @@ class _ChatScreenState extends State<ChatScreen> {
       // Get response from LLM
       final response = await widget.llmService.generateResponse(userMessage);
 
+      final aiChatMessage = ChatMessage(
+        text: response,
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+
       // Add AI response
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text: response,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
+        _messages.add(aiChatMessage);
         _isLoading = false;
       });
 
+      // Save AI response to database
+      await _databaseService.addMessage(
+        _currentConversation.id,
+        response,
+        false,
+      );
+
       _scrollToBottom();
     } catch (e) {
+      final errorMessage = ChatMessage(
+        text: 'Sorry, I encountered an error: $e',
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text: 'Sorry, I encountered an error: $e',
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
+        _messages.add(errorMessage);
         _isLoading = false;
       });
+
+      // Save error message to database
+      await _databaseService.addMessage(
+        _currentConversation.id,
+        errorMessage.text,
+        false,
+      );
     }
   }
 
@@ -106,6 +191,42 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _clearConversation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Conversation'),
+        content: const Text('Are you sure you want to clear this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _databaseService.deleteMessages(_currentConversation.id);
+        setState(() {
+          _messages.clear();
+        });
+        _addWelcomeMessage();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to clear: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -132,6 +253,13 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.black87),
+            onPressed: _clearConversation,
+            tooltip: 'Clear conversation',
+          ),
+        ],
       ),
       body: Column(
         children: [
