@@ -4,10 +4,12 @@ import 'services/token_manager.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
 import 'services/content_service.dart';
+import 'services/llm_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/chat_screen.dart';
 import 'benchmark_screen.dart';
 
 void main() async {
@@ -29,12 +31,16 @@ void main() async {
   final contentService = ContentService();
   await contentService.initialize(apiService);
   
+  final llmService = LlmService();
+  await llmService.initialize(modelLoader);
+  
   runApp(LibrioApp(
     tokenManager: tokenManager,
     modelLoader: modelLoader,
     apiService: apiService,
     authService: authService,
     contentService: contentService,
+    llmService: llmService,
   ));
 }
 
@@ -44,6 +50,7 @@ class LibrioApp extends StatelessWidget {
   final ApiService apiService;
   final AuthService authService;
   final ContentService contentService;
+  final LlmService llmService;
   
   const LibrioApp({
     super.key,
@@ -52,6 +59,7 @@ class LibrioApp extends StatelessWidget {
     required this.apiService,
     required this.authService,
     required this.contentService,
+    required this.llmService,
   });
 
   @override
@@ -100,6 +108,9 @@ class LibrioApp extends StatelessWidget {
         '/signup': (context) => SignupScreen(
           tokenManager: tokenManager,
           authService: authService,
+        ),
+        '/chat': (context) => ChatScreen(
+          llmService: llmService,
         ),
       },
     );
