@@ -677,37 +677,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildGeneratingIndicator() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
-            'Librio',
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
+          CrystalLoader(size: 48),
+          const SizedBox(width: 14),
+          if (_isSearchingMaterials)
+            const Text(
+              'Searching your materials...',
+              style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
             ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Column(
-              children: [
-                CrystalLoader(size: 80),
-                const SizedBox(height: 12),
-                if (_isSearchingMaterials)
-                  const Text(
-                    'Searching your materials...',
-                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: Colors.grey),
-                  )
-                else
-                  const Text(
-                    'Librio is thinking...',
-                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: Colors.grey),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );

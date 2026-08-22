@@ -32,11 +32,11 @@ class _CrystalLoaderState extends State<CrystalLoader>
     super.initState();
     _spinController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 1500),
     )..repeat();
     _emergeController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
   }
 
