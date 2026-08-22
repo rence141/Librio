@@ -12,6 +12,11 @@ import '../utils/debug_logger.dart';
 /// - Smaller context window (2048) for less memory pressure
 /// - Capped maxTokens so generation doesn't run forever
 /// - ngram-simple speculative decoding for repetitive academic content
+///
+/// Anti-hallucination guardrails:
+/// - System prompt enforces honest, factual responses
+/// - Lower temperature (0.3) for factual accuracy over creativity
+/// - Model instructed to admit ignorance rather than fabricate
 class LlmService {
   static final LlmService _instance = LlmService._internal();
 
@@ -26,17 +31,36 @@ class LlmService {
   bool _isInitialized = false;
   bool _isInitializing = false;
 
-  /// Optimized generation params for fast academic tutoring responses.
+  /// System prompt guardrail — enforces factual, honest responses.
+  /// This is prepended to ALL prompts to prevent hallucination.
+  static const String _systemPrompt = '''You are Librio, a helpful study tutor. Follow these rules strictly:
+
+1. ACCURACY: Only state facts you are confident about. Do not guess or fabricate information.
+2. HONESTY: If you don't know the answer or are unsure, say "I'm not sure about that" or "I don't have enough information to answer that accurately." Never make up answers.
+3. CLARITY: Give clear, concise answers. Use simple language.
+4. SCOPE: You are a study tutor. Stay on topic with academic subjects. If asked about non-academic topics, briefly answer and redirect to studying.
+5. SOURCES: When using provided study materials, base your answer on those materials. If the materials don't contain the answer, say so.
+6. NO HALLUCINATION: Do not invent quotes, citations, dates, names, formulas, or facts. If you are not certain, say you are uncertain.
+7. CORRECTION: If you realize you made an error, correct it immediately.
+
+Remember: It is better to admit you don't know than to give a wrong answer.''';
+
+  /// Optimized generation params for factual academic tutoring.
   /// - maxTokens capped at 512 to prevent runaway generation
-  /// - temp 0.7 for helpful but focused answers
-  /// - topK 40 / topP 0.9 for Gemma-family sampling
+  /// - temp 0.3 for factual accuracy (lower = more deterministic)
+  /// - topK 20 / topP 0.85 for focused sampling
   GenerationParams get _fastParams => const GenerationParams(
         maxTokens: 512,
-        temp: 0.7,
-        topK: 40,
-        topP: 0.9,
+        temp: 0.3,
+        topK: 20,
+        topP: 0.85,
         minP: 0.05,
       );
+
+  /// Build a guarded prompt with system instructions prepended.
+  String _buildGuardedPrompt(String userPrompt) {
+    return '$_systemPrompt\n\nUser: $userPrompt\n\nLibrio:';
+  }
 
   /// Initialize LLM service
   Future<bool> initialize(ModelLoader modelLoader) async {
@@ -120,7 +144,7 @@ class LlmService {
 
       // enableThinking: false — skip hidden reasoning tokens for speed
       await for (final chunk in session.create(
-        [LlamaTextContent(prompt)],
+        [LlamaTextContent(_buildGuardedPrompt(prompt))],
         params: _fastParams,
         enableThinking: false,
       )) {
@@ -157,7 +181,7 @@ class LlmService {
 
       // enableThinking: false — skip hidden reasoning tokens for speed
       await for (final chunk in session.create(
-        [LlamaTextContent(prompt)],
+        [LlamaTextContent(_buildGuardedPrompt(prompt))],
         params: _fastParams,
         enableThinking: false,
       )) {

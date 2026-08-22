@@ -136,11 +136,14 @@ class RagService {
     if (documents.isEmpty) {
       return query;
     }
-    
+
     final contextBuilder = StringBuffer();
-    contextBuilder.writeln('Based on the following information:');
+    contextBuilder.writeln('Based ONLY on the following study materials, answer the question.');
+    contextBuilder.writeln('If the answer is not contained in these materials, say "I couldn\'t find that in your study materials."');
+    contextBuilder.writeln('Do not make up information that is not in the materials below.');
     contextBuilder.writeln();
-    
+    contextBuilder.writeln('Study materials:');
+
     for (int i = 0; i < documents.length; i++) {
       final doc = documents[i];
       contextBuilder.writeln('${i + 1}. ${doc.title}');
@@ -148,9 +151,9 @@ class RagService {
       contextBuilder.writeln('   (Source: ${doc.source}, Similarity: ${(doc.similarity * 100).toStringAsFixed(1)}%)');
       contextBuilder.writeln();
     }
-    
+
     contextBuilder.writeln('Question: $query');
-    
+
     return contextBuilder.toString();
   }
   
