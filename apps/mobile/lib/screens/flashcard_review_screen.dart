@@ -16,6 +16,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
   List<Flashcard> _cards = [];
   List<String> _decks = [];
   String? _selectedDeck;
+  Set<String> _selectedDecksForGroup = {}; // For group review
+  bool _isGroupReviewMode = false;
   bool _isLoading = true;
   bool _isReviewing = false;
   int _currentIndex = 0;
@@ -61,6 +63,23 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     });
     _cards = await widget.databaseService.getFlashcards(deck: deck);
     setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadGroupReviewCards() async {
+    if (_selectedDecksForGroup.isEmpty) {
+      setState(() => _cards = []);
+      return;
+    }
+    try {
+      final allCards = <Flashcard>[];
+      for (final deck in _selectedDecksForGroup) {
+        final cards = await widget.databaseService.getFlashcards(deck: deck);
+        allCards.addAll(cards);
+      }
+      setState(() => _cards = allCards);
+    } catch (e, st) {
+      DebugLogger.error('FlashcardReview', 'Failed to load group cards', e, st);
+    }
   }
 
   void _startReview() {
@@ -272,20 +291,81 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
 
     return Column(
       children: [
-        // Deck filter
+        // Deck filter / Group review toggle
         if (_decks.length > 1)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: DropdownButton<String>(
-              value: _selectedDeck,
-              hint: const Text('All Decks',
-                  style: TextStyle(fontFamily: 'Fredoka')),
-              isExpanded: true,
-              items: [
-                const DropdownMenuItem(value: null, child: Text('All Decks')),
-                ..._decks.map((d) => DropdownMenuItem(value: d, child: Text(d))),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButton<String>(
+                    value: _isGroupReviewMode ? null : _selectedDeck,
+                    hint: const Text('All Decks',
+                        style: TextStyle(fontFamily: 'Fredoka')),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('All Decks')),
+                      ..._decks.map((d) => DropdownMenuItem(value: d, child: Text(d))),
+                    ],
+                    onChanged: _isGroupReviewMode
+                        ? null
+                        : (value) {
+                            _selectedDecksForGroup.clear();
+                            _selectDeck(value);
+                          },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Group review toggle button
+                ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _isGroupReviewMode = !_isGroupReviewMode;
+                      if (!_isGroupReviewMode) {
+                        _selectedDecksForGroup.clear();
+                      }
+                    });
+                  },
+                  icon: Icon(_isGroupReviewMode ? Icons.check : Icons.layers),
+                  label: Text(_isGroupReviewMode ? 'Group' : 'Single',
+                      style: const TextStyle(fontFamily: 'Fredoka', fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isGroupReviewMode ? _deepPurple : Colors.grey[300],
+                    foregroundColor: _isGroupReviewMode ? Colors.white : Colors.black87,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
               ],
-              onChanged: _selectDeck,
+            ),
+          ),
+        // Group review deck selector
+        if (_isGroupReviewMode && _decks.length > 1)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Wrap(
+              spacing: 8,
+              children: _decks.map((deck) {
+                final isSelected = _selectedDecksForGroup.contains(deck);
+                return FilterChip(
+                  label: Text(deck, style: const TextStyle(fontFamily: 'Fredoka')),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedDecksForGroup.add(deck);
+                      } else {
+                        _selectedDecksForGroup.remove(deck);
+                      }
+                      _loadGroupReviewCards();
+                    });
+                  },
+                  backgroundColor: Colors.grey[200],
+                  selectedColor: _deepPurple.withValues(alpha: 0.3),
+                  side: BorderSide(
+                    color: isSelected ? _deepPurple : Colors.grey[300]!,
+                  ),
+                );
+              }).toList(),
             ),
           ),
         // Stats
@@ -313,17 +393,21 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _startReview,
+              onPressed: _cards.isEmpty ? null : _startReview,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _deepPurple,
+                backgroundColor: _cards.isEmpty ? Colors.grey[300] : _deepPurple,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Start Review',
-                  style: TextStyle(
-                      fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                _isGroupReviewMode && _selectedDecksForGroup.isNotEmpty
+                    ? 'Start Group Review'
+                    : 'Start Review',
+                style: const TextStyle(
+                    fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ),
