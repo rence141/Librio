@@ -64,15 +64,36 @@ class AuthService {
       );
       
       if (response.success && response.data != null) {
-        final data = response.data!;
-        final token = data['token'] as String?;
-        final refreshToken = data['refreshToken'] as String?;
-        final userId = data['userId'] as String?;
+        var data = response.data!;
         
-        if (token != null && refreshToken != null && userId != null) {
+        // Handle response wrapped in 'data' field
+        if (data['data'] is Map) {
+          data = data['data'] as Map<String, dynamic>;
+        }
+        
+        // Handle both old and new response formats
+        final accessToken = data['accessToken'] as String? ?? data['token'] as String?;
+        final refreshToken = data['refreshToken'] as String?;
+        
+        // Extract user data from nested 'user' object or top level
+        String? userId;
+        if (data['user'] is Map) {
+          userId = (data['user'] as Map)['id'] as String?;
+        } else {
+          userId = data['userId'] as String?;
+        }
+        
+        if (kDebugMode) {
+          print('📦 Response data: $data');
+          print('🔑 accessToken: $accessToken');
+          print('🔑 refreshToken: $refreshToken');
+          print('👤 userId: $userId');
+        }
+        
+        if (accessToken != null && refreshToken != null && userId != null) {
           // Save tokens
           await _tokenManager.saveTokens(
-            token: token,
+            token: accessToken,
             refreshToken: refreshToken,
             userId: userId,
             userEmail: email,
@@ -84,7 +105,7 @@ class AuthService {
           
           return AuthResult(
             success: true,
-            token: token,
+            token: accessToken,
             refreshToken: refreshToken,
             userId: userId,
             userEmail: email,
@@ -94,6 +115,7 @@ class AuthService {
       
       if (kDebugMode) {
         print('❌ Login failed: ${response.error}');
+        print('📦 Response data: ${response.data}');
       }
       
       return AuthResult(
@@ -132,15 +154,36 @@ class AuthService {
       );
       
       if (response.success && response.data != null) {
-        final data = response.data!;
-        final token = data['token'] as String?;
-        final refreshToken = data['refreshToken'] as String?;
-        final userId = data['userId'] as String?;
+        var data = response.data!;
         
-        if (token != null && refreshToken != null && userId != null) {
+        // Handle response wrapped in 'data' field
+        if (data['data'] is Map) {
+          data = data['data'] as Map<String, dynamic>;
+        }
+        
+        // Handle both old and new response formats
+        final accessToken = data['accessToken'] as String? ?? data['token'] as String?;
+        final refreshToken = data['refreshToken'] as String?;
+        
+        // Extract user data from nested 'user' object or top level
+        String? userId;
+        if (data['user'] is Map) {
+          userId = (data['user'] as Map)['id'] as String?;
+        } else {
+          userId = data['userId'] as String?;
+        }
+        
+        if (kDebugMode) {
+          print('📦 Response data: $data');
+          print('🔑 accessToken: $accessToken');
+          print('🔑 refreshToken: $refreshToken');
+          print('👤 userId: $userId');
+        }
+        
+        if (accessToken != null && refreshToken != null && userId != null) {
           // Save tokens
           await _tokenManager.saveTokens(
-            token: token,
+            token: accessToken,
             refreshToken: refreshToken,
             userId: userId,
             userEmail: email,
@@ -152,7 +195,7 @@ class AuthService {
           
           return AuthResult(
             success: true,
-            token: token,
+            token: accessToken,
             refreshToken: refreshToken,
             userId: userId,
             userEmail: email,
@@ -162,6 +205,7 @@ class AuthService {
       
       if (kDebugMode) {
         print('❌ Signup failed: ${response.error}');
+        print('📦 Response data: ${response.data}');
       }
       
       return AuthResult(
