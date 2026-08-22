@@ -4,8 +4,12 @@ import 'dart:io';
 
 /// Model loader service for LLM initialization
 class ModelLoader {
-  static const String modelFileName = 'gemma-3-1b-q4_k_m.gguf';
-  static const String modelUrl = 'https://huggingface.co/google/gemma-3-1b-gguf/resolve/main/gemma-3-1b-q4_k_m.gguf';
+  static const String modelFileName = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
+  static const String modelUrl = 'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf';
+  
+  // HuggingFace repo for automatic download
+  static const String huggingFaceRepo = 'vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF';
+  static const String huggingFaceFile = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
   
   bool _modelLoaded = false;
   String? _modelPath;
@@ -47,14 +51,22 @@ class ModelLoader {
         return true;
       }
       
-      // Model not found, would need to download
+      // Model not found, provide download instructions
       if (kDebugMode) {
-        print('⚠️ Model not found. Download from:');
+        print('⚠️ Model not found at: $_modelPath');
+        print('📥 To download the model:');
+        print('   Option 1: Automatic download on first app run (requires internet)');
+        print('   Option 2: Manual download from:');
         print('   $modelUrl');
-        print('   Place at: $_modelPath');
+        print('   Then place at: $_modelPath');
+        print('');
+        print('Model: Gemma 3 1B Thinking (Q4_K_M)');
+        print('Size: ~806 MB');
+        print('Source: vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF');
       }
       
-      // For now, return false (model needs to be downloaded separately)
+      // Return false - model needs to be downloaded
+      // App will show helpful message to user
       return false;
     } catch (e) {
       if (kDebugMode) {

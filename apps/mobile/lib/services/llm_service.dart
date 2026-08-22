@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'model_loader.dart';
 
-/// LLM Service for on-device inference with Gemma 3 1B
+/// LLM Service for on-device inference with Gemma 3 1B Thinking
+/// Model: vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF
 class LlmService {
   static final LlmService _instance = LlmService._internal();
   
