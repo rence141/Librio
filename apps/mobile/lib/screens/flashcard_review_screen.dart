@@ -469,38 +469,44 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             style: const TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
         subtitle: Text('$typeLabel • ${card.deck}',
             style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: Colors.grey[600])),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'edit') {
-              _showEditFlashcardDialog(card);
-            } else if (value == 'delete') {
-              _showDeleteConfirmation(card);
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 18, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Edit', style: TextStyle(fontFamily: 'Fredoka')),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 18, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(fontFamily: 'Fredoka')),
-                ],
-              ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${card.correctCount}/${card.reviewCount}',
+                style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey[500], fontSize: 12)),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') {
+                  _showEditFlashcardDialog(card);
+                } else if (value == 'delete') {
+                  _showDeleteConfirmation(card);
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Edit', style: TextStyle(fontFamily: 'Fredoka')),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete', style: TextStyle(fontFamily: 'Fredoka')),
+                    ],
+                  ),
+                ),
+              ],
+              icon: const Icon(Icons.more_vert, size: 20),
             ),
           ],
-          child: Text('${card.correctCount}/${card.reviewCount}',
-              style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey[500], fontSize: 12)),
         ),
       ),
     );
