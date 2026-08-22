@@ -1356,7 +1356,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   shrinkWrap: true,
                   children: [
                     ...models.map((model) {
-                final isInstalled = _installedModels[model.id] ?? false;
+                final isInstalled = model.isOnline || (_installedModels[model.id] ?? false);
                 final isSelected = model.id == _currentModelId;
                 return _modelOption(
                   name: model.name,
