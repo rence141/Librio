@@ -1349,6 +1349,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1369,7 +1373,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
               ),
-              ...models.map((model) {
+              Expanded(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ...models.map((model) {
                 final isInstalled = _installedModels[model.id] ?? false;
                 final isSelected = model.id == _currentModelId;
                 return _modelOption(
@@ -1494,6 +1502,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
