@@ -3,7 +3,9 @@ import '../services/llm_service.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
 import '../services/embeddings_service.dart';
+import '../services/document_upload_service.dart';
 import '../models/conversation.dart';
+import 'documents_screen.dart';
 
 /// Chat screen - Main interface for Librio
 class ChatScreen extends StatefulWidget {
@@ -26,6 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late DatabaseService _databaseService;
   late RagService _ragService;
   late EmbeddingsService _embeddingsService;
+  late DocumentUploadService _uploadService;
   late Conversation _currentConversation;
 
   @override
@@ -43,6 +46,10 @@ class _ChatScreenState extends State<ChatScreen> {
       _embeddingsService = EmbeddingsService();
       _ragService = RagService();
       await _ragService.initialize(_databaseService, _embeddingsService);
+      
+      // Initialize document upload service
+      _uploadService = DocumentUploadService();
+      await _uploadService.initialize(_ragService);
       
       // Create or get the current conversation
       final conversations = await _databaseService.getConversations();
@@ -211,6 +218,18 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  void _openDocumentsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentsScreen(
+          ragService: _ragService,
+          uploadService: _uploadService,
+        ),
+      ),
+    );
+  }
+
   Future<void> _clearConversation() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -272,6 +291,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.library_books, color: Colors.black87),
+            onPressed: _openDocumentsScreen,
+            tooltip: 'Knowledge base',
+          ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.black87),
             onPressed: _clearConversation,
