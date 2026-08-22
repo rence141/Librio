@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../config/google_config.dart';
 import '../utils/debug_logger.dart';
 
 /// Authentication service for user login, signup, and password reset
@@ -119,27 +121,42 @@ class AuthService extends ChangeNotifier {
   /// Google Sign In
   Future<bool> signInWithGoogle() async {
     try {
-      // TODO: Implement Google Sign-In using google_sign_in package
-      // For now, simulate
-      final prefs = await SharedPreferences.getInstance();
-      final userId = DateTime.now().millisecondsSinceEpoch.toString();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: GoogleConfig.debugClientId,
+        scopes: GoogleConfig.scopes,
+      );
 
-      // Simulate Google user data
-      final googleEmail = 'user@gmail.com';
-      final googleName = 'Google User';
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw 'Google sign-in cancelled';
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // TODO: Send idToken to backend for verification
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        throw 'Failed to get ID token';
+      }
+
+      // Store user data
+      final prefs = await SharedPreferences.getInstance();
+      final userId = googleUser.id;
 
       await prefs.setString('user_id', userId);
-      await prefs.setString('user_email', googleEmail);
-      await prefs.setString('user_name', googleName);
+      await prefs.setString('user_email', googleUser.email);
+      await prefs.setString('user_name', googleUser.displayName ?? '');
       await prefs.setString('auth_provider', 'google');
+      await prefs.setString('id_token', idToken);
       await prefs.setBool('auth_token', true);
 
       _currentUserId = userId;
-      _currentUserEmail = googleEmail;
-      _currentUserName = googleName;
+      _currentUserEmail = googleUser.email;
+      _currentUserName = googleUser.displayName;
       _isAuthenticated = true;
 
-      DebugLogger.success(_tag, 'User signed in with Google: $googleEmail');
+      DebugLogger.success(_tag, 'Google sign in: ${googleUser.email}');
       notifyListeners();
       return true;
     } catch (e, st) {
