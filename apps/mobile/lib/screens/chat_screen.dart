@@ -733,7 +733,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (message.isStreaming && message.text.isEmpty)
             Row(
               children: [
-                CrystalLoader(size: 64),
+                CrystalLoader(size: 100),
                 const SizedBox(width: 12),
                 if (_isSearchingMaterials)
                   const Text(
