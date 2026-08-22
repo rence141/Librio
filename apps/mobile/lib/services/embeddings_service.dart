@@ -76,27 +76,29 @@ class EmbeddingsService {
     return _normalize(embedding);
   }
   
-  /// Calculate cosine similarity between two embeddings
+  /// Calculate cosine similarity between two embeddings.
+  /// Handles different lengths by padding the shorter with zeros
+  /// (missing dimensions are effectively 0 for the shorter embedding).
   double cosineSimilarity(List<double> a, List<double> b) {
-    if (a.length != b.length) {
-      throw Exception('Embeddings must have same length');
-    }
-    
+    final maxLen = a.length > b.length ? a.length : b.length;
+
     double dotProduct = 0;
     double normA = 0;
     double normB = 0;
-    
-    for (int i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
+
+    for (int i = 0; i < maxLen; i++) {
+      final va = i < a.length ? a[i] : 0.0;
+      final vb = i < b.length ? b[i] : 0.0;
+      dotProduct += va * vb;
+      normA += va * va;
+      normB += vb * vb;
     }
-    
+
     normA = sqrt(normA);
     normB = sqrt(normB);
-    
+
     if (normA == 0 || normB == 0) return 0;
-    
+
     return dotProduct / (normA * normB);
   }
   

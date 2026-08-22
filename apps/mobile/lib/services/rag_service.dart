@@ -107,10 +107,15 @@ class RagService {
       
       // Calculate similarity for each document
       for (final doc in allDocuments) {
-        doc.similarity = _embeddingsService.cosineSimilarity(
-          queryEmbedding,
-          doc.embedding,
-        );
+        try {
+          doc.similarity = _embeddingsService.cosineSimilarity(
+            queryEmbedding,
+            doc.embedding,
+          );
+        } catch (e) {
+          // Skip documents with incompatible embeddings
+          doc.similarity = 0;
+        }
       }
       
       // Sort by similarity (descending)
