@@ -30,8 +30,9 @@ class DatabaseService {
       
       _database = await openDatabase(
         path,
-        version: 1,
+        version: 2,
         onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
       );
       
       _isInitialized = true;
@@ -125,6 +126,39 @@ class DatabaseService {
     } catch (e) {
       DebugLogger.error("DatabaseService", "Failed to create tables: $e");
       rethrow;
+    }
+  }
+
+  /// Upgrade database when version increases.
+  /// Adds missing tables for users with older databases.
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    DebugLogger.info("DatabaseService", "Upgrading database from v$oldVersion to v$newVersion");
+
+    for (var v = oldVersion + 1; v <= newVersion; v++) {
+      if (v == 2) {
+        // v2: add flashcards table (may not exist on v1 databases)
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS flashcards (
+            id TEXT PRIMARY KEY,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            options TEXT NOT NULL DEFAULT '',
+            correct_option_index INTEGER NOT NULL DEFAULT 0,
+            type TEXT NOT NULL DEFAULT 'identification',
+            deck TEXT NOT NULL DEFAULT 'Default',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            review_count INTEGER NOT NULL DEFAULT 0,
+            correct_count INTEGER NOT NULL DEFAULT 0,
+            last_reviewed TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE INDEX IF NOT EXISTS idx_flashcards_deck
+          ON flashcards(deck)
+        ''');
+        DebugLogger.success("DatabaseService", "v2: flashcards table ensured");
+      }
     }
   }
   

@@ -93,9 +93,7 @@ class _CrystalLoaderState extends State<CrystalLoader>
                   child: Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.00125) // perspective: 800px
-                      ..rotateX(math.pi / 4) // rotateX(45deg)
-                      ..rotateZ(spinAngle), // rotateZ(spin)
+                      ..rotateZ(spinAngle), // rotateZ(spin) — flat 2D squares
                     child: Container(
                       width: crystalSize,
                       height: crystalSize,
