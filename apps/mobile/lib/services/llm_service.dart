@@ -3,15 +3,18 @@ import 'package:llamadart/llamadart.dart';
 import 'model_loader.dart';
 import '../utils/debug_logger.dart';
 
-/// LLM Service for on-device inference with Gemma 3 1B Thinking
-/// Model: vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF
+/// LLM Service for on-device inference with Qwen2.5-3B Instruct
+/// Model: Qwen/Qwen2.5-3B-Instruct (Q4_K_M GGUF, ~1.9 GB)
+///
+/// Why Qwen2.5-3B over Gemma 3 1B:
+/// - Significantly better reasoning, math, and factual accuracy
+/// - Better instruction following (less hallucination)
+/// - Still mobile-friendly (~1.9 GB, runs on phone CPU)
 ///
 /// Speed optimizations:
-/// - Thinking mode DISABLED (skips hidden reasoning tokens — biggest win)
 /// - Flash attention enabled
-/// - Smaller context window (2048) for less memory pressure
+/// - Context window 2048 (balances memory and conversation length)
 /// - Capped maxTokens so generation doesn't run forever
-/// - ngram-simple speculative decoding for repetitive academic content
 ///
 /// Anti-hallucination guardrails:
 /// - System prompt enforces honest, factual responses
@@ -45,12 +48,12 @@ class LlmService {
 
 Remember: It is better to admit you don't know than to give a wrong answer.''';
 
-  /// Optimized generation params for factual academic tutoring.
-  /// - maxTokens capped at 512 to prevent runaway generation
+  /// Optimized generation params for Qwen2.5-3B factual tutoring.
+  /// - maxTokens capped at 768 (Qwen2.5 is more verbose, needs room)
   /// - temp 0.3 for factual accuracy (lower = more deterministic)
-  /// - topK 20 / topP 0.85 for focused sampling
+  /// - topK 20 / topP 0.85 for focused sampling (Qwen2.5 recommended)
   GenerationParams get _fastParams => const GenerationParams(
-        maxTokens: 512,
+        maxTokens: 768,
         temp: 0.3,
         topK: 20,
         topP: 0.85,
@@ -142,11 +145,9 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
       final session = ChatSession(_engine!, maxContextTokens: 2048);
       final response = StringBuffer();
 
-      // enableThinking: false — skip hidden reasoning tokens for speed
       await for (final chunk in session.create(
         [LlamaTextContent(_buildGuardedPrompt(prompt))],
         params: _fastParams,
-        enableThinking: false,
       )) {
         if (chunk.choices.isEmpty) continue;
         final text = chunk.choices.first.delta.content;
@@ -179,11 +180,9 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
 
       final session = ChatSession(_engine!, maxContextTokens: 2048);
 
-      // enableThinking: false — skip hidden reasoning tokens for speed
       await for (final chunk in session.create(
         [LlamaTextContent(_buildGuardedPrompt(prompt))],
         params: _fastParams,
-        enableThinking: false,
       )) {
         if (chunk.choices.isEmpty) continue;
         final text = chunk.choices.first.delta.content;
@@ -218,12 +217,11 @@ Remember: It is better to admit you don't know than to give a wrong answer.''';
     try {
       return {
         'status': 'loaded',
-        'model': 'Gemma 3 1B Thinking',
+        'model': 'Qwen2.5-3B Instruct',
         'quantization': 'Q4_K_M',
         'context_size': 2048,
         'threads': 4,
         'flash_attention': true,
-        'thinking_mode': false,
       };
     } catch (e, st) {
       DebugLogger.error(tag, 'getModelInfo failed', e, st);

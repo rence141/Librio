@@ -4,13 +4,15 @@ import '../utils/debug_logger.dart';
 
 /// Model loader service for LLM initialization
 class ModelLoader {
-  static const String modelFileName = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
+  // Qwen2.5-3B Instruct (Q4_K_M) — significantly smarter than Gemma 3 1B
+  // while still mobile-friendly (~1.9 GB, runs on phone CPU)
+  static const String modelFileName = 'qwen2.5-3b-instruct-q4_k_m.gguf';
   static const String modelUrl =
-      'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf';
+      'https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf';
 
   // HuggingFace repo for automatic download
-  static const String huggingFaceRepo = 'vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF';
-  static const String huggingFaceFile = 'gemma-3-1b-thinking-v2-q4_k_m.gguf';
+  static const String huggingFaceRepo = 'Qwen/Qwen2.5-3B-Instruct-GGUF';
+  static const String huggingFaceFile = 'qwen2.5-3b-instruct-q4_k_m.gguf';
 
   bool _modelLoaded = false;
   String? _modelPath;
@@ -56,7 +58,7 @@ class ModelLoader {
       DebugLogger.warning(tag, 'Model not found at: $_modelPath');
       DebugLogger.warning(tag, 'To download: $modelUrl');
       DebugLogger.warning(tag, 'Then place at: $_modelPath');
-      DebugLogger.warning(tag, 'Model: Gemma 3 1B Thinking (Q4_K_M) ~806 MB');
+      DebugLogger.warning(tag, 'Model: Qwen2.5-3B Instruct (Q4_K_M) ~1.9 GB');
 
       return false;
     } catch (e, st) {
