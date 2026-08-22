@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/token_manager.dart';
 import '../services/model_loader.dart';
+import 'topics_screen.dart';
 
 /// Home screen - main app interface
 class HomeScreen extends StatefulWidget {
@@ -184,7 +185,11 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle: const Text('Tap to explore'),
             trailing: const Icon(Icons.arrow_forward),
             onTap: () {
-              // TODO: Navigate to subject content
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => TopicsScreen(subject: subject),
+                ),
+              );
             },
           ),
         );
