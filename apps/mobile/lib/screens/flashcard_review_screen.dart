@@ -790,7 +790,9 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     final questionController = TextEditingController();
     final answerController = TextEditingController();
     final deckController = TextEditingController();
-    String selectedType = 'identification'; // identification or multiple_choice
+    String selectedType = 'identification';
+    List<TextEditingController> choiceControllers = [];
+    int correctChoiceIndex = 0;
 
     showDialog(
       context: context,
@@ -831,7 +833,13 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                     ],
                     selected: {selectedType},
                     onSelectionChanged: (Set<String> newSelection) {
-                      setState(() => selectedType = newSelection.first);
+                      setState(() {
+                        selectedType = newSelection.first;
+                        // Initialize choices if switching to multiple choice
+                        if (selectedType == 'multiple_choice' && choiceControllers.isEmpty) {
+                          choiceControllers = List.generate(2, (_) => TextEditingController());
+                        }
+                      });
                     },
                   ),
                 ),
@@ -852,64 +860,172 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
-                // Answer
-                const Text('Answer',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: answerController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter the answer',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                // Answer section (dynamic based on type)
+                if (selectedType == 'identification') ...[
+                  const Text('Answer',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: answerController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter the answer',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                    style: const TextStyle(fontFamily: 'Fredoka'),
+                    maxLines: 3,
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
-                  maxLines: 3,
-                ),
+                ] else ...[
+                  const Text('Choices (max 5)',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: List.generate(choiceControllers.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: choiceControllers[index],
+                                decoration: InputDecoration(
+                                  hintText: 'Choice ${index + 1}',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                ),
+                                style: const TextStyle(fontFamily: 'Fredoka'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Radio<int>(
+                              value: index,
+                              groupValue: correctChoiceIndex,
+                              onChanged: (value) {
+                                setState(() => correctChoiceIndex = value ?? 0);
+                              },
+                            ),
+                            if (choiceControllers.length > 2)
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 18),
+                                onPressed: () {
+                                  setState(() {
+                                    choiceControllers[index].dispose();
+                                    choiceControllers.removeAt(index);
+                                    if (correctChoiceIndex >= choiceControllers.length) {
+                                      correctChoiceIndex = choiceControllers.length - 1;
+                                    }
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                  if (choiceControllers.length < 5)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            choiceControllers.add(TextEditingController());
+                          });
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Choice',
+                            style: TextStyle(fontFamily: 'Fredoka')),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                for (var controller in choiceControllers) {
+                  controller.dispose();
+                }
+                Navigator.pop(context);
+              },
               child: const Text('Cancel',
                   style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
                 final question = questionController.text.trim();
-                final answer = answerController.text.trim();
                 final deck = deckController.text.trim().isEmpty
                     ? 'Default'
                     : deckController.text.trim();
 
-                if (question.isEmpty || answer.isEmpty) {
+                if (question.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill in all fields')),
+                    const SnackBar(content: Text('Please enter a question')),
                   );
                   return;
                 }
 
-                // Create flashcard
-                final card = Flashcard(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  question: question,
-                  answer: answer,
-                  type: selectedType == 'multiple_choice'
-                      ? FlashcardType.multipleChoice
-                      : FlashcardType.identification,
-                  deck: deck,
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                  reviewCount: 0,
-                  correctCount: 0,
-                  options: [],
-                  correctOptionIndex: 0,
-                );
+                if (selectedType == 'identification') {
+                  final answer = answerController.text.trim();
+                  if (answer.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter an answer')),
+                    );
+                    return;
+                  }
 
-                await widget.databaseService.addFlashcard(card);
+                  final card = Flashcard(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    question: question,
+                    answer: answer,
+                    type: FlashcardType.identification,
+                    deck: deck,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                    reviewCount: 0,
+                    correctCount: 0,
+                    options: [],
+                    correctOptionIndex: 0,
+                  );
+
+                  await widget.databaseService.addFlashcard(card);
+                } else {
+                  final choices = choiceControllers
+                      .map((c) => c.text.trim())
+                      .where((c) => c.isNotEmpty)
+                      .toList();
+
+                  if (choices.length < 2) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please add at least 2 choices')),
+                    );
+                    return;
+                  }
+
+                  final card = Flashcard(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    question: question,
+                    answer: choices[correctChoiceIndex],
+                    type: FlashcardType.multipleChoice,
+                    deck: deck,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                    reviewCount: 0,
+                    correctCount: 0,
+                    options: choices,
+                    correctOptionIndex: correctChoiceIndex,
+                  );
+
+                  await widget.databaseService.addFlashcard(card);
+                }
+
                 if (mounted) {
+                  for (var controller in choiceControllers) {
+                    controller.dispose();
+                  }
                   Navigator.pop(context);
                   _loadData();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -938,6 +1054,10 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     String selectedType = card.type == FlashcardType.multipleChoice
         ? 'multiple_choice'
         : 'identification';
+    List<TextEditingController> choiceControllers = card.options
+        .map((option) => TextEditingController(text: option))
+        .toList();
+    int correctChoiceIndex = card.correctOptionIndex;
 
     showDialog(
       context: context,
@@ -965,21 +1085,19 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   style: const TextStyle(fontFamily: 'Fredoka'),
                 ),
                 const SizedBox(height: 16),
-                // Type selector
+                // Type selector (read-only for existing cards)
                 const Text('Type',
                     style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(label: Text('Short Answer'), value: 'identification'),
-                      ButtonSegment(label: Text('Multiple Choice'), value: 'multiple_choice'),
-                    ],
-                    selected: {selectedType},
-                    onSelectionChanged: (Set<String> newSelection) {
-                      setState(() => selectedType = newSelection.first);
-                    },
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    selectedType == 'multiple_choice' ? 'Multiple Choice' : 'Short Answer',
+                    style: const TextStyle(fontFamily: 'Fredoka', fontSize: 14),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -999,64 +1117,172 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
-                // Answer
-                const Text('Answer',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: answerController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter the answer',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                // Answer section (dynamic based on type)
+                if (selectedType == 'identification') ...[
+                  const Text('Answer',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: answerController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter the answer',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                    style: const TextStyle(fontFamily: 'Fredoka'),
+                    maxLines: 3,
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
-                  maxLines: 3,
-                ),
+                ] else ...[
+                  const Text('Choices (max 5)',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: List.generate(choiceControllers.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: choiceControllers[index],
+                                decoration: InputDecoration(
+                                  hintText: 'Choice ${index + 1}',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                ),
+                                style: const TextStyle(fontFamily: 'Fredoka'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Radio<int>(
+                              value: index,
+                              groupValue: correctChoiceIndex,
+                              onChanged: (value) {
+                                setState(() => correctChoiceIndex = value ?? 0);
+                              },
+                            ),
+                            if (choiceControllers.length > 2)
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 18),
+                                onPressed: () {
+                                  setState(() {
+                                    choiceControllers[index].dispose();
+                                    choiceControllers.removeAt(index);
+                                    if (correctChoiceIndex >= choiceControllers.length) {
+                                      correctChoiceIndex = choiceControllers.length - 1;
+                                    }
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                  if (choiceControllers.length < 5)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            choiceControllers.add(TextEditingController());
+                          });
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Choice',
+                            style: TextStyle(fontFamily: 'Fredoka')),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                for (var controller in choiceControllers) {
+                  controller.dispose();
+                }
+                Navigator.pop(context);
+              },
               child: const Text('Cancel',
                   style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
                 final question = questionController.text.trim();
-                final answer = answerController.text.trim();
                 final deck = deckController.text.trim().isEmpty
                     ? 'Default'
                     : deckController.text.trim();
 
-                if (question.isEmpty || answer.isEmpty) {
+                if (question.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill in all fields')),
+                    const SnackBar(content: Text('Please enter a question')),
                   );
                   return;
                 }
 
-                // Update flashcard
-                final updatedCard = Flashcard(
-                  id: card.id,
-                  question: question,
-                  answer: answer,
-                  type: selectedType == 'multiple_choice'
-                      ? FlashcardType.multipleChoice
-                      : FlashcardType.identification,
-                  deck: deck,
-                  createdAt: card.createdAt,
-                  updatedAt: DateTime.now(),
-                  reviewCount: card.reviewCount,
-                  correctCount: card.correctCount,
-                  options: card.options,
-                  correctOptionIndex: card.correctOptionIndex,
-                );
+                if (selectedType == 'identification') {
+                  final answer = answerController.text.trim();
+                  if (answer.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter an answer')),
+                    );
+                    return;
+                  }
 
-                await widget.databaseService.updateFlashcard(updatedCard);
+                  final updatedCard = Flashcard(
+                    id: card.id,
+                    question: question,
+                    answer: answer,
+                    type: FlashcardType.identification,
+                    deck: deck,
+                    createdAt: card.createdAt,
+                    updatedAt: DateTime.now(),
+                    reviewCount: card.reviewCount,
+                    correctCount: card.correctCount,
+                    options: [],
+                    correctOptionIndex: 0,
+                  );
+
+                  await widget.databaseService.updateFlashcard(updatedCard);
+                } else {
+                  final choices = choiceControllers
+                      .map((c) => c.text.trim())
+                      .where((c) => c.isNotEmpty)
+                      .toList();
+
+                  if (choices.length < 2) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please add at least 2 choices')),
+                    );
+                    return;
+                  }
+
+                  final updatedCard = Flashcard(
+                    id: card.id,
+                    question: question,
+                    answer: choices[correctChoiceIndex],
+                    type: FlashcardType.multipleChoice,
+                    deck: deck,
+                    createdAt: card.createdAt,
+                    updatedAt: DateTime.now(),
+                    reviewCount: card.reviewCount,
+                    correctCount: card.correctCount,
+                    options: choices,
+                    correctOptionIndex: correctChoiceIndex,
+                  );
+
+                  await widget.databaseService.updateFlashcard(updatedCard);
+                }
+
                 if (mounted) {
+                  for (var controller in choiceControllers) {
+                    controller.dispose();
+                  }
                   Navigator.pop(context);
                   _loadData();
                   ScaffoldMessenger.of(context).showSnackBar(
