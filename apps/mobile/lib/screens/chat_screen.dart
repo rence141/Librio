@@ -10,7 +10,6 @@ import '../services/flashcard_generator.dart';
 import '../models/conversation.dart';
 import '../models/document.dart';
 import '../utils/debug_logger.dart';
-import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
 import 'documents_screen.dart';
 import 'flashcard_review_screen.dart';
@@ -729,11 +728,18 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          // Content — crystal loader while generating, formatted text when complete
+          // Content — default loading while generating, formatted text when complete
           if (message.isStreaming && message.text.isEmpty)
             Row(
               children: [
-                CrystalLoader(size: 64),
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: _deepPurple,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 if (_isSearchingMaterials)
                   const Text(
