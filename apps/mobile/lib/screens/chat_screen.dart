@@ -593,21 +593,7 @@ class _ChatScreenState extends State<ChatScreen> {
           tooltip: 'Menu',
         ),
       ),
-      title: Row(
-        children: [
-          _buildLogoMark(24),
-          const SizedBox(width: 8),
-          const Text(
-            'Librio',
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              color: Colors.black87,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+      title: _buildLogoMark(24),
       actions: [
         // Model selector (subtle)
         TextButton.icon(
