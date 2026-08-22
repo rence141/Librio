@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../services/llm_service.dart';
+import '../services/online_llm_service.dart';
 import '../services/model_loader.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -62,7 +63,9 @@ class _ChatScreenState extends State<ChatScreen> {
   // Model info
   String _currentModelName = 'Loading...';
   String _currentModelId = '';
+  bool _currentModelIsOnline = false;
   Map<String, bool> _installedModels = {};
+  final OnlineLlmService _onlineLlm = OnlineLlmService();
 
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
@@ -108,6 +111,9 @@ class _ChatScreenState extends State<ChatScreen> {
       final info = await modelLoader.getModelInfo();
       _currentModelName = info['displayName'] as String? ?? 'Unknown';
       _currentModelId = modelLoader.selectedModel?.id ?? '';
+      _currentModelIsOnline = modelLoader.selectedModel?.isOnline ?? false;
+      // If online model selected, no need for local LLM
+      _isOffline = _currentModelIsOnline ? false : !widget.llmService.isInitialized;
 
       setState(() => _isInitialized = true);
     } catch (e, st) {
@@ -202,7 +208,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Streaming is kept internally for cancellation and progress, but
       // the user only sees "Librio is thinking..." until complete.
       final responseBuffer = StringBuffer();
-      await for (final chunk in widget.llmService.streamResponse(prompt)) {
+      await for (final chunk in _streamLlmResponse(prompt)) {
         if (!_isGenerating) break; // User pressed stop
         responseBuffer.write(chunk);
         // No setState here — no partial text display
@@ -394,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Buffer the response (no partial display)
       final responseBuffer = StringBuffer();
-      await for (final chunk in widget.llmService.streamResponse(fullPrompt)) {
+      await for (final chunk in _streamLlmResponse(fullPrompt)) {
         if (!_isGenerating) break;
         responseBuffer.write(chunk);
       }
@@ -1352,12 +1358,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 final isSelected = model.id == _currentModelId;
                 return _modelOption(
                   name: model.name,
-                  subtitle: '${model.description} • ${model.sizeLabel}${isInstalled ? "" : " (not installed)"}',
+                  subtitle: '${model.description} • ${model.sizeLabel}${model.isOnline ? "" : (isInstalled ? "" : " (not installed)")}',
                   isSelected: isSelected,
                   isInstalled: isInstalled,
-                  icon: isInstalled
-                      ? (isSelected ? Icons.check_circle : Icons.cloud_done)
-                      : Icons.cloud_download,
+                  icon: model.isOnline
+                      ? (isSelected ? Icons.cloud : Icons.cloud_outlined)
+                      : (isInstalled
+                          ? (isSelected ? Icons.check_circle : Icons.cloud_done)
+                          : Icons.cloud_download),
                   onTap: () async {
                     if (!isInstalled) {
                       Navigator.pop(context);
@@ -1390,6 +1398,23 @@ class _ChatScreenState extends State<ChatScreen> {
                       _currentModelName = 'Switching...';
                     });
 
+                    // Online models don't need local engine
+                    if (model.isOnline) {
+                      setState(() {
+                        _currentModelId = model.id;
+                        _currentModelName = model.name;
+                        _currentModelIsOnline = true;
+                        _isOffline = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Switched to ${model.name} (online)'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
                     // Reload model loader with new selection
                     final newLoader = ModelLoader();
                     final loaded = await newLoader.loadModel();
@@ -1414,6 +1439,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       setState(() {
                         _currentModelId = model.id;
                         _currentModelName = model.name;
+                        _currentModelIsOnline = false;
                         _isOffline = false;
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1436,10 +1462,18 @@ class _ChatScreenState extends State<ChatScreen> {
               }),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.grey),
-                title: const Text('Models run fully offline on your device', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13)),
+                leading: const Icon(Icons.phone_android, color: Colors.grey),
+                title: const Text('Offline models run on your device', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13)),
                 subtitle: Text(
-                  'To install: download GGUF file and place in app models folder',
+                  'Download GGUF file → place in app models folder',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.cloud_outlined, color: Colors.grey),
+                title: const Text('Online models need internet', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13)),
+                subtitle: Text(
+                  'Faster & smarter, but requires connection',
                   style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
                 ),
               ),
@@ -1482,6 +1516,19 @@ class _ChatScreenState extends State<ChatScreen> {
           : null,
       onTap: onTap,
     );
+  }
+
+  // ============ LLM Streaming Helper ============
+
+  /// Stream response from either local or online model based on current selection.
+  Stream<String> _streamLlmResponse(String prompt) async* {
+    if (_currentModelIsOnline) {
+      // Use online Gemini service
+      yield* _onlineLlm.streamResponse(prompt, model: _currentModelId);
+    } else {
+      // Use local on-device LLM
+      yield* _streamLlmResponse(prompt);
+    }
   }
 
   // ============ Empty State ============
@@ -1787,7 +1834,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Buffer — no partial UI updates
       final responseBuffer = StringBuffer();
-      await for (final chunk in widget.llmService.streamResponse(prompt)) {
+      await for (final chunk in _streamLlmResponse(prompt)) {
         if (!_isGenerating) break;
         responseBuffer.write(chunk);
       }

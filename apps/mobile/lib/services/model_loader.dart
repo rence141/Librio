@@ -11,6 +11,7 @@ class AiModel {
   final String url;
   final String description;
   final String sizeLabel;
+  final bool isOnline;
 
   const AiModel({
     required this.id,
@@ -19,6 +20,7 @@ class AiModel {
     required this.url,
     required this.description,
     required this.sizeLabel,
+    this.isOnline = false,
   });
 }
 
@@ -27,12 +29,13 @@ class AiModel {
 class ModelLoader {
   // Available models — user can switch between these
   static const List<AiModel> availableModels = [
+    // --- Local (offline) models ---
     AiModel(
       id: 'qwen2.5-coder-3b',
       name: 'Qwen2.5 Coder 3B',
       fileName: 'qwen2.5-coder-3b-instruct-q4_k_m.gguf',
       url: 'https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf',
-      description: 'Coding-tuned. Stronger reasoning, less hallucination.',
+      description: 'Offline. Coding-tuned, stronger reasoning.',
       sizeLabel: '~2.0 GB',
     ),
     AiModel(
@@ -40,8 +43,36 @@ class ModelLoader {
       name: 'Gemma 3 1B',
       fileName: 'gemma-3-1b-thinking-v2-q4_k_m.gguf',
       url: 'https://huggingface.co/vinhnx90/gemma-3-1b-thinking-v2-Q4_K_M-GGUF/resolve/main/gemma-3-1b-thinking-v2-q4_k_m.gguf',
-      description: 'Fastest. Lightweight. Good for simple questions.',
+      description: 'Offline. Fastest, lightweight.',
       sizeLabel: '~806 MB',
+    ),
+    // --- Online (cloud) models ---
+    AiModel(
+      id: 'gemini-2.0-flash',
+      name: 'Gemini 2.0 Flash',
+      fileName: '',
+      url: '',
+      description: 'Online. Fast, smart, free tier.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
+      id: 'gemini-2.5-flash',
+      name: 'Gemini 2.5 Flash',
+      fileName: '',
+      url: '',
+      description: 'Online. Latest, better reasoning.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
+      id: 'gemini-2.5-pro',
+      name: 'Gemini 2.5 Pro',
+      fileName: '',
+      url: '',
+      description: 'Online. Most capable Gemini.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
     ),
   ];
 
@@ -81,15 +112,20 @@ class ModelLoader {
     }
   }
 
-  /// Check which models are present on disk.
+  /// Check which models are present on disk (or available online).
   Future<Map<String, bool>> getAvailableModels() async {
     final appDir = await getApplicationDocumentsDirectory();
     final modelsDir = Directory('${appDir.path}/models');
     final result = <String, bool>{};
 
     for (final model in availableModels) {
-      final file = File('${modelsDir.path}/${model.fileName}');
-      result[model.id] = file.existsSync();
+      if (model.isOnline) {
+        // Online models are always "available" if configured
+        result[model.id] = true;
+      } else {
+        final file = File('${modelsDir.path}/${model.fileName}');
+        result[model.id] = file.existsSync();
+      }
     }
 
     return result;
@@ -111,6 +147,14 @@ class ModelLoader {
       }
 
       DebugLogger.info(tag, 'Selected model: ${_selectedModel!.name}');
+
+      // Online models don't need a file on disk
+      if (_selectedModel!.isOnline) {
+        DebugLogger.info(tag, 'Online model — no local file needed');
+        _modelPath = null;
+        _modelLoaded = true;
+        return true;
+      }
 
       // Get app documents directory
       final appDir = await getApplicationDocumentsDirectory();

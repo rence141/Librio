@@ -52,3 +52,4 @@ services/api/postgres-data/
 *.pem
 *.key
 secrets/
+apps/mobile/lib/services/online_model_config.dart
