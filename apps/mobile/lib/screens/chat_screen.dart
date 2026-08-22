@@ -14,7 +14,6 @@ import '../services/embeddings_service.dart';
 import '../services/document_upload_service.dart';
 import '../services/flashcard_generator.dart';
 import '../models/conversation.dart';
-import '../models/document.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
@@ -48,7 +47,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final FocusNode _inputFocusNode = FocusNode();
 
   bool _isGenerating = false;
-  bool _isSearchingMaterials = false;
   bool _canStop = false;
   bool _isInitialized = false;
   final List<String> _pendingAttachments = []; // paths of images/files to send
@@ -205,25 +203,12 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      // Search materials (RAG)
-      setState(() => _isSearchingMaterials = true);
-      final documents = await _ragService.retrieveContext(userMessage);
-      setState(() {
-        _isSearchingMaterials = false;
-      });
-
-      String prompt = userMessage;
-      if (documents.isNotEmpty) {
-        prompt = _ragService.buildPromptWithContext(userMessage, documents);
-      }
-
       // Create a placeholder AI message (empty — not shown until complete)
       final aiChatMessage = ChatMessage(
         text: '',
         isUser: false,
         timestamp: DateTime.now(),
         isStreaming: true,
-        sources: documents,
       );
       setState(() => _messages.add(aiChatMessage));
       _scrollToBottom();
@@ -232,7 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Streaming is kept internally for cancellation and progress, but
       // the user only sees "Librio is thinking..." until complete.
       final responseBuffer = StringBuffer();
-      await for (final chunk in _streamLlmResponse(prompt, imagePaths: attachments)) {
+      await for (final chunk in _streamLlmResponse(userMessage, imagePaths: attachments)) {
         if (!_isGenerating) break; // User pressed stop
         responseBuffer.write(chunk);
         // No setState here — no partial text display
@@ -273,7 +258,6 @@ class _ChatScreenState extends State<ChatScreen> {
         }
         _isGenerating = false;
         _canStop = false;
-        _isSearchingMaterials = false;
       });
     }
   }
@@ -427,27 +411,19 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      // Build prompt with RAG context
-      final documents = await _ragService.retrieveContext(prompt);
-      String fullPrompt = prompt;
-      if (documents.isNotEmpty) {
-        fullPrompt = _ragService.buildPromptWithContext(prompt, documents);
-      }
-
       // Create placeholder AI message
       final aiChatMessage = ChatMessage(
         text: '',
         isUser: false,
         timestamp: DateTime.now(),
         isStreaming: true,
-        sources: documents,
       );
       setState(() => _messages.add(aiChatMessage));
       _scrollToBottom();
 
       // Buffer the response (no partial display)
       final responseBuffer = StringBuffer();
-      await for (final chunk in _streamLlmResponse(fullPrompt)) {
+      await for (final chunk in _streamLlmResponse(prompt)) {
         if (!_isGenerating) break;
         responseBuffer.write(chunk);
       }
@@ -828,11 +804,10 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 CrystalLoader(size: 100),
                 const SizedBox(width: 12),
-                if (_isSearchingMaterials)
-                  const Text(
-                    'Searching your materials...',
-                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
-                  ),
+                const Text(
+                  'Librio is thinking...',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
+                ),
               ],
             )
           else if (message.text.isNotEmpty)
@@ -841,11 +816,6 @@ class _ChatScreenState extends State<ChatScreen> {
               selectable: true,
               styleSheet: _markdownStyle(),
             ),
-          // Sources (RAG)
-          if (message.sources.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            _buildSources(message.sources),
-          ],
           // Actions
           if (showActions) ...[
             const SizedBox(height: 12),
@@ -928,78 +898,6 @@ class _ChatScreenState extends State<ChatScreen> {
       tableBody: const TextStyle(
         fontFamily: 'Fredoka',
         fontSize: 14,
-      ),
-    );
-  }
-
-  // ============ Sources (RAG) ============
-
-  Widget _buildSources(List<Document> sources) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.menu_book, size: 16, color: Colors.grey[500]),
-            const SizedBox(width: 6),
-            Text(
-              'Sources',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...sources.map((doc) => _buildSourceCard(doc)),
-      ],
-    );
-  }
-
-  Widget _buildSourceCard(Document doc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: _surfaceColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.description, size: 18, color: Colors.grey[400]),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doc.title,
-                    style: const TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  if (doc.category.isNotEmpty)
-                    Text(
-                      doc.category,
-                      style: TextStyle(
-                        fontFamily: 'Fredoka',
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -2054,25 +1952,18 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      final documents = await _ragService.retrieveContext(lastUserMessage);
-      String prompt = lastUserMessage;
-      if (documents.isNotEmpty) {
-        prompt = _ragService.buildPromptWithContext(lastUserMessage, documents);
-      }
-
       final aiChatMessage = ChatMessage(
         text: '',
         isUser: false,
         timestamp: DateTime.now(),
         isStreaming: true,
-        sources: documents,
       );
       setState(() => _messages.add(aiChatMessage));
       _scrollToBottom();
 
       // Buffer — no partial UI updates
       final responseBuffer = StringBuffer();
-      await for (final chunk in _streamLlmResponse(prompt)) {
+      await for (final chunk in _streamLlmResponse(lastUserMessage)) {
         if (!_isGenerating) break;
         responseBuffer.write(chunk);
       }
