@@ -33,10 +33,25 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   path_provider: ^2.1.0
+  shared_preferences: ^2.2.2
+  http: ^1.1.0
   
   # Phase 1: Actual LLM inference with GGUF models
   llamadart: ^0.8.19
   supabase_flutter: ^2.17.2
+  
+  # Authentication & State Management
+  jwt_decoder: ^2.0.1
+  
+  # UI & Navigation
+  go_router: ^13.0.0
+  
+  # Local Storage
+  sqflite: ^2.3.0
+  
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.0.0
 
 dev_dependencies:
   flutter_test:
