@@ -1,376 +1,364 @@
-# Phase 1 Testing Guide
+# Phase 1: LLM Model Testing Guide
 
 **Date:** 2026-08-22  
-**Status:** Ready for Testing  
-**Device:** Infinix-Note50 (4GB RAM, Android 16)
+**Status:** Model downloading (in progress)  
+**Next:** Testing after download completes
 
 ---
 
-## Overview
+## 📥 MODEL DOWNLOAD STATUS
 
-This guide walks you through testing Phase 1's actual GGUF model loading and inference on your Infinix-Note50.
-
-### What You'll Test
-
-- ✓ Actual GGUF model loading (vs. Phase 0's simulated loading)
-- ✓ Real inference with streaming tokens
-- ✓ Performance measurement (TTFT, decode speed, load time)
-- ✓ Error handling and recovery
-- ✓ Model management (download, cache, storage)
-
-### Expected Outcomes
-
-| Metric | Phase 0 | Phase 1 Target | Notes |
-|--------|---------|-----------------|-------|
-| Model Load | 500ms | <2s | Real loading time |
-| TTFT | ~50ms | <500ms | Time to first token |
-| Decode Speed | ~100 tok/s | >20 tok/s | Tokens per second |
-| Peak RAM | ~850MB | <1.5GB | Memory usage |
-| Battery Drain | N/A | <10%/hr | To be measured |
+**File:** `gemma-3-1b-q4_k_m.gguf`  
+**Size:** ~2.5GB  
+**Location:** `apps/mobile/assets/models/`  
+**Status:** ⏳ Downloading...  
+**ETA:** 10-20 minutes
 
 ---
 
-## Option A: Automatic Model Transfer (Recommended)
+## ✅ TESTING CHECKLIST
 
-### Step 1: Prepare Models
+### **Phase 1A: Model Loading (5 minutes)**
 
-Models are already downloaded in `bench/models/`:
-- `gemma-3-1b-q4_k_m.gguf` (600 MB)
-- `llama-3.2-1b-q4_k_m.gguf` (800 MB)
-- `smollm2-1.7b-q4_k_m.gguf` (1000 MB)
+After download completes:
 
-### Step 2: Run Transfer Script
+```bash
+cd apps/mobile
 
-**On Windows (PowerShell):**
+# 1. Verify file exists
+ls -la assets/models/gemma-3-1b-q4_k_m.gguf
 
-```powershell
-cd C:\dev\Librio\bench
-.\transfer_models.ps1
+# 2. Get dependencies
+flutter pub get
+
+# 3. Run on emulator
+flutter run
+
+# 4. Check logs for model loading
+# Expected output:
+# 🤖 Loading model from: ...
+# ✅ LLM model loaded successfully
 ```
 
-**Expected output:**
-```
-=== Librio Model Transfer Script ===
-Device: adb-138097055K002303-DxquAm._adb-tls-connect._tcp
-Local models: C:\dev\Librio\bench\models
-Device target: /data/user/0/com.librio.librio/app_flutter/models
-
-Checking device connection...
-✓ Device connected
-
-Found 3 model(s):
-  - gemma-3-1b-q4_k_m.gguf (600.00 MB)
-  - llama-3.2-1b-q4_k_m.gguf (800.00 MB)
-  - smollm2-1.7b-q4_k_m.gguf (1000.00 MB)
-
-Creating device directory...
-✓ Directory created
-
-Transferring: gemma-3-1b-q4_k_m.gguf (600.00 MB)
-✓ Transferred: gemma-3-1b-q4_k_m.gguf (15.50 MB/s)
-
-Transferring: llama-3.2-1b-q4_k_m.gguf (800.00 MB)
-✓ Transferred: llama-3.2-1b-q4_k_m.gguf (16.20 MB/s)
-
-Transferring: smollm2-1.7b-q4_k_m.gguf (1000.00 MB)
-✓ Transferred: smollm2-1.7b-q4_k_m.gguf (15.80 MB/s)
-
-=== Transfer Complete ===
-Total transferred: 2400.00 MB
-
-Next steps:
-1. Open the Librio app on your phone
-2. Go to the Benchmark screen
-3. Tap 'Start Benchmark'
-4. Watch the logs as it loads and runs inference on the models
-```
-
-**Time estimate:** ~2.5-3 hours (2400 MB at ~15 MB/s)
-
-### Step 3: Run Benchmark on Phone
-
-1. **Open Librio app** on Infinix-Note50
-2. **Navigate to Benchmark screen** (should already be there)
-3. **Tap "Start Benchmark"** button
-4. **Watch the logs** in real-time:
-   - Model loading progress
-   - TTFT measurement
-   - Decode speed
-   - Inference results
-
-### Step 4: Collect Results
-
-Results are saved to:
-```
-/data/user/0/com.librio.librio/app_flutter/benchmark_results/
-```
-
-Files created:
-- `Infinix-Note50-gemma3-1b-q4-phase1-*.json`
-- `Infinix-Note50-llama32-1b-q4-phase1-*.json`
-- `Infinix-Note50-smollm2-1.7b-q4-phase1-*.json`
+**Success Criteria:**
+- ✅ File exists and is ~2.5GB
+- ✅ App starts without crashing
+- ✅ Model loads in <5 seconds
+- ✅ No memory errors
+- ✅ No file not found errors
 
 ---
 
-## Option B: In-App Download (Future)
+### **Phase 1B: Inference Testing (10 minutes)**
 
-### Coming Soon
-
-The app will support automatic HuggingFace downloads:
+After model loads:
 
 ```dart
-// In the app (not yet implemented)
-final modelManager = ModelManager();
-await modelManager.init();
+// Test in chat screen
 
-// Download model
-await modelManager.downloadModel(
-  'gemma3-1b-q4',
-  onProgress: (downloaded, total) {
-    print('Downloaded: $downloaded / $total bytes');
-  },
-);
+// 1. Send simple message
+"What is 2+2?"
 
-// Use model
-final modelPath = modelManager.getModelPath('gemma3-1b-q4');
+// Expected response:
+// ✅ Response generated
+// ✅ Appears in chat
+// ✅ Takes 10-30 seconds
+// ✅ ~20-30 tokens/second
+
+// 2. Send complex message
+"Explain photosynthesis in simple terms"
+
+// Expected response:
+// ✅ Response generated
+// ✅ Streaming works
+// ✅ Takes 20-40 seconds
+// ✅ Response is coherent
+
+// 3. Send follow-up
+"Can you simplify that further?"
+
+// Expected response:
+// ✅ Response generated
+// ✅ Context understood
+// ✅ Response is relevant
 ```
 
-**Status:** Code skeleton created in `lib/services/model_manager.dart`
+**Success Criteria:**
+- ✅ Responses generate
+- ✅ Streaming displays tokens
+- ✅ Speed: 20-30 tokens/sec
+- ✅ Quality: Coherent responses
+- ✅ No crashes
+- ✅ No memory leaks
 
 ---
 
-## Expected Logs
+### **Phase 1C: Performance Testing (15 minutes)**
 
-### Successful Benchmark Run
-
+**Memory Usage:**
 ```
-=== Librio Phase 1 Benchmark (Actual Inference) ===
-Device: Infinix-Note50
-Dart SDK: 3.10.8 (stable) on "android_arm64"
+Expected:
+- Idle: <500MB
+- During inference: <2GB
+- After inference: <500MB (cleanup)
 
-Device Info: Infinix-Note50 (Android)
-
-Memory: RAM: ~4GB available
-
-Testing model: gemma3-1b-q4
-  [*] Model file: /data/user/0/com.librio.librio/app_flutter/models/gemma-3-1b-q4_k_m.gguf
-  [*] Loading model: gemma3-1b-q4
-  [✓] Model loaded in 1250ms
-  [*] Prompt 1/5: "What is photosynthesis?"
-      Time: 2450ms | Tokens: 45 | Speed: 18.4 tok/s
-  [*] Prompt 2/5: "Solve: 2x + 5 = 13"
-      Time: 2380ms | Tokens: 42 | Speed: 17.6 tok/s
-  [*] Prompt 3/5: "Explain Newton's first law of motion."
-      Time: 2510ms | Tokens: 48 | Speed: 19.1 tok/s
-  [*] Prompt 4/5: "What is the capital of France?"
-      Time: 2290ms | Tokens: 38 | Speed: 16.6 tok/s
-  [*] Prompt 5/5: "How do plants absorb water?"
-      Time: 2420ms | Tokens: 44 | Speed: 18.2 tok/s
-  [Summary]
-    Load time: 1250ms
-    TTFT: 85ms
-    Avg inference: 2412ms
-    Avg speed: 18.2 tok/s
-  [✓] Result saved to: /data/user/0/com.librio.librio/app_flutter/benchmark_results/Infinix-Note50-gemma3-1b-q4-phase1-1787345044359.json
-  [✓] Model unloaded
-
-Testing model: llama32-1b-q4
-  [*] Model file: /data/user/0/com.librio.librio/app_flutter/models/llama-3.2-1b-q4_k_m.gguf
-  [*] Loading model: llama32-1b-q4
-  [✓] Model loaded in 1380ms
-  [*] Prompt 1/5: "What is photosynthesis?"
-      Time: 2680ms | Tokens: 48 | Speed: 17.9 tok/s
-  ...
-  [✓] Model unloaded
-
-Testing model: smollm2-1.7b-q4
-  [*] Model file: /data/user/0/com.librio.librio/app_flutter/models/smollm2-1.7b-q4_k_m.gguf
-  [*] Loading model: smollm2-1.7b-q4
-  [✓] Model loaded in 1520ms
-  [*] Prompt 1/5: "What is photosynthesis?"
-      Time: 2890ms | Tokens: 51 | Speed: 17.6 tok/s
-  ...
-  [✓] Model unloaded
-
-=== Benchmark finished ===
+Test:
+1. Open app
+2. Check memory (Settings > Developer > Memory)
+3. Send message
+4. Monitor memory during response
+5. Check memory after response
 ```
 
-### Error Handling
+**Speed Testing:**
+```
+Expected:
+- Model load: <5 seconds
+- First token: <2 seconds
+- Subsequent tokens: 30-50ms each
+- Full response (256 tokens): 10-30 seconds
 
-**Missing Model File:**
-```
-[*] Model file: /data/user/0/com.librio.librio/app_flutter/models/gemma-3-1b-q4_k_m.gguf
-[ERROR] Model file not found: /data/user/0/com.librio.librio/app_flutter/models/gemma-3-1b-q4_k_m.gguf
-[INFO] Phase 1 requires actual GGUF files in bench/models/
+Test:
+1. Time model loading
+2. Time first token
+3. Count tokens/second
+4. Time full response
 ```
 
-**Model Load Failure:**
+**Battery Usage:**
 ```
-[*] Loading model: gemma3-1b-q4
-[ERROR] Failed to load model: Native asset not available
-[INFO] This may be due to missing native assets or incompatible model format
+Expected:
+- Idle: <1% per minute
+- During inference: <5% per minute
+
+Test:
+1. Check battery before
+2. Generate 5 responses
+3. Check battery after
+4. Calculate drain rate
 ```
 
 ---
 
-## Troubleshooting
+### **Phase 1D: Stability Testing (30 minutes)**
 
-### Issue: "Model file not found"
-
-**Solution:** Run the transfer script to copy models to device
-
-```powershell
-.\transfer_models.ps1
+**Crash Testing:**
+```
+Test:
+1. Send 10 messages in sequence
+2. Send very long message (500+ chars)
+3. Send special characters
+4. Send empty message
+5. Rapid send/cancel
+6. Send during app pause/resume
+7. Send with low memory
+8. Send with network off
 ```
 
-### Issue: "Failed to load model: Native asset not available"
-
-**Possible causes:**
-1. llamadart native assets not properly built
-2. Model file corrupted during transfer
-3. Insufficient memory on device
-
-**Solutions:**
-1. Rebuild app: `flutter clean && flutter run`
-2. Re-transfer models: `.\transfer_models.ps1`
-3. Close other apps to free memory
-
-### Issue: Slow inference (>5s per prompt)
-
-**Possible causes:**
-1. Device thermal throttling
-2. Other apps using CPU
-3. Model too large for device
-
-**Solutions:**
-1. Let device cool down
-2. Close background apps
-3. Use smaller model (SmolLM2 1.7B instead of larger models)
-
-### Issue: App crashes during inference
-
-**Possible causes:**
-1. Out of memory (OOM)
-2. Model file corrupted
-3. llamadart bug
-
-**Solutions:**
-1. Close other apps
-2. Re-transfer models
-3. Check device logs: `adb logcat | grep flutter`
+**Expected:**
+- ✅ No crashes
+- ✅ Graceful error handling
+- ✅ No hung processes
+- ✅ Proper cleanup
 
 ---
 
-## Performance Analysis
+### **Phase 1E: Device Testing (1-2 hours)**
 
-### Metrics to Collect
+**Emulator Testing:**
+```bash
+# Test on different emulator configurations
 
-For each model, record:
-- **Load Time:** Time to load model into memory
-- **TTFT:** Time to first token (ms)
-- **Decode Speed:** Tokens per second (tok/s)
-- **Total Time:** Time for all 5 prompts
-- **Peak RAM:** Maximum memory used (from Android Profiler)
-- **CPU Usage:** Average CPU usage (from Android Profiler)
+# 1. Default emulator
+flutter run
 
-### Expected Performance
+# 2. Low memory emulator
+# Create emulator with 512MB RAM
+flutter run -d <emulator-id>
 
-**Gemma 3 1B Q4_K_M:**
-- Load: 1-2s
-- TTFT: 50-150ms
-- Speed: 15-25 tok/s
-- RAM: 800-1000 MB
+# 3. Slow network emulator
+# Use Android Studio network throttling
+```
 
-**Llama 3.2 1B Q4_K_M:**
-- Load: 1-2s
-- TTFT: 60-180ms
-- Speed: 12-20 tok/s
-- RAM: 900-1100 MB
+**Physical Device Testing:**
+```bash
+# Connect Infinix-Note50
+adb devices
 
-**SmolLM2 1.7B Q4_K_M:**
-- Load: 1.5-2.5s
-- TTFT: 70-200ms
-- Speed: 10-18 tok/s
-- RAM: 1000-1300 MB
+# Install app
+flutter run -d <device-id>
 
-### Comparison with Phase 0
+# Monitor performance
+flutter run -d <device-id> --profile
 
-| Metric | Phase 0 | Phase 1 | Difference |
-|--------|---------|---------|-----------|
-| Load Time | 500ms | 1-2s | +100-300% (real loading) |
-| TTFT | ~50ms | 50-200ms | +0-300% (real inference) |
-| Decode Speed | ~100 tok/s | 10-25 tok/s | -75-90% (real inference) |
-| Peak RAM | ~850MB | 800-1300MB | Similar |
+# Check logs
+adb logcat | grep flutter
+```
 
 ---
 
-## Next Steps After Testing
+## 🔍 DEBUGGING GUIDE
 
-### 1. Analyze Results
-- Compare Phase 0 vs Phase 1
-- Identify bottlenecks
-- Plan optimizations
+### **If Model Doesn't Load**
 
-### 2. Implement RAG Layer
-- Embeddings model integration
-- Vector database setup
-- Retrieval implementation
+```
+Error: "Model not found in assets"
 
-### 3. Quality Validation
-- Run 25-prompt test suite
-- Score responses (1-5 scale)
-- Gather user feedback
+Solutions:
+1. Verify file exists: ls -la apps/mobile/assets/models/
+2. Verify pubspec.yaml has asset entry
+3. Run: flutter pub get
+4. Clean build: flutter clean && flutter pub get
+5. Rebuild: flutter run --no-cache
+```
 
-### 4. Optimize Performance
-- Profile inference bottlenecks
-- Optimize quantization
-- Reduce memory footprint
-- Minimize battery drain
+### **If Inference is Slow**
 
-### 5. Document Results
-- Create Phase 1 report
-- Compare with Phase 0
-- Recommendations for Phase 2
+```
+Symptoms: Takes >60 seconds for response
+
+Solutions:
+1. Check device specs (CPU, RAM)
+2. Reduce context size in llm_service.dart
+3. Reduce max tokens (currently 256)
+4. Use fewer threads (currently 4)
+5. Profile with: flutter run --profile
+```
+
+### **If Memory Usage is High**
+
+```
+Symptoms: App crashes with "Out of memory"
+
+Solutions:
+1. Reduce context size (currently 512)
+2. Reduce max tokens (currently 256)
+3. Add explicit garbage collection
+4. Profile with: flutter run --profile
+5. Check for memory leaks in llm_service.dart
+```
+
+### **If Streaming Doesn't Work**
+
+```
+Symptoms: Response appears all at once instead of streaming
+
+Solutions:
+1. Check stream implementation in llm_service.dart
+2. Verify llamadart version supports streaming
+3. Check for stream cancellation
+4. Add debug logging to stream
+5. Test with simpler prompt
+```
 
 ---
 
-## Timeline
+## 📊 EXPECTED RESULTS
 
-| Step | Time | Status |
-|------|------|--------|
-| Model transfer | 2.5-3h | Ready |
-| Benchmark run | 15-20 min | Ready |
-| Result analysis | 1-2h | Ready |
-| RAG implementation | 3-5 days | Planned |
-| Quality validation | 2-3 days | Planned |
-| Optimization | 2-3 days | Planned |
-| Documentation | 1-2 days | Planned |
+### **Successful Load**
+```
+✅ Model loads in <5 seconds
+✅ Memory usage <2GB during inference
+✅ Inference speed: 20-30 tokens/sec
+✅ Response quality: Coherent, relevant
+✅ No crashes in 30 minutes of testing
+✅ Works on emulator and device
+```
+
+### **Performance Targets**
+```
+Model Load Time:    <5 seconds
+First Token Time:   <2 seconds
+Token Speed:        20-30 tokens/sec
+Full Response:      10-30 seconds
+Memory (Idle):      <500MB
+Memory (Inference): <2GB
+Memory (Cleanup):   <500MB
+```
 
 ---
 
-## Success Criteria
+## 🚀 NEXT STEPS AFTER TESTING
 
-- ✓ Models load successfully on device
-- ✓ Actual inference runs (not simulated)
-- ✓ Performance metrics measured
-- ✓ Results saved as JSON
-- ✓ No crashes or errors
-- ✓ Phase 0 vs Phase 1 comparison complete
+### **If All Tests Pass**
+1. ✅ Commit successful test results
+2. ✅ Update progress documentation
+3. ✅ Move to Phase 2: Chat Interface Polish
+4. ✅ Schedule device testing
+
+### **If Tests Fail**
+1. ⚠️ Identify failure point
+2. ⚠️ Check debugging guide
+3. ⚠️ Implement fix
+4. ⚠️ Re-test
+5. ⚠️ Document issue and solution
 
 ---
 
-## Support
+## 📝 TEST RESULTS TEMPLATE
+
+```markdown
+# Phase 1 Test Results
+
+**Date:** [Date]
+**Device:** [Device Name]
+**Model:** Gemma 3 1B Q4_K_M
+**File Size:** [Size]
+
+## Model Loading
+- Load Time: [X] seconds
+- Memory Used: [X] MB
+- Status: ✅ Pass / ❌ Fail
+
+## Inference Testing
+- First Token: [X] seconds
+- Token Speed: [X] tokens/sec
+- Response Quality: [Good/Fair/Poor]
+- Status: ✅ Pass / ❌ Fail
+
+## Performance
+- Idle Memory: [X] MB
+- Peak Memory: [X] MB
+- Battery Drain: [X]% per minute
+- Status: ✅ Pass / ❌ Fail
+
+## Stability
+- Crashes: [0/X]
+- Errors: [List any]
+- Status: ✅ Pass / ❌ Fail
+
+## Overall
+- Status: ✅ Pass / ❌ Fail
+- Issues: [List any]
+- Next Steps: [Next actions]
+```
+
+---
+
+## ⏱️ TIMELINE
+
+| Phase | Task | Duration | Status |
+|-------|------|----------|--------|
+| **1A** | Model Loading | 5 min | ⏳ |
+| **1B** | Inference Testing | 10 min | ⏳ |
+| **1C** | Performance Testing | 15 min | ⏳ |
+| **1D** | Stability Testing | 30 min | ⏳ |
+| **1E** | Device Testing | 1-2 hrs | ⏳ |
+| **Total** | | 2-3 hrs | ⏳ |
+
+---
+
+## 📞 SUPPORT
 
 If you encounter issues:
 
-1. **Check logs:** `adb logcat | grep flutter`
-2. **Verify device:** `adb devices`
-3. **Check storage:** `adb shell df /data`
-4. **Restart app:** Kill and relaunch
-5. **Rebuild app:** `flutter clean && flutter run`
+1. Check the debugging guide above
+2. Review the error messages in logs
+3. Check llamadart documentation
+4. Check Flutter documentation
+5. Check device logs with `adb logcat`
 
 ---
 
-**Ready to test? Start with Option A (Automatic Model Transfer)!** 🚀
-
-Generated: 2026-08-22
+Generated: 2026-08-22  
+Status: Waiting for model download to complete
