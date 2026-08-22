@@ -46,7 +46,7 @@ class ModelLoader {
       description: 'Offline. Fastest, lightweight.',
       sizeLabel: '~806 MB',
     ),
-    // --- Online (cloud) models ---
+    // --- Online (cloud via FreeLLMAPI proxy) ---
     AiModel(
       id: 'gemini-2.0-flash',
       name: 'Gemini 2.0 Flash',
@@ -71,6 +71,33 @@ class ModelLoader {
       fileName: '',
       url: '',
       description: 'Online. Most capable Gemini.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
+      id: 'llama-3.3-70b',
+      name: 'Llama 3.3 70B',
+      fileName: '',
+      url: '',
+      description: 'Online. Meta\'s largest open model.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
+      id: 'deepseek-r1',
+      name: 'DeepSeek R1',
+      fileName: '',
+      url: '',
+      description: 'Online. Strong reasoning model.',
+      sizeLabel: 'Cloud',
+      isOnline: true,
+    ),
+    AiModel(
+      id: 'qwen3-32b',
+      name: 'Qwen3 32B',
+      fileName: '',
+      url: '',
+      description: 'Online. Latest Qwen, thinking mode.',
       sizeLabel: 'Cloud',
       isOnline: true,
     ),
