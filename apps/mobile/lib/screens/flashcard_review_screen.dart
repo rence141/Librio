@@ -291,6 +291,26 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
 
     return Column(
       children: [
+        // New flashcard button
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _showCreateFlashcardDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('New Flashcard',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _deepPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ),
         // Deck filter / Group review toggle
         if (_decks.length > 1)
           Container(
