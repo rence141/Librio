@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/llm_service.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -307,10 +308,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'L',
-                      style: TextStyle(
+                      style: GoogleFonts.fredoka(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -321,9 +322,9 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'Librio',
-              style: TextStyle(
+              style: GoogleFonts.fredoka(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -390,7 +391,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'Librio is thinking...',
-                    style: TextStyle(
+                    style: GoogleFonts.fredoka(
                       color: Colors.grey[600],
                       fontSize: 14,
                     ),
@@ -426,7 +427,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _messageController,
                       decoration: InputDecoration(
                         hintText: 'Ask me anything...',
-                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        hintStyle: GoogleFonts.fredoka(color: Colors.grey[500]),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -453,7 +454,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7B2CBF).withOpacity(0.3),
+                        color: const Color(0xFF7B2CBF).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -509,10 +510,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'L',
-                      style: TextStyle(
+                      style: GoogleFonts.fredoka(
                         color: Colors.white,
                         fontSize: 60,
                         fontWeight: FontWeight.bold,
@@ -532,9 +533,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   Color(0xFF06B6D4),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: Text(
                 'Welcome to Librio',
-                style: TextStyle(
+                style: GoogleFonts.fredoka(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -544,7 +545,7 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(height: 12),
             Text(
               'Your AI academic tutor',
-              style: TextStyle(
+              style: GoogleFonts.fredoka(
                 fontSize: 16,
                 color: Colors.grey[600],
               ),
@@ -552,7 +553,7 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(height: 32),
             Text(
               'Ask me anything about:',
-              style: TextStyle(
+              style: GoogleFonts.fredoka(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -589,7 +590,7 @@ class _ChatScreenState extends State<ChatScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7B2CBF).withOpacity(0.2),
+            color: const Color(0xFF7B2CBF).withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -597,7 +598,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: GoogleFonts.fredoka(
           fontSize: 14,
           color: Colors.white,
           fontWeight: FontWeight.w500,
@@ -643,7 +644,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     message.text,
-                    style: TextStyle(
+                    style: GoogleFonts.fredoka(
                       color: message.isUser ? Colors.white : Colors.black87,
                       fontSize: 15,
                       height: 1.4,
@@ -652,7 +653,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
-                    style: TextStyle(
+                    style: GoogleFonts.fredoka(
                       color: message.isUser
                           ? Colors.white70
                           : Colors.grey[600],

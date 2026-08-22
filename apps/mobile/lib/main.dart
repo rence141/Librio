@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
-import 'screens/splash_screen.dart';
 import 'screens/chat_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,14 +34,7 @@ class LibrioApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Librio',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: true,
-        ),
-      ),
+      theme: LibrioTheme.lightTheme,
       home: ChatScreen(llmService: llmService),
     );
   }
