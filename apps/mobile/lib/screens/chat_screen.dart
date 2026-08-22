@@ -1189,7 +1189,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final hasText = _messageController.text.trim().isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
@@ -1199,18 +1199,28 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // + button (attachments)
-            IconButton(
-              onPressed: _showAttachmentMenu,
-              icon: Icon(Icons.add, color: Colors.grey[600]),
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            // + button (attachments) — same height as send button
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: IconButton(
+                onPressed: _showAttachmentMenu,
+                icon: Icon(Icons.add, color: Colors.grey[600]),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              ),
             ),
+            const SizedBox(width: 8),
             // Text field
             Expanded(
               child: Container(
+                constraints: const BoxConstraints(
+                  minHeight: 44,
+                  maxHeight: 120,
+                ),
                 decoration: BoxDecoration(
                   color: _surfaceColor,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: Colors.grey[200]!, width: 1),
                 ),
                 child: TextField(
@@ -1239,20 +1249,20 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 8),
             // Send / Stop button
-            Container(
+            SizedBox(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: hasText || _canStop ? _deepPurple : Colors.grey[300],
-                borderRadius: BorderRadius.circular(22),
-              ),
               child: IconButton(
                 icon: _canStop
-                    ? const Icon(Icons.stop, color: Colors.white, size: 20)
-                    : const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
+                    ? Icon(Icons.stop, color: hasText || _canStop ? Colors.white : Colors.grey[500], size: 20)
+                    : Icon(Icons.arrow_upward, color: hasText || _canStop ? Colors.white : Colors.grey[500], size: 20),
                 onPressed: _canStop ? _stopGeneration : (hasText ? _sendMessage : null),
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                style: IconButton.styleFrom(
+                  backgroundColor: hasText || _canStop ? _deepPurple : Colors.grey[200],
+                  shape: const CircleBorder(),
+                ),
               ),
             ),
           ],
