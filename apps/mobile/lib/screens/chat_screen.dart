@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../services/llm_service.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -934,13 +935,57 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SelectableText(
-                  message.text,
-                  style: const TextStyle(
-                    fontFamily: 'Fredoka',
-                    color: Colors.black87,
-                    fontSize: 15,
-                    height: 1.5,
+                MarkdownBody(
+                  data: message.text,
+                  selectable: true,
+                  styleSheet: MarkdownStyleSheet(
+                    p: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      color: Colors.black87,
+                      fontSize: 15,
+                      height: 1.5,
+                    ),
+                    strong: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontSize: 15,
+                    ),
+                    em: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontStyle: FontStyle.italic,
+                      color: Colors.black87,
+                      fontSize: 15,
+                    ),
+                    code: TextStyle(
+                      fontFamily: 'monospace',
+                      backgroundColor: Colors.grey[100],
+                      color: _deepPurple,
+                      fontSize: 14,
+                    ),
+                    h1: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    h2: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    h3: const TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    listBullet: TextStyle(
+                      fontFamily: 'Fredoka',
+                      color: Colors.grey[700],
+                      fontSize: 15,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
