@@ -661,50 +661,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      itemCount: _messages.length + (_isGenerating ? 1 : 0),
+      itemCount: _messages.length,
       itemBuilder: (context, index) {
-        if (index == _messages.length && _isGenerating) {
-          return _buildGeneratingIndicator();
-        }
         final message = _messages[index];
         return _buildMessage(message, index);
       },
-    );
-  }
-
-  // ============ Generating Indicator ============
-
-  Widget _buildGeneratingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // "Librio" label — same as AI messages
-          const Text(
-            'Librio',
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Crystal loader right below the label, left-aligned
-          Row(
-            children: [
-              CrystalLoader(size: 64),
-              const SizedBox(width: 12),
-              if (_isSearchingMaterials)
-                const Text(
-                  'Searching your materials...',
-                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
-                ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -768,8 +729,20 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          // Content — rendered through normalize → parse → render pipeline
-          if (message.text.isNotEmpty)
+          // Content — crystal loader while generating, formatted text when complete
+          if (message.isStreaming && message.text.isEmpty)
+            Row(
+              children: [
+                CrystalLoader(size: 64),
+                const SizedBox(width: 12),
+                if (_isSearchingMaterials)
+                  const Text(
+                    'Searching your materials...',
+                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
+                  ),
+              ],
+            )
+          else if (message.text.isNotEmpty)
             LlmMarkdown(
               data: message.text,
               selectable: true,
