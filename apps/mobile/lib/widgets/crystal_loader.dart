@@ -1,12 +1,13 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Crystal loader — animated "thinking" indicator.
 ///
-/// Ported from Uiverse.io Z4drus CSS design: 6 rotating crystals with
-/// staggered blue gradients that emerge and spin in 3D perspective.
+/// 6 crystals positioned around a ring, each pulsing with staggered
+/// blue gradients. The whole ring rotates smoothly.
 class CrystalLoader extends StatefulWidget {
   final double size;
-  const CrystalLoader({super.key, this.size = 80});
+  const CrystalLoader({super.key, this.size = 64});
 
   @override
   State<CrystalLoader> createState() => _CrystalLoaderState();
@@ -15,7 +16,7 @@ class CrystalLoader extends StatefulWidget {
 class _CrystalLoaderState extends State<CrystalLoader>
     with TickerProviderStateMixin {
   late AnimationController _spinController;
-  late AnimationController _emergeController;
+  late AnimationController _pulseController;
 
   static const _gradients = [
     [Color(0xFF003366), Color(0xFF336699)],
@@ -25,75 +26,88 @@ class _CrystalLoaderState extends State<CrystalLoader>
     [Color(0xFF33CCFF), Color(0xFF99CCFF)],
     [Color(0xFF66FFFF), Color(0xFFCCFFFF)],
   ];
-  static const _delays = [0.0, 0.3, 0.6, 0.9, 1.2, 1.5];
 
   @override
   void initState() {
     super.initState();
     _spinController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     )..repeat();
-    _emergeController = AnimationController(
+    _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 600),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _spinController.dispose();
-    _emergeController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final crystalSize = widget.size * 0.3;
+    final crystalSize = widget.size * 0.18;
+    final radius = widget.size * 0.32;
 
     return SizedBox(
       width: widget.size,
       height: widget.size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: List.generate(6, (i) {
-          return AnimatedBuilder(
-            animation: Listenable.merge([_spinController, _emergeController]),
-            builder: (context, _) {
-              final spinAngle = _spinController.value * 2 * 3.14159265;
-              // Staggered emerge: offset each crystal's phase
-              final phase = (_emergeController.value + _delays[i] / 2.0) % 1.0;
-              final scaleVal = 0.5 + 0.5 * (1 - (2 * phase - 1).abs());
-              final opacityVal = (1 - (2 * phase - 1).abs()) * 0.8;
+      child: AnimatedBuilder(
+        animation: _spinController,
+        builder: (context, _) {
+          final spinAngle = _spinController.value * 2 * math.pi;
+          return Stack(
+            alignment: Alignment.center,
+            children: List.generate(6, (i) {
+              // Position each crystal at a different angle around the ring
+              final angle = (i / 6) * 2 * math.pi + spinAngle;
+              final x = radius * math.cos(angle);
+              final y = radius * math.sin(angle);
 
-              return Transform.scale(
-                scale: scaleVal.clamp(0.3, 1.0),
-                child: Opacity(
-                  opacity: opacityVal.clamp(0.0, 0.8),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.003) // perspective
-                      ..rotateX(0.785) // 45deg
-                      ..rotateZ(spinAngle),
-                    child: Container(
-                      width: crystalSize,
-                      height: crystalSize,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: _gradients[i],
+              return Transform.translate(
+                offset: Offset(x, y),
+                child: AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, _) {
+                    // Stagger pulse phase per crystal
+                    final phase = (_pulseController.value + i / 6) % 1.0;
+                    final pulse = 0.7 + 0.3 * (0.5 + 0.5 * math.sin(phase * 2 * math.pi));
+                    final opacity = 0.5 + 0.5 * (0.5 + 0.5 * math.sin(phase * 2 * math.pi));
+
+                    return Opacity(
+                      opacity: opacity.clamp(0.3, 1.0),
+                      child: Transform.scale(
+                        scale: pulse,
+                        child: Container(
+                          width: crystalSize,
+                          height: crystalSize,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(crystalSize * 0.3),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _gradients[i],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _gradients[i][1].withValues(alpha: 0.4),
+                                blurRadius: 4,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               );
-            },
+            }),
           );
-        }),
+        },
       ),
     );
   }

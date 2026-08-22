@@ -35,8 +35,13 @@ void main() async {
 
   DebugLogger.success('Main', 'All services initialized, launching app...');
 
-  // Check if onboarding is needed
-  final needsOnboarding = !await OnboardingScreen.hasCompleted();
+  // Check if onboarding is needed (defensive against null prefs)
+  bool needsOnboarding = true;
+  try {
+    needsOnboarding = !await OnboardingScreen.hasCompleted();
+  } catch (e) {
+    DebugLogger.error('Main', 'Onboarding check failed, defaulting to show', e, null);
+  }
 
   runApp(LibrioApp(
     modelLoader: modelLoader,
