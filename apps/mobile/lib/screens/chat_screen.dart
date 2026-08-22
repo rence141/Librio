@@ -232,7 +232,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Streaming is kept internally for cancellation and progress, but
       // the user only sees "Librio is thinking..." until complete.
       final responseBuffer = StringBuffer();
-      await for (final chunk in _streamLlmResponse(prompt)) {
+      await for (final chunk in _streamLlmResponse(prompt, imagePaths: attachments)) {
         if (!_isGenerating) break; // User pressed stop
         responseBuffer.write(chunk);
         // No setState here — no partial text display
@@ -1766,14 +1766,25 @@ class _ChatScreenState extends State<ChatScreen> {
   // ============ LLM Streaming Helper ============
 
   /// Stream response from either local or online model based on current selection.
-  Stream<String> _streamLlmResponse(String prompt) async* {
+  /// Passes image attachments to online vision models.
+  Stream<String> _streamLlmResponse(String prompt, {List<String> imagePaths = const []}) async* {
     if (_currentModelIsOnline) {
-      // Use online Gemini service
-      yield* _onlineLlm.streamResponse(prompt, model: _currentModelId);
+      // Use online model — supports vision
+      yield* _onlineLlm.streamResponse(prompt, model: _currentModelId, imagePaths: imagePaths);
     } else {
-      // Use local on-device LLM
-      yield* _streamLlmResponse(prompt);
+      // Use local on-device LLM — no vision support, just text
+      // If images were attached, note that they can't be processed locally
+      if (imagePaths.isNotEmpty) {
+        yield* _streamLocalResponse('$prompt\n\n[Note: ${imagePaths.length} image(s) were attached but local model cannot process images. Switch to an online model for image understanding.]');
+      } else {
+        yield* _streamLocalResponse(prompt);
+      }
     }
+  }
+
+  /// Stream from local on-device LLM
+  Stream<String> _streamLocalResponse(String prompt) async* {
+    yield* widget.llmService.streamResponse(prompt);
   }
 
   // ============ Empty State ============
