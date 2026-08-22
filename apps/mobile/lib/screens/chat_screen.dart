@@ -6,6 +6,7 @@ import '../services/database_service.dart';
 import '../services/rag_service.dart';
 import '../services/embeddings_service.dart';
 import '../services/document_upload_service.dart';
+import '../services/flashcard_generator.dart';
 import '../models/conversation.dart';
 import '../models/document.dart';
 import '../utils/debug_logger.dart';
@@ -46,6 +47,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _canStop = false;
   bool _isInitialized = false;
   bool _isOffline = true; // Default to offline (local model)
+
+  // Generated flashcards from chat (pending save)
+  List<ParsedFlashcard> _pendingFlashcards = [];
+  bool _showFlashcardSavePrompt = false;
 
   late DatabaseService _databaseService;
   late RagService _ragService;
@@ -326,6 +331,140 @@ class _ChatScreenState extends State<ChatScreen> {
     final prompt = '$action\n\n${lastAiMessage.text}';
     _messageController.text = prompt;
     _sendMessage();
+  }
+
+  /// Generate flashcards from the last AI response.
+  /// Asks the AI to create flashcards, then parses and offers to save.
+  Future<void> _generateFlashcards() async {
+    if (_isGenerating) return;
+
+    final lastAiMessage = _messages.lastWhere((m) => !m.isUser);
+    final prompt = FlashcardGenerator.buildPrompt(lastAiMessage.text);
+
+    // Send as a user message and generate
+    _messageController.text = 'Make flashcards from this';
+    final userMessage = _messageController.text.trim();
+    _messageController.clear();
+
+    final userChatMessage = ChatMessage(
+      text: userMessage,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+
+    setState(() {
+      _messages.add(userChatMessage);
+      _isGenerating = true;
+      _canStop = true;
+      _pendingFlashcards = [];
+      _showFlashcardSavePrompt = false;
+    });
+
+    await _databaseService.addMessage(_currentConversation.id, userMessage, true);
+    _scrollToBottom();
+
+    try {
+      // Build prompt with RAG context
+      final documents = await _ragService.retrieveContext(prompt);
+      String fullPrompt = prompt;
+      if (documents.isNotEmpty) {
+        fullPrompt = _ragService.buildPromptWithContext(prompt, documents);
+      }
+
+      // Create placeholder AI message
+      final aiChatMessage = ChatMessage(
+        text: '',
+        isUser: false,
+        timestamp: DateTime.now(),
+        isStreaming: true,
+        sources: documents,
+      );
+      setState(() => _messages.add(aiChatMessage));
+      _scrollToBottom();
+
+      // Buffer the response (no partial display)
+      final responseBuffer = StringBuffer();
+      await for (final chunk in widget.llmService.streamResponse(fullPrompt)) {
+        if (!_isGenerating) break;
+        responseBuffer.write(chunk);
+      }
+
+      if (_isGenerating) {
+        final response = responseBuffer.toString();
+        // Parse flashcards from the AI response
+        final parsed = FlashcardGenerator.parse(response);
+
+        setState(() {
+          _messages.last.text = response;
+          _messages.last.isStreaming = false;
+          _isGenerating = false;
+          _canStop = false;
+          _pendingFlashcards = parsed;
+          _showFlashcardSavePrompt = parsed.isNotEmpty;
+        });
+        await _databaseService.addMessage(_currentConversation.id, response, false);
+        _scrollToBottom();
+      } else {
+        // Cancelled
+        setState(() {
+          if (_messages.isNotEmpty && !_messages.last.isUser) {
+            _messages.removeLast();
+          }
+          _canStop = false;
+        });
+      }
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Flashcard generation failed', e, st);
+      setState(() {
+        _isGenerating = false;
+        _canStop = false;
+      });
+    }
+  }
+
+  /// Save all pending flashcards to the database.
+  Future<void> _savePendingFlashcards() async {
+    if (_pendingFlashcards.isEmpty) return;
+
+    try {
+      for (final parsed in _pendingFlashcards) {
+        final card = parsed.toFlashcard(deck: _currentConversation.title);
+        await _databaseService.addFlashcard(card);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_pendingFlashcards.length} flashcards saved to review!'),
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: 'Review',
+              onPressed: _openFlashcardReview,
+            ),
+          ),
+        );
+      }
+
+      setState(() {
+        _showFlashcardSavePrompt = false;
+        _pendingFlashcards = [];
+      });
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Failed to save flashcards', e, st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e')),
+        );
+      }
+    }
+  }
+
+  /// Discard pending flashcards.
+  void _discardPendingFlashcards() {
+    setState(() {
+      _showFlashcardSavePrompt = false;
+      _pendingFlashcards = [];
+    });
   }
 
   // ============ Scroll ============
@@ -653,6 +792,11 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(height: 12),
             _buildStudyActions(),
           ],
+          // Flashcard save prompt (after AI generates flashcards)
+          if (_showFlashcardSavePrompt && isLast && !_isGenerating) ...[
+            const SizedBox(height: 12),
+            _buildFlashcardSavePrompt(),
+          ],
         ],
       ),
     );
@@ -799,6 +943,141 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // ============ Flashcard Save Prompt ============
+
+  Widget _buildFlashcardSavePrompt() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _deepPurple.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _deepPurple.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.style, size: 18, color: _deepPurple),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${_pendingFlashcards.length} flashcards generated',
+                  style: const TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _deepPurple,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Preview first 2 flashcards
+          ..._pendingFlashcards.take(2).map((card) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.circle, size: 6, color: _deepPurple.withValues(alpha: 0.5)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Q: ${card.question}',
+                        style: const TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'A: ${card.answer}',
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )),
+          if (_pendingFlashcards.length > 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '+ ${_pendingFlashcards.length - 2} more...',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _savePendingFlashcards,
+                  icon: const Icon(Icons.bookmark_add, size: 16),
+                  label: const Text(
+                    'Save to Review',
+                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: _discardPendingFlashcards,
+                child: const Text(
+                  'Discard',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Manual creation option
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                _discardPendingFlashcards();
+                _openFlashcardReview();
+              },
+              icon: Icon(Icons.edit, size: 14, color: Colors.grey[500]),
+              label: Text(
+                'Or make your own manually',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ============ AI Actions (subtle) ============
 
   Widget _buildAiActions(ChatMessage message) {
@@ -896,7 +1175,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             _studyChip('Summarize', Icons.summarize_outlined, () => _sendStudyAction('Summarize this:')),
             _studyChip('Quiz Me', Icons.quiz_outlined, () => _sendStudyAction('Create a quiz about:')),
-            _studyChip('Flashcards', Icons.style_outlined, () => _sendStudyAction('Make flashcards about:')),
+            _studyChip('Make Flashcards', Icons.style_outlined, _generateFlashcards),
             _studyChip('Explain Simply', Icons.lightbulb_outline, () => _sendStudyAction('Explain simply:')),
           ],
         ),
