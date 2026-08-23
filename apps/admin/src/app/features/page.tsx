@@ -7,24 +7,18 @@ export default function FeaturesPage() {
   const primaryFeatures = [
     {
       title: 'AI Tutor',
-      subtitle: 'Ask questions and get clear, student-friendly explanations.',
       image: '/images/AI-Tutor.jpg',
       longDescription: 'Get clear explanations for difficult topics and learn at your own pace with a tutor that never sleeps. Librio\'s AI Tutor adapts to your learning style and provides context-aware answers to your specific questions.',
-      imageHeight: 'h-72 md:h-96',
     },
     {
       title: 'Smart Flashcards',
-      subtitle: 'Turn lessons and study materials into flashcards for review.',
       image: '/images/Flashcard-img.jpg',
       longDescription: 'Turn your study materials into flashcards instantly and reinforce what you\'ve learned efficiently. Smart Flashcards use spaced repetition to help you remember more of what matters.',
-      imageHeight: 'h-48',
     },
     {
       title: 'AI Quizzes',
-      subtitle: 'Generate practice questions based on your learning materials.',
       image: '/images/AI-Quizzes.jpg',
       longDescription: 'Practice with questions generated directly from your study materials or exams. AI Quizzes identify gaps in your knowledge and help you focus on what matters most.',
-      imageHeight: 'h-48',
     },
   ];
 
@@ -99,66 +93,66 @@ export default function FeaturesPage() {
           </p>
         </section>
 
-        {/* Feature Grid - AI Tutor large left, others stacked right */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:auto-rows-fr">
-          {/* AI Tutor - Large Card */}
-          <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <div className={`relative w-full ${primaryFeatures[0].imageHeight}`}>
+        {/* Feature Sections - each with full image + text */}
+        <section className="space-y-12 mb-16">
+          {/* AI Tutor */}
+          <article className="bg-white rounded-3xl overflow-hidden shadow-sm">
+            <div className="w-full">
               <Image
                 src={primaryFeatures[0].image}
                 alt={primaryFeatures[0].title}
-                fill
-                className="object-cover"
+                width={1200}
+                height={800}
+                className="w-full h-auto object-cover"
               />
             </div>
-            <div className="p-8 flex-grow">
+            <div className="p-8">
               <h2 className="text-2xl font-bold mb-3">{primaryFeatures[0].title}</h2>
               <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[0].longDescription}</p>
             </div>
           </article>
 
-          {/* Right column: Smart Flashcards + AI Quizzes + Offline Intelligence */}
-          <div className="flex flex-col gap-6">
-            {/* Smart Flashcards */}
-            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col flex-1">
-              <div className="relative w-full h-48">
-                <Image
-                  src={primaryFeatures[1].image}
-                  alt={primaryFeatures[1].title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold mb-3">{primaryFeatures[1].title}</h2>
-                <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[1].longDescription}</p>
-              </div>
-            </article>
+          {/* Smart Flashcards */}
+          <article className="bg-white rounded-3xl overflow-hidden shadow-sm">
+            <div className="w-full">
+              <Image
+                src={primaryFeatures[1].image}
+                alt={primaryFeatures[1].title}
+                width={1200}
+                height={800}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-bold mb-3">{primaryFeatures[1].title}</h2>
+              <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[1].longDescription}</p>
+            </div>
+          </article>
 
-            {/* AI Quizzes */}
-            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col flex-1">
-              <div className="relative w-full h-48">
-                <Image
-                  src={primaryFeatures[2].image}
-                  alt={primaryFeatures[2].title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold mb-3">{primaryFeatures[2].title}</h2>
-                <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[2].longDescription}</p>
-              </div>
-            </article>
+          {/* AI Quizzes */}
+          <article className="bg-white rounded-3xl overflow-hidden shadow-sm">
+            <div className="w-full">
+              <Image
+                src={primaryFeatures[2].image}
+                alt={primaryFeatures[2].title}
+                width={1200}
+                height={800}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-bold mb-3">{primaryFeatures[2].title}</h2>
+              <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[2].longDescription}</p>
+            </div>
+          </article>
 
-            {/* Offline Intelligence */}
-            <article className="rounded-3xl p-8 bg-librio-gradient text-white flex-1">
-              <h2 className="text-xl font-bold mb-3">Offline Intelligence</h2>
-              <p className="text-white/90 text-sm leading-relaxed">
-                Once your materials are uploaded, Librio&apos;s AI goes to work — entirely on your device. Ask questions about difficult topics, generate concise summaries, create flashcards for review, and take AI-generated quizzes to test your knowledge. No internet required: the AI runs locally, so your study sessions work anywhere, even offline.
-              </p>
-            </article>
-          </div>
+          {/* Offline Intelligence */}
+          <article className="rounded-3xl p-8 bg-librio-gradient text-white">
+            <h2 className="text-xl font-bold mb-3">Offline Intelligence</h2>
+            <p className="text-white/90 text-sm leading-relaxed">
+              Once your materials are uploaded, Librio&apos;s AI goes to work — entirely on your device. Ask questions about difficult topics, generate concise summaries, create flashcards for review, and take AI-generated quizzes to test your knowledge. No internet required: the AI runs locally, so your study sessions work anywhere, even offline.
+            </p>
+          </article>
         </section>
 
         {/* Secondary Features Grid */}
