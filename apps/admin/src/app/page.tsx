@@ -223,7 +223,7 @@ export default function LandingPage() {
                   src={features[0].image}
                   alt={features[0].title}
                   fill
-                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
               {/* Gradient overlay for text readability */}
@@ -249,10 +249,10 @@ export default function LandingPage() {
                   src={features[2].image}
                   alt={features[2].title}
                   fill
-                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
               
               <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
                 <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
@@ -270,10 +270,10 @@ export default function LandingPage() {
                   src={features[1].image}
                   alt={features[1].title}
                   fill
-                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
               
               <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
                 <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
@@ -294,10 +294,10 @@ export default function LandingPage() {
                     src={feature.image}
                     alt={feature.title}
                     fill
-                    className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                    className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
                 
                 <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
                   <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
