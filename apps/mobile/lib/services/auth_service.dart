@@ -172,7 +172,12 @@ class AuthService extends ChangeNotifier {
       return true;
     } on AuthException catch (e) {
       DebugLogger.error(_tag, 'Supabase sign in error: ${e.message}', e);
-      _setError(e.message);
+      // Handle email not confirmed
+      if (e.message.contains('Email not confirmed')) {
+        _setError('Please confirm your email before signing in. Check your inbox for a confirmation link.');
+      } else {
+        _setError(e.message);
+      }
       _setLoading(false);
       rethrow;
     } catch (e, st) {

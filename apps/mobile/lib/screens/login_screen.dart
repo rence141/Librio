@@ -97,6 +97,9 @@ class _LoginScreenState extends State<LoginScreen> {
   String _formatAuthError(String message) {
     DebugLogger.info(_tag, 'Formatting error: $message');
     
+    if (message.contains('Email not confirmed')) {
+      return 'Please confirm your email before signing in. Check your inbox for a confirmation link.';
+    }
     if (message.contains('Invalid login credentials')) {
       return 'Invalid email or password';
     }
