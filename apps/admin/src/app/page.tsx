@@ -122,10 +122,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 inset-x-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center h-16 pl-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer">
               <Image
                 src="/images/Logo-Text.png"
                 alt="Librio"
@@ -145,25 +145,25 @@ export default function LandingPage() {
               <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 FAQ
               </a>
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
-                Log In
-              </Link>
             </nav>
-            {/* CTA Button */}
-            <div className="hidden md:flex items-center gap-4">
-              <Link
-                href="/signup"
-                className="ai-button ai-button-sm rounded-full"
-              >
-                Get Started
+            {/* Login / CTA */}
+            <div className="hidden md:flex items-stretch h-16">
+              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors flex items-center px-4">
+                Log in
+              </Link>
+              <Link href="/signup" className="ai-button inline-flex items-center justify-center px-6 h-full text-sm font-extrabold rounded-none gap-2">
+                <span>Get the app</span>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect height="7" width="7" x="3" y="3"></rect>
+                  <rect height="7" width="7" x="14" y="3"></rect>
+                  <rect height="7" width="7" x="14" y="14"></rect>
+                  <rect height="7" width="7" x="3" y="14"></rect>
+                </svg>
               </Link>
             </div>
             {/* Mobile CTA */}
-            <div className="md:hidden">
-              <Link
-                href="/signup"
-                className="ai-button ai-button-sm rounded-full"
-              >
+            <div className="md:hidden pr-4">
+              <Link href="/signup" className="ai-button ai-button-sm rounded-full">
                 Get Started
               </Link>
             </div>
