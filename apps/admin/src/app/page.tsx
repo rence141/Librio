@@ -438,11 +438,11 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
                 </button>
-                {openFaq === index && (
+                <div className={`overflow-hidden transition-all duration-300 ${openFaq === index ? 'max-h-96' : 'max-h-0'}`}>
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <p className="text-gray-700">{item.answer}</p>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
