@@ -1,0 +1,345 @@
+/* Librio Brand Gradient System */
+
+:root {
+  /* Brand Colors */
+  --librio-purple: #9B5DE5;
+  --librio-blue: #6F9BEF;
+  --librio-cyan: #22D3E6;
+
+  /* Gradient Definitions */
+  --librio-gradient: linear-gradient(
+    90deg,
+    #9B5DE5 0%,
+    #6F9BEF 50%,
+    #22D3E6 100%
+  );
+
+  --librio-gradient-vertical: linear-gradient(
+    180deg,
+    #9B5DE5 0%,
+    #6F9BEF 50%,
+    #22D3E6 100%
+  );
+
+  /* Gradient with Opacity */
+  --librio-gradient-light: linear-gradient(
+    90deg,
+    rgba(155, 93, 229, 0.1) 0%,
+    rgba(111, 155, 239, 0.1) 50%,
+    rgba(34, 211, 230, 0.1) 100%
+  );
+
+  --librio-gradient-medium: linear-gradient(
+    90deg,
+    rgba(155, 93, 229, 0.3) 0%,
+    rgba(111, 155, 239, 0.3) 50%,
+    rgba(34, 211, 230, 0.3) 100%
+  );
+
+  /* Glow Effects */
+  --librio-glow: 0 0 20px rgba(155, 93, 229, 0.3),
+    0 0 40px rgba(111, 155, 239, 0.2),
+    0 0 60px rgba(34, 211, 230, 0.1);
+
+  --librio-glow-strong: 0 0 30px rgba(155, 93, 229, 0.5),
+    0 0 60px rgba(111, 155, 239, 0.3),
+    0 0 90px rgba(34, 211, 230, 0.2);
+}
+
+/* AI Avatar Styling */
+.ai-avatar {
+  background: var(--librio-gradient);
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: var(--librio-glow);
+}
+
+.ai-avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+}
+
+.ai-avatar-md {
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+}
+
+.ai-avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 32px;
+}
+
+/* AI Icon Styling */
+.ai-icon {
+  background: var(--librio-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ai-icon-filled {
+  color: var(--librio-purple);
+}
+
+/* AI Sparkle Indicators */
+.ai-sparkle {
+  background: var(--librio-gradient);
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* AI Generated Content Accent */
+.ai-generated {
+  border-left: 4px solid var(--librio-purple);
+  padding-left: 16px;
+  background: var(--librio-gradient-light);
+  border-radius: 4px;
+}
+
+.ai-generated::before {
+  content: "✨ AI Generated";
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--librio-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* AI Button Styling */
+.ai-button {
+  background: var(--librio-gradient);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(155, 93, 229, 0.2);
+}
+
+.ai-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--librio-glow-strong);
+}
+
+.ai-button:active {
+  transform: translateY(0);
+}
+
+.ai-button-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.ai-button-md {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.ai-button-lg {
+  padding: 16px 32px;
+  font-size: 18px;
+}
+
+/* AI Button Outline */
+.ai-button-outline {
+  background: transparent;
+  border: 2px solid var(--librio-purple);
+  color: var(--librio-purple);
+}
+
+.ai-button-outline:hover {
+  background: var(--librio-gradient-light);
+  border-color: var(--librio-blue);
+}
+
+/* AI Loading Indicator */
+.ai-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--librio-gradient-light);
+  border-top-color: var(--librio-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* AI Progress Bar */
+.ai-progress {
+  height: 4px;
+  background: var(--librio-gradient-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ai-progress-bar {
+  height: 100%;
+  background: var(--librio-gradient);
+  border-radius: 2px;
+  animation: progress 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+/* AI Badge */
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--librio-gradient-light);
+  border: 1px solid var(--librio-purple);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--librio-purple);
+}
+
+.ai-badge::before {
+  content: "✨";
+  font-size: 14px;
+}
+
+/* AI Highlight */
+.ai-highlight {
+  background: var(--librio-gradient-light);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+/* AI Feature Section */
+.ai-feature {
+  border: 1px solid var(--librio-gradient-light);
+  border-radius: 12px;
+  padding: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(155, 93, 229, 0.02) 0%,
+    rgba(34, 211, 230, 0.02) 100%
+  );
+}
+
+.ai-feature-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-feature-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--librio-gradient);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.ai-feature-title {
+  font-weight: 600;
+  color: var(--librio-purple);
+}
+
+/* AI Tooltip */
+.ai-tooltip {
+  background: var(--librio-gradient);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: var(--librio-glow);
+}
+
+/* AI Divider */
+.ai-divider {
+  height: 2px;
+  background: var(--librio-gradient);
+  border: none;
+  margin: 16px 0;
+}
+
+/* AI Text Gradient */
+.ai-text-gradient {
+  background: var(--librio-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+/* AI Glow Effect */
+.ai-glow {
+  box-shadow: var(--librio-glow);
+}
+
+.ai-glow-strong {
+  box-shadow: var(--librio-glow-strong);
+}
+
+/* AI Active State */
+.ai-active {
+  background: var(--librio-gradient);
+  color: white;
+}
+
+/* AI Disabled State */
+.ai-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .ai-avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .ai-button-lg {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+}
