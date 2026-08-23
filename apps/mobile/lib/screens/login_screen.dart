@@ -95,18 +95,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// Format Supabase auth error messages for user display
   String _formatAuthError(String message) {
+    DebugLogger.info(_tag, 'Formatting error: $message');
+    
     if (message.contains('Invalid login credentials')) {
       return 'Invalid email or password';
     }
     if (message.contains('User already registered')) {
       return 'This email is already registered';
     }
-    if (message.contains('Password')) {
+    if (message.contains('Password should be at least')) {
       return 'Password must be at least 8 characters';
     }
-    if (message.contains('Email')) {
+    if (message.contains('invalid email')) {
       return 'Please enter a valid email address';
     }
+    if (message.contains('Unable to validate email address')) {
+      return 'Please enter a valid email address';
+    }
+    // Return the original message if no specific match
     return message;
   }
 
