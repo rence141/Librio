@@ -1,11 +1,15 @@
 import 'dart:ui';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
+import 'services/auth_service.dart';
 import 'screens/chat_screen.dart';
 import 'screens/intro_splash_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 import 'utils/debug_logger.dart';
 
@@ -20,6 +24,13 @@ void main() async {
   if (kIsWeb) {
     databaseFactory = databaseFactoryFfiWeb;
   }
+
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://YOUR_PROJECT.supabase.co'),
+    publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'YOUR_ANON_KEY'),
+    debug: kDebugMode,
+  );
 
   // Global error handler for Flutter framework errors
   FlutterError.onError = (details) {
@@ -78,56 +89,59 @@ class LibrioApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Librio',
-      theme: LibrioTheme.lightTheme,
-      home: _AppEntry(
-        llmService: llmService,
-        needsOnboarding: needsOnboarding,
-      ),
-      builder: (context, widget) {
-        // Catch widget build errors
-        ErrorWidget.builder = (details) {
-          DebugLogger.error('WidgetBuilder', 'Widget build error', details.exception, details.stack);
-          return Material(
-            child: Container(
-              color: Colors.white,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Something went wrong',
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+    return ChangeNotifierProvider(
+      create: (_) => AuthService(),
+      child: MaterialApp(
+        title: 'Librio',
+        theme: LibrioTheme.lightTheme,
+        home: _AppEntry(
+          llmService: llmService,
+          needsOnboarding: needsOnboarding,
+        ),
+        builder: (context, widget) {
+          // Catch widget build errors
+          ErrorWidget.builder = (details) {
+            DebugLogger.error('WidgetBuilder', 'Widget build error', details.exception, details.stack);
+            return Material(
+              child: Container(
+                color: Colors.white,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Something went wrong',
+                          style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        details.exception.toString(),
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                        const SizedBox(height: 8),
+                        Text(
+                          details.exception.toString(),
+                          style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        };
-        return widget ?? const SizedBox.shrink();
-      },
+            );
+          };
+          return widget ?? const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
@@ -176,7 +190,17 @@ class _AppEntryState extends State<_AppEntry> {
       );
     }
 
-    // Step 3: Main chat screen
+    // Step 3: Auth gate — require login before chat
+    final authService = context.watch<AuthService>();
+    if (!authService.isAuthenticated) {
+      return LoginScreen(
+        onLoginSuccess: () {
+          // AuthService notifies listeners; the widget rebuilds automatically
+        },
+      );
+    }
+
+    // Step 4: Main chat screen
     return ChatScreen(llmService: widget.llmService);
   }
 }

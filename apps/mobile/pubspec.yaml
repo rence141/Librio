@@ -42,7 +42,7 @@ dependencies:
   
   # Authentication & State Management
   jwt_decoder: ^2.0.1
-  provider: ^6.4.0
+  provider: ^6.1.5
   google_sign_in: ^6.2.0
   flutter_secure_storage: ^9.2.2
   

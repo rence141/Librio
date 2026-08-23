@@ -7,7 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/llm_service.dart';
 import '../services/online_llm_service.dart';
 import '../services/online_model_config.dart';
-import '../services/secure_storage_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/model_loader.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -69,7 +69,6 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _currentModelIsOnline = false;
   Map<String, bool> _installedModels = {};
   final OnlineLlmService _onlineLlm = OnlineLlmService();
-  final SecureStorageService _secureStorage = SecureStorageService();
 
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
@@ -272,7 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (_currentModelIsOnline && OnlineModelConfig.hasKey) {
         final onlineService = OnlineLlmService();
-        final authToken = await _secureStorage.getAccessToken();
+        final authToken = Supabase.instance.client.auth.currentSession?.accessToken;
         title = await onlineService.generateTitle(userMessage, authToken: authToken);
       } else {
         title = await widget.llmService.generateTitle(userMessage);
@@ -1679,7 +1678,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Stream<String> _streamLlmResponse(String prompt, {List<String> imagePaths = const []}) async* {
     if (_currentModelIsOnline) {
       // Use online model via Supabase Edge Function — supports vision
-      final authToken = await _secureStorage.getAccessToken();
+      final authToken = Supabase.instance.client.auth.currentSession?.accessToken;
       yield* _onlineLlm.streamResponse(
         prompt,
         model: _currentModelId,

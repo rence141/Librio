@@ -81,35 +81,36 @@ supabase functions deploy ai-chat
 
 ## Step 6: Configure Flutter
 
-Update `apps/mobile/lib/services/online_model_config.dart` with your Supabase URL and anon key:
-
-```dart
-static const String supabaseUrl = String.fromEnvironment(
-  'SUPABASE_URL',
-  defaultValue: 'https://YOUR_PROJECT.supabase.co',
-);
-
-static const String supabaseAnonKey = String.fromEnvironment(
-  'SUPABASE_ANON_KEY',
-  defaultValue: 'YOUR_ANON_KEY',
-);
-```
-
-Or pass them at build time:
+Update `apps/mobile/lib/main.dart` with your Supabase URL and anon key (via `--dart-define`):
 
 ```bash
-flutter run --dart-define=SUPABASE_URL=your_url --dart-define=SUPABASE_ANON_KEY=your_key
+flutter run \
+  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
+
+Or edit `apps/mobile/lib/services/online_model_config.dart` to set the defaults.
 
 Get your anon key from: Supabase Dashboard > Project Settings > API > anon public
 
-## Step 7: Verify
+## Step 7: Configure Google Sign-In in Supabase
 
-1. Sign in to the app (Supabase Auth)
-2. Send a chat message
-3. The request flows: Flutter → Edge Function → FreeLLMAPI → LLM → back to Flutter
-4. Check Supabase Dashboard > Logs > Edge Functions for request logs
-5. Check the `ai_usage` table for usage records
+If using Google Sign-In:
+
+1. Go to Supabase Dashboard > Authentication > Providers
+2. Enable Google
+3. Add your Google Web Client ID and Secret from Google Cloud Console
+4. Add the authorized redirect URIs shown in Supabase to your Google Cloud Console
+
+## Step 8: Verify
+
+1. Launch the app — you'll see the Login screen (auth gate)
+2. Sign up or sign in with email/password or Google
+3. After login, the chat screen appears
+4. Send a chat message with an online model selected
+5. The request flows: Flutter → Edge Function → FreeLLMAPI → LLM → back to Flutter
+6. Check Supabase Dashboard > Logs > Edge Functions for request logs
+7. Check the `ai_usage` table for usage records
 
 ## Environment Variables Reference
 

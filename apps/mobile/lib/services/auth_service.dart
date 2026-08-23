@@ -1,10 +1,18 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../config/google_config.dart';
 import '../utils/debug_logger.dart';
 
-/// Authentication service for user login, signup, and password reset
+/// Authentication service backed by Supabase Auth.
+///
+/// Replaces the previous SharedPreferences-based stub and the custom
+/// Node.js backend (AuthServiceV3). All auth goes through Supabase,
+/// producing JWTs that the ai-chat Edge Function can verify.
+///
+/// Supported methods:
+///   - Email / password (sign up, sign in, password reset)
+///   - Google Sign-In (via Supabase signInWithIdToken)
 class AuthService extends ChangeNotifier {
   static const String _tag = 'AuthService';
 
@@ -12,24 +20,57 @@ class AuthService extends ChangeNotifier {
   String? _currentUserId;
   String? _currentUserEmail;
   String? _currentUserName;
+  bool _isLoading = false;
+  String? _lastError;
 
   bool get isAuthenticated => _isAuthenticated;
   String? get currentUserId => _currentUserId;
   String? get currentUserEmail => _currentUserEmail;
   String? get currentUserName => _currentUserName;
+  bool get isLoading => _isLoading;
+  String? get lastError => _lastError;
+
+  /// Current Supabase access token (JWT) — null if not signed in.
+  String? get accessToken => Supabase.instance.client.auth.currentSession?.accessToken;
 
   AuthService() {
     _checkAuthStatus();
+    // Listen to Supabase auth state changes
+    Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      _onAuthStateChanged(event.event, event.session);
+    });
   }
 
-  /// Check if user is already authenticated
+  void _onAuthStateChanged(AuthChangeEvent event, Session? session) {
+    if (session != null) {
+      _isAuthenticated = true;
+      _currentUserId = session.user.id;
+      _currentUserEmail = session.user.email;
+      _currentUserName = session.user.userMetadata?['full_name'] as String? ??
+          session.user.userMetadata?['name'] as String? ??
+          '';
+    } else {
+      _isAuthenticated = false;
+      _currentUserId = null;
+      _currentUserEmail = null;
+      _currentUserName = null;
+    }
+    notifyListeners();
+  }
+
+  /// Check if user is already authenticated from persisted Supabase session
   Future<void> _checkAuthStatus() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      _isAuthenticated = prefs.getBool('auth_token') != null;
-      _currentUserId = prefs.getString('user_id');
-      _currentUserEmail = prefs.getString('user_email');
-      _currentUserName = prefs.getString('user_name');
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        _isAuthenticated = true;
+        _currentUserId = session.user.id;
+        _currentUserEmail = session.user.email;
+        _currentUserName = session.user.userMetadata?['full_name'] as String? ??
+            session.user.userMetadata?['name'] as String? ??
+            '';
+        DebugLogger.success(_tag, 'User authenticated from Supabase session');
+      }
       notifyListeners();
     } catch (e) {
       DebugLogger.error(_tag, 'Failed to check auth status', e);
@@ -43,7 +84,9 @@ class AuthService extends ChangeNotifier {
     required String name,
   }) async {
     try {
-      // Validate inputs
+      _setLoading(true);
+      _setError(null);
+
       if (!_isValidEmail(email)) {
         throw 'Invalid email format';
       }
@@ -54,27 +97,33 @@ class AuthService extends ChangeNotifier {
         throw 'Name cannot be empty';
       }
 
-      // TODO: Call backend API to create user account
-      // For now, simulate with local storage
-      final prefs = await SharedPreferences.getInstance();
-      final userId = DateTime.now().millisecondsSinceEpoch.toString();
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': name},
+      );
 
-      // Store user data
-      await prefs.setString('user_id', userId);
-      await prefs.setString('user_email', email);
-      await prefs.setString('user_name', name);
-      await prefs.setBool('auth_token', true);
+      if (response.user == null) {
+        throw 'Sign up failed — no user returned';
+      }
 
-      _currentUserId = userId;
-      _currentUserEmail = email;
+      _currentUserId = response.user!.id;
+      _currentUserEmail = response.user!.email;
       _currentUserName = name;
       _isAuthenticated = true;
 
       DebugLogger.success(_tag, 'User signed up: $email');
-      notifyListeners();
+      _setLoading(false);
       return true;
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Supabase sign up error: ${e.message}', e);
+      _setError(e.message);
+      _setLoading(false);
+      rethrow;
     } catch (e, st) {
       DebugLogger.error(_tag, 'Sign up failed', e, st);
+      _setError(e.toString());
+      _setLoading(false);
       rethrow;
     }
   }
@@ -85,6 +134,9 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
+      _setLoading(true);
+      _setError(null);
+
       if (!_isValidEmail(email)) {
         throw 'Invalid email format';
       }
@@ -92,35 +144,45 @@ class AuthService extends ChangeNotifier {
         throw 'Password cannot be empty';
       }
 
-      // TODO: Call backend API to authenticate
-      // For now, simulate with local storage
-      final prefs = await SharedPreferences.getInstance();
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-      // Verify credentials (in real app, call backend)
-      final storedEmail = prefs.getString('user_email');
-      if (storedEmail != email) {
-        throw 'Email or password incorrect';
+      if (response.user == null) {
+        throw 'Sign in failed — no user returned';
       }
 
-      // Set authenticated state
-      await prefs.setBool('auth_token', true);
+      _currentUserId = response.user!.id;
+      _currentUserEmail = response.user!.email;
+      _currentUserName = response.user!.userMetadata?['full_name'] as String? ??
+          response.user!.userMetadata?['name'] as String? ??
+          '';
       _isAuthenticated = true;
-      _currentUserEmail = email;
-      _currentUserId = prefs.getString('user_id');
-      _currentUserName = prefs.getString('user_name');
 
       DebugLogger.success(_tag, 'User signed in: $email');
-      notifyListeners();
+      _setLoading(false);
       return true;
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Supabase sign in error: ${e.message}', e);
+      _setError(e.message);
+      _setLoading(false);
+      rethrow;
     } catch (e, st) {
       DebugLogger.error(_tag, 'Sign in failed', e, st);
+      _setError(e.toString());
+      _setLoading(false);
       rethrow;
     }
   }
 
-  /// Google Sign In
+  /// Google Sign In — uses GoogleSignIn to get an ID token, then
+  /// signs into Supabase with signInWithIdToken.
   Future<bool> signInWithGoogle() async {
     try {
+      _setLoading(true);
+      _setError(null);
+
       final GoogleSignIn googleSignIn = GoogleSignIn(
         clientId: GoogleConfig.debugClientId,
         scopes: GoogleConfig.scopes,
@@ -128,39 +190,45 @@ class AuthService extends ChangeNotifier {
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
+        _setLoading(false);
         throw 'Google sign-in cancelled';
       }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // TODO: Send idToken to backend for verification
       final idToken = googleAuth.idToken;
       if (idToken == null) {
-        throw 'Failed to get ID token';
+        throw 'Failed to get Google ID token';
       }
 
-      // Store user data
-      final prefs = await SharedPreferences.getInstance();
-      final userId = googleUser.id;
+      // Sign in to Supabase with the Google ID token
+      final response = await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+      );
 
-      await prefs.setString('user_id', userId);
-      await prefs.setString('user_email', googleUser.email);
-      await prefs.setString('user_name', googleUser.displayName ?? '');
-      await prefs.setString('auth_provider', 'google');
-      await prefs.setString('id_token', idToken);
-      await prefs.setBool('auth_token', true);
+      if (response.user == null) {
+        throw 'Supabase Google sign-in failed — no user returned';
+      }
 
-      _currentUserId = userId;
-      _currentUserEmail = googleUser.email;
-      _currentUserName = googleUser.displayName;
+      _currentUserId = response.user!.id;
+      _currentUserEmail = response.user!.email;
+      _currentUserName = googleUser.displayName ?? '';
       _isAuthenticated = true;
 
       DebugLogger.success(_tag, 'Google sign in: ${googleUser.email}');
-      notifyListeners();
+      _setLoading(false);
       return true;
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Supabase Google sign-in error: ${e.message}', e);
+      _setError(e.message);
+      _setLoading(false);
+      rethrow;
     } catch (e, st) {
       DebugLogger.error(_tag, 'Google sign in failed', e, st);
+      _setError(e.toString());
+      _setLoading(false);
       rethrow;
     }
   }
@@ -168,23 +236,33 @@ class AuthService extends ChangeNotifier {
   /// Request password reset email
   Future<bool> requestPasswordReset(String email) async {
     try {
+      _setLoading(true);
+      _setError(null);
+
       if (!_isValidEmail(email)) {
         throw 'Invalid email format';
       }
 
-      // TODO: Call backend API to send password reset email
-      // For now, simulate
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+
       DebugLogger.success(_tag, 'Password reset email sent to: $email');
+      _setLoading(false);
       return true;
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Password reset error: ${e.message}', e);
+      _setError(e.message);
+      _setLoading(false);
+      rethrow;
     } catch (e, st) {
       DebugLogger.error(_tag, 'Password reset request failed', e, st);
+      _setError(e.toString());
+      _setLoading(false);
       rethrow;
     }
   }
 
-  /// Reset password with token
+  /// Reset password (user must already have a recovery session)
   Future<bool> resetPassword({
-    required String token,
     required String newPassword,
   }) async {
     try {
@@ -192,11 +270,23 @@ class AuthService extends ChangeNotifier {
         throw 'Password must be at least 8 characters';
       }
 
-      // TODO: Call backend API to reset password
+      final response = await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
+      if (response.user == null) {
+        throw 'Password reset failed';
+      }
+
       DebugLogger.success(_tag, 'Password reset successful');
       return true;
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Password reset error: ${e.message}', e);
+      _setError(e.message);
+      rethrow;
     } catch (e, st) {
       DebugLogger.error(_tag, 'Password reset failed', e, st);
+      _setError(e.toString());
       rethrow;
     }
   }
@@ -204,12 +294,7 @@ class AuthService extends ChangeNotifier {
   /// Sign out
   Future<void> signOut() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token');
-      await prefs.remove('user_id');
-      await prefs.remove('user_email');
-      await prefs.remove('user_name');
-      await prefs.remove('auth_provider');
+      await Supabase.instance.client.auth.signOut();
 
       _isAuthenticated = false;
       _currentUserId = null;
@@ -222,6 +307,16 @@ class AuthService extends ChangeNotifier {
       DebugLogger.error(_tag, 'Sign out failed', e, st);
       rethrow;
     }
+  }
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setError(String? error) {
+    _lastError = error;
+    notifyListeners();
   }
 
   /// Validate email format
