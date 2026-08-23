@@ -197,59 +197,8 @@ export default function FeaturesPage() {
         </div>
       </header>
 
-      {/* 1. Hero Section */}
-      <section className="pt-32 pb-20 px-6 md:px-12 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text */}
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-librio-purple/10 mb-6">
-                <Sparkles className="w-4 h-4 text-librio-purple" />
-                <span className="text-sm font-medium text-librio-purple">AI-powered study companion</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1]">
-                Powerful tools that{' '}
-                <span className="bg-librio-gradient bg-clip-text text-transparent">simplify your life</span>
-              </h1>
-              <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0">
-                Everything you need to master any subject - explanations, flashcards, quizzes, and summaries - all in one place. And it works offline.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link
-                  href="/download"
-                  className="ai-button ai-button-lg rounded-full inline-flex items-center justify-center gap-2 hover:scale-105 transform transition-all duration-200"
-                >
-                  Get the app
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link
-                  href="/how-it-works"
-                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-colors"
-                >
-                  See how it works
-                </Link>
-              </div>
-            </div>
-            {/* Right: Product preview */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-librio-gradient opacity-10 blur-3xl rounded-full"></div>
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
-                <Image
-                  src="/images/Hero-Image.jpg"
-                  alt="Librio app interface"
-                  width={800}
-                  height={600}
-                  className="w-full h-auto object-cover"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* 2. Feature Overview Grid */}
-      <section className="py-20 px-6 md:px-12 bg-[#F8FAFC]">
+      <section className="pt-32 py-20 px-6 md:px-12 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
