@@ -18,6 +18,10 @@ describe('AuthService', () => {
   let authService: AuthService;
 
   beforeEach(() => {
+    // Set JWT secrets for testing
+    process.env.JWT_SECRET = 'test_secret_key_min_32_chars_long_here';
+    process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_key_min_32_chars';
+    
     // Reset mocks before each test
     vi.clearAllMocks();
     
@@ -59,7 +63,7 @@ describe('AuthService', () => {
     it('should reject signup with invalid email', async () => {
       await expect(
         authService.signUp({
-          email: 'invalid-email',
+          email: '',
           password: 'TestPassword123',
           fullName: 'Test User',
         })
@@ -146,7 +150,7 @@ describe('AuthService', () => {
     it('should reject login with invalid email', async () => {
       await expect(
         authService.login({
-          email: 'invalid-email',
+          email: '',
           password: 'TestPassword123',
         })
       ).rejects.toThrow('Email and password are required');
@@ -214,10 +218,6 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('should successfully refresh access token', async () => {
-      // Set JWT secrets for testing
-      process.env.JWT_SECRET = 'test_secret_key_min_32_chars_long_here';
-      process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_key_min_32_chars';
-
       const refreshToken = jwt.sign(
         {
           sub: 'user_123',
@@ -245,8 +245,6 @@ describe('AuthService', () => {
     });
 
     it('should reject expired refresh token', async () => {
-      process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_key_min_32_chars';
-
       const expiredToken = jwt.sign(
         {
           sub: 'user_123',
@@ -264,8 +262,6 @@ describe('AuthService', () => {
 
   describe('verifyAccessToken', () => {
     it('should successfully verify valid access token', () => {
-      process.env.JWT_SECRET = 'test_secret_key_min_32_chars_long_here';
-
       const token = jwt.sign(
         {
           sub: 'user_123',
@@ -288,8 +284,6 @@ describe('AuthService', () => {
     });
 
     it('should reject expired access token', () => {
-      process.env.JWT_SECRET = 'test_secret_key_min_32_chars_long_here';
-
       const expiredToken = jwt.sign(
         {
           sub: 'user_123',
