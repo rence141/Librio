@@ -145,12 +145,9 @@ export default function LandingPage() {
                 FAQ
               </a>
             </nav>
-            {/* Login / CTA - pinned to right edge */}
+            {/* CTA - pinned to right edge */}
             <div className="hidden md:flex items-stretch h-16">
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors flex items-center px-4">
-                Log in
-              </Link>
-              <Link href="/signup" className="ai-button inline-flex items-center justify-center px-6 h-full text-sm font-extrabold rounded-none gap-2">
+              <Link href="/download" className="ai-button inline-flex items-center justify-center px-6 h-full text-sm font-extrabold rounded-none gap-2">
                 <span>Get the app</span>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                   <rect height="7" width="7" x="3" y="3"></rect>
@@ -162,8 +159,8 @@ export default function LandingPage() {
             </div>
             {/* Mobile CTA */}
             <div className="md:hidden pr-4">
-              <Link href="/signup" className="ai-button ai-button-sm rounded-full">
-                Get Started
+              <Link href="/download" className="ai-button ai-button-sm rounded-full">
+                Get the app
               </Link>
             </div>
           </div>
@@ -180,7 +177,7 @@ export default function LandingPage() {
             Master any subject with personalized explanations, smart practice, and effortless organization. Learn smarter, not harder.
           </p>
           <Link
-            href="/signup"
+            href="/download"
             className="ai-button ai-button-lg rounded-full inline-flex items-center justify-center hover:scale-105 transform transition-all duration-200"
           >
             Get Started
@@ -246,7 +243,7 @@ export default function LandingPage() {
                     <span className="text-2xl bg-librio-gradient bg-clip-text text-transparent">✦</span>
                   </h3>
                   <p className="text-gray-100 leading-relaxed text-lg mb-6">{features[0].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors font-semibold">
+                  <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -276,7 +273,7 @@ export default function LandingPage() {
                 <div className="max-w-xs">
                   <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
                   <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[2].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
+                  <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -306,7 +303,7 @@ export default function LandingPage() {
                 <div className="max-w-xs">
                   <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
                   <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
+                  <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -342,7 +339,7 @@ export default function LandingPage() {
                       {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
                     </h3>
                     <p className="text-gray-200 leading-relaxed text-sm mb-4">{feature.description}</p>
-                    <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
+                    <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                       Learn more <span className="ml-2">→</span>
                     </Link>
                   </div>
@@ -462,7 +459,7 @@ export default function LandingPage() {
               Your AI-powered study companion is ready to help.
             </p>
             <Link
-              href="/signup"
+              href="/download"
               className="ai-button ai-button-lg inline-block"
             >
               ✨ Get Started Free
