@@ -135,15 +135,15 @@ export default function LandingPage() {
             </Link>
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
+              <Link href="/features" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 Features
-              </a>
-              <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
+              </Link>
+              <Link href="/how-it-works" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 How It Works
-              </a>
-              <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
+              </Link>
+              <Link href="/faq" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 FAQ
-              </a>
+              </Link>
             </nav>
             {/* CTA - pinned to right edge */}
             <div className="hidden md:flex items-stretch h-16">
