@@ -295,7 +295,7 @@ export default function ContentPage() {
               <ModalBody>
                 {selectedContent && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-600">Title</p>
                         <p className="font-semibold">{selectedContent.title}</p>
@@ -332,7 +332,7 @@ export default function ContentPage() {
 
                     <div className="border-t pt-4">
                       <h3 className="font-semibold mb-3">Statistics</h3>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-gray-600">Downloads</p>
                           <p className="text-2xl font-bold text-blue-600">

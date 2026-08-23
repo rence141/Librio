@@ -35,7 +35,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardBody className="gap-6 p-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Librio</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Librio</h1>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
 

@@ -34,6 +34,12 @@ npm-debug.log*
 coverage/
 .nyc_output/
 
+# --- Next.js build output ---
+.next/
+**/.next/
+next-env.d.ts
+*.tsbuildinfo
+
 # --- LLM weights / benchmark artifacts (never commit weights) ---
 *.gguf
 *.litertlm

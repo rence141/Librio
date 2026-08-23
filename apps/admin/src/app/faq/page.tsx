@@ -116,7 +116,7 @@ export default function FAQPage() {
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                   className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition"
                 >
-                  <span className="font-semibold text-gray-900 text-left">{item.question}</span>
+                  <span className="font-semibold text-sm sm:text-base text-gray-900 text-left">{item.question}</span>
                   <svg
                     className={`w-5 h-5 text-gray-600 transition-transform flex-shrink-0 ${
                       openFaq === index ? 'rotate-180' : ''
