@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
@@ -25,8 +26,23 @@ export default function AdminSidebar() {
     >
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
-        <div className="flex items-center justify-between">
-          {!collapsed && <h1 className="text-2xl font-bold">Librio</h1>}
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
+            <Image
+              src="/icons/logo.png"
+              alt="Librio Logo"
+              width={32}
+              height={32}
+            />
+            {!collapsed && (
+              <Image
+                src="/images/Logo-Text.png"
+                alt="Librio"
+                width={80}
+                height={28}
+              />
+            )}
+          </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 hover:bg-gray-800 rounded-lg transition"

@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: 'Librio - Admin & Public Portal',
   description: 'Librio Admin Dashboard and Public Portal',
   icons: {
-    icon: '/images/favicon.svg',
-    apple: '/images/logo.svg',
+    icon: '/icons/logo.png',
+    apple: '/icons/logo.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {

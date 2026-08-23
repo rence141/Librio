@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, CardBody, Image } from '@nextui-org/react';
+import { Button, Card, CardBody } from '@nextui-org/react';
+import Image from 'next/image';
 import { useAuthStore } from '@/stores/authStore';
 import Link from 'next/link';
 
@@ -22,7 +23,23 @@ export default function Home() {
       {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold text-indigo-600">Librio</div>
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
+            <Image
+              src="/icons/logo.png"
+              alt="Librio Logo"
+              width={40}
+              height={40}
+              priority
+            />
+            <Image
+              src="/images/Logo-Text.png"
+              alt="Librio"
+              width={120}
+              height={40}
+              priority
+              className="hidden sm:block"
+            />
+          </Link>
           <div className="flex gap-4">
             {isAuthenticated ? (
               <>

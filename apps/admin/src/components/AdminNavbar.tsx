@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@nextui-org/react';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
@@ -21,9 +23,15 @@ export default function AdminNavbar() {
 
   return (
     <nav className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-      <div>
+      <Link href="/admin/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
+        <Image
+          src="/icons/logo.png"
+          alt="Librio Logo"
+          width={32}
+          height={32}
+        />
         <h2 className="text-xl font-semibold text-gray-900">Admin Panel</h2>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-4">
         {/* Search */}
