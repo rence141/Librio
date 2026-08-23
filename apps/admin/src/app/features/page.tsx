@@ -60,11 +60,11 @@ export default function FeaturesPage() {
       title: 'AI Tutor',
       tagline: 'A tutor that never sleeps',
       description:
-        'Ask questions about difficult topics and get clear, student-friendly explanations. Librio's AI Tutor adapts to your learning style and pace, providing context-aware answers to your specific questions.',
+        'Ask questions about difficult topics and get clear, student-friendly explanations. Librio\'s AI Tutor adapts to your learning style and pace, providing context-aware answers to your specific questions.',
       benefits: [
         'Adapts to your learning style and pace',
         'Context-aware answers based on your materials',
-        'Available 24/7 — no scheduling required',
+        'Available 24/7 - no scheduling required',
       ],
       image: '/images/AI-Tutor.jpg',
       imageAlt: 'AI Tutor explaining a concept',
@@ -78,7 +78,7 @@ export default function FeaturesPage() {
       benefits: [
         'Auto-generated from your uploaded materials',
         'Spaced repetition optimizes review timing',
-        'Review anywhere — even offline',
+        'Review anywhere - even offline',
       ],
       image: '/images/Flashcard-img.jpg',
       imageAlt: 'Smart Flashcards review interface',
@@ -86,7 +86,7 @@ export default function FeaturesPage() {
     {
       icon: HelpCircle,
       title: 'AI Quizzes',
-      tagline: 'Test what you know, find what you don't',
+      tagline: 'Test what you know, find what you don\'t',
       description:
         'Practice with questions generated directly from your study materials. AI Quizzes identify gaps in your knowledge and help you focus your studying on the areas that need the most attention.',
       benefits: [
@@ -131,7 +131,7 @@ export default function FeaturesPage() {
     },
     {
       title: 'Professionals',
-      description: 'Stay sharp with quick summaries and practice — even during a commute.',
+      description: 'Stay sharp with quick summaries and practice - even during a commute.',
     },
   ];
 
@@ -212,7 +212,7 @@ export default function FeaturesPage() {
                 <span className="bg-librio-gradient bg-clip-text text-transparent">simplify your life</span>
               </h1>
               <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0">
-                Everything you need to master any subject — explanations, flashcards, quizzes, and summaries — all in one place. And it works offline.
+                Everything you need to master any subject - explanations, flashcards, quizzes, and summaries - all in one place. And it works offline.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
@@ -405,10 +405,10 @@ export default function FeaturesPage() {
                 <span className="text-sm font-semibold uppercase tracking-wide">Offline Intelligence</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                Study anywhere, anytime — no internet required
+                Study anywhere, anytime - no internet required
               </h2>
               <p className="text-white/90 text-lg leading-relaxed mb-8">
-                Librio's AI runs entirely on your device. Ask questions, generate summaries, create flashcards, and take quizzes — all without a connection. Your study sessions work anywhere.
+                Librio&apos;s AI runs entirely on your device. Ask questions, generate summaries, create flashcards, and take quizzes - all without a connection. Your study sessions work anywhere.
               </p>
               <Link
                 href="/download"
@@ -430,7 +430,7 @@ export default function FeaturesPage() {
               Built for how you learn
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Whether you're cramming for finals or picking up a new skill, Librio adapts to you.
+              Whether you&apos;re cramming for finals or picking up a new skill, Librio adapts to you.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -518,7 +518,7 @@ export default function FeaturesPage() {
               </a>
             </div>
             <p className="text-sm text-gray-500">
-              Â© 2026 Librio. All rights reserved.
+              &copy; 2026 Librio. All rights reserved.
             </p>
           </div>
         </div>
