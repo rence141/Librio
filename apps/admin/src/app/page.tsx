@@ -216,17 +216,17 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {features.slice(0, 3).map((feature, index) => (
               <div key={index} className="group relative rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col h-[500px]">
-                <div className="absolute inset-0 z-0">
-                  {feature.image && (
+                {feature.image && (
+                  <div className="absolute inset-0 z-0 h-2/3">
                     <Image
                       src={feature.image}
                       alt={feature.title}
                       fill
-                      className="w-full h-2/3 object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                      className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
                     />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
-                </div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
                 <div className="relative z-10 p-8 flex flex-col justify-end h-full mt-auto">
                   <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">{feature.title} ✨</h3>
                   <p className="text-gray-300 leading-relaxed text-sm">{feature.description}</p>
