@@ -448,7 +448,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _errorMessage = null;
                               _emailController.clear();
                               _passwordController.clear();
-                              _nameController.clear();
+                              _usernameController.clear();
                             });
                           },
                       ),
