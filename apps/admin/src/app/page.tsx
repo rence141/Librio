@@ -7,6 +7,12 @@ import Link from 'next/link';
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  const socialLinks = [
+    { name: 'Facebook', href: '#' },
+    { name: 'Twitter', href: '#' },
+    { name: 'Instagram', href: '#' },
+  ];
+
   const faqItems = [
     {
       question: 'What is Librio?',
@@ -114,109 +120,87 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/images/Logo-Text.png"
-              alt="Librio"
-              width={120}
-              height={40}
-              priority
-            />
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-gray-600 hover:text-gray-900 transition">
-              Features
-            </a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition">
-              How It Works
-            </a>
-            <a href="#faq" className="text-gray-600 hover:text-gray-900 transition">
-              FAQ
-            </a>
-            <Link href="/login" className="text-gray-600 hover:text-gray-900 transition">
-              Log In
+      <header className="fixed top-0 inset-x-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/images/Logo-Text.png"
+                alt="Librio"
+                width={120}
+                height={40}
+                priority
+              />
             </Link>
-            <Link
-              href="/signup"
-              className="ai-button ai-button-sm"
-            >
-              Get Started
-            </Link>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                Features
+              </a>
+              <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                How It Works
+              </a>
+              <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                FAQ
+              </a>
+              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                Log In
+              </Link>
+            </nav>
+            {/* CTA Button */}
+            <div className="hidden md:flex items-center gap-4">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Get Started
+              </Link>
+            </div>
+            {/* Mobile CTA */}
+            <div className="md:hidden">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
           </div>
-          <div className="md:hidden">
-            <Link
-              href="/signup"
-              className="ai-button ai-button-sm"
-            >
-              Get Started
-            </Link>
-          </div>
-        </nav>
+        </div>
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                Your AI Study Companion.
-              </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
-                Learn smarter with AI-powered explanations, flashcards, quizzes, summaries, and personalized study tools — all in one place.
-              </p>
-            </div>
-            <div className="flex gap-4 flex-wrap">
-              <Link
-                href="/signup"
-                className="ai-button ai-button-lg"
-              >
-                ✨ Get Started Free
-              </Link>
-              <a
-                href="#how-it-works"
-                className="ai-button-outline ai-button-lg"
-              >
-                See How It Works
-              </a>
-            </div>
-            <p className="text-sm text-gray-500">
-              No credit card required. Start learning in seconds.
-            </p>
-          </div>
-          <div className="relative h-96 rounded-2xl overflow-hidden">
-            <Image
-              src="/images/Hero-Image.jpg"
-              alt="Librio App Interface"
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-            <div className="absolute inset-0 bg-librio-gradient opacity-10"></div>
-          </div>
+      <section className="relative overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40 bg-gradient-to-br from-blue-100 via-purple-50 to-cyan-50">
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
+            Your AI Study <br className="hidden sm:block" /> Companion
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-gray-700 font-medium mb-10">
+            Master any subject with personalized explanations, smart practice, and effortless organization. Learn smarter, not harder.
+          </p>
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-full shadow-lg text-white bg-blue-600 hover:bg-blue-700 hover:scale-105 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Get Started Free
+          </Link>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="bg-gray-50 py-20 md:py-32">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Everything you need to study smarter.
-            </h2>
-            <p className="text-xl text-gray-600">
-              Librio transforms how you learn by combining AI intelligence with proven study techniques.
-            </p>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Everything you need to study smarter</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
-              <div key={index} className="bg-white rounded-xl p-8 border border-gray-200 hover:border-gray-300 transition">
-                <div className="text-4xl mb-4">{benefit.icon}</div>
+              <div key={index} className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] transition-shadow border border-gray-100">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-6 text-2xl">{benefit.icon}</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
-                <p className="text-gray-600">{benefit.description}</p>
+                <p className="text-gray-600 text-sm leading-relaxed">{benefit.description}</p>
               </div>
             ))}
           </div>
@@ -224,35 +208,32 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Powerful features for every learner.
-          </h2>
-          <p className="text-xl text-gray-600">
-            Everything you need to master any subject.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="ai-feature group">
-              {feature.image && (
-                <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
-                  <Image
-                    src={feature.image}
-                    alt={feature.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+      <section id="features" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Powerful tools that simplify your life</h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {features.slice(0, 3).map((feature, index) => (
+              <div key={index} className="group relative rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col h-[500px]">
+                <div className="absolute inset-0 z-0">
+                  {feature.image && (
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="w-full h-2/3 object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
                 </div>
-              )}
-              <div className="ai-feature-header">
-                <div className="text-3xl">{feature.icon}</div>
-                <h3 className="ai-feature-title">{feature.title}</h3>
+                <div className="relative z-10 p-8 flex flex-col justify-end h-full mt-auto">
+                  <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">{feature.title} ✨</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm">{feature.description}</p>
+                </div>
               </div>
-              <p className="text-gray-700">{feature.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -381,31 +362,47 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/images/Logo-Text.png"
-                alt="Librio"
-                width={100}
-                height={32}
-              />
-            </Link>
-            <div className="flex gap-8 text-sm text-gray-600">
-              <Link href="/privacy" className="hover:text-gray-900 transition">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="hover:text-gray-900 transition">
-                Terms of Service
-              </Link>
-              <a href="mailto:support@librio.com" className="hover:text-gray-900 transition">
-                Contact
-              </a>
+      <footer className="bg-gray-900 pt-16 pb-8 border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+            <div className="col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2 mb-6">
+                <Image
+                  src="/images/Logo-Text.png"
+                  alt="Librio"
+                  width={100}
+                  height={32}
+                />
+              </div>
+              <p className="text-gray-400 text-sm">Your intelligent companion for smarter, faster learning.</p>
             </div>
-            <p className="text-sm text-gray-500">
-              © 2026 Librio. All rights reserved.
-            </p>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Product Links</h4>
+              <ul className="space-y-3">
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Chat</a></li>
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Materials</a></li>
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Flashcards</a></li>
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Quizzes</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <ul className="space-y-3">
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">About</a></li>
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Contact Us</a></li>
+                <li><a className="text-gray-400 hover:text-white transition-colors text-sm" href="#">Careers</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Legal</h4>
+              <ul className="space-y-3">
+                <li><Link className="text-gray-400 hover:text-white transition-colors text-sm" href="/privacy">Privacy Policy</Link></li>
+                <li><Link className="text-gray-400 hover:text-white transition-colors text-sm" href="/terms">Terms of Service</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-500">© 2026 Librio. All rights reserved.</p>
           </div>
         </div>
       </footer>
