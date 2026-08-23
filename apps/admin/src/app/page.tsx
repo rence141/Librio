@@ -223,7 +223,7 @@ export default function LandingPage() {
                   src={features[0].image}
                   alt={features[0].title}
                   fill
-                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
               {/* Gradient overlay for text readability */}
@@ -249,7 +249,7 @@ export default function LandingPage() {
                   src={features[2].image}
                   alt={features[2].title}
                   fill
-                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
@@ -270,7 +270,7 @@ export default function LandingPage() {
                   src={features[1].image}
                   alt={features[1].title}
                   fill
-                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
@@ -294,7 +294,7 @@ export default function LandingPage() {
                     src={feature.image}
                     alt={feature.title}
                     fill
-                    className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                    className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
