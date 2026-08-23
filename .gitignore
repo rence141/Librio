@@ -58,7 +58,9 @@ services/api/postgres-data/
 *.pem
 *.key
 secrets/
-apps/mobile/lib/services/online_model_config.dart
+# Note: online_model_config.dart is now safe to commit —
+# it only contains Supabase public URL/anon key, NOT the FreeLLMAPI key.
+# The FreeLLMAPI key is stored as a Supabase Edge Function secret.
 
 # --- Google OAuth (NEVER COMMIT!) ---
 google-services.json

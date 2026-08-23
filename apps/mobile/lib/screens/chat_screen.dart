@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/llm_service.dart';
 import '../services/online_llm_service.dart';
 import '../services/online_model_config.dart';
+import '../services/secure_storage_service.dart';
 import '../services/model_loader.dart';
 import '../services/database_service.dart';
 import '../services/rag_service.dart';
@@ -68,6 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _currentModelIsOnline = false;
   Map<String, bool> _installedModels = {};
   final OnlineLlmService _onlineLlm = OnlineLlmService();
+  final SecureStorageService _secureStorage = SecureStorageService();
 
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
@@ -270,7 +272,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (_currentModelIsOnline && OnlineModelConfig.hasKey) {
         final onlineService = OnlineLlmService();
-        title = await onlineService.generateTitle(userMessage);
+        final authToken = await _secureStorage.getAccessToken();
+        title = await onlineService.generateTitle(userMessage, authToken: authToken);
       } else {
         title = await widget.llmService.generateTitle(userMessage);
       }
@@ -1675,8 +1678,14 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Passes image attachments to online vision models.
   Stream<String> _streamLlmResponse(String prompt, {List<String> imagePaths = const []}) async* {
     if (_currentModelIsOnline) {
-      // Use online model — supports vision
-      yield* _onlineLlm.streamResponse(prompt, model: _currentModelId, imagePaths: imagePaths);
+      // Use online model via Supabase Edge Function — supports vision
+      final authToken = await _secureStorage.getAccessToken();
+      yield* _onlineLlm.streamResponse(
+        prompt,
+        model: _currentModelId,
+        imagePaths: imagePaths,
+        authToken: authToken,
+      );
     } else {
       // Use local on-device LLM — no vision support, just text
       // If images were attached, note that they can't be processed locally
