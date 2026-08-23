@@ -32,15 +32,17 @@ class OnlineModelConfig {
 
   // Available models (server-side controls which one is actually used)
   // The Edge Function can override this — these are client-side suggestions
+  // Model names must match FreeLLMAPI's catalog (check /v1/models)
   static const Map<String, String> models = {
-    'gemini-2.0-flash': 'Gemini 2.0 Flash',
+    'auto': 'Auto (router picks best)',
     'gemini-2.5-flash': 'Gemini 2.5 Flash',
-    'gemini-2.5-pro': 'Gemini 2.5 Pro',
-    'llama-3.3-70b': 'Llama 3.3 70B',
-    'deepseek-r1': 'DeepSeek R1',
-    'qwen3-32b': 'Qwen3 32B',
+    'gemini-3.5-flash': 'Gemini 3.5 Flash',
+    'gemini-3.6-flash': 'Gemini 3.6 Flash',
     'gpt-oss-120b': 'GPT-OSS 120B',
-    'mistral-large': 'Mistral Large',
+    'gpt-oss-20b': 'GPT-OSS 20B',
+    'qwen3.6-27b': 'Qwen3.6 27B',
+    'gemma-4-31b-it': 'Gemma 4 31B',
+    'fusion': 'Fusion (panel of models)',
   };
 
   // Check if Supabase is configured

@@ -21,7 +21,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const FREELLM_BASE_URL = Deno.env.get("FREELLM_BASE_URL") || "https://freellmapi.co/v1";
 const FREELLM_API_KEY = Deno.env.get("FREELLM_API_KEY");
-const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "gemini-2.0-flash";
+const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "auto";
 
 // Rate limits per tier
 const RATE_LIMITS = {
@@ -396,7 +396,7 @@ Deno.serve(async (req: Request) => {
         { role: "user", content: prompt },
       ];
 
-      const result = await callFreeLLMAPI(titleMessages, "gemini-2.0-flash", false, 30);
+      const result = await callFreeLLMAPI(titleMessages, "auto", false, 30);
       const title = result.text.trim().replace(/["'`]/g, "");
 
       return new Response(
