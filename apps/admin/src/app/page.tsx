@@ -171,13 +171,22 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40 bg-gradient-to-br from-blue-100 via-purple-50 to-cyan-50">
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
+      <section className="relative overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/Hero-Image.jpg"
+            alt="Librio Hero"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
             Your AI Study <br className="hidden sm:block" /> Companion
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-gray-700 font-medium mb-10">
+          <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-gray-100 font-medium mb-10">
             Master any subject with personalized explanations, smart practice, and effortless organization. Learn smarter, not harder.
           </p>
           <Link
