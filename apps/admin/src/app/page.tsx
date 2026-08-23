@@ -270,7 +270,7 @@ export default function LandingPage() {
       {/* Differentiation */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
         <div className="text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold bg-librio-gradient bg-clip-text text-transparent mb-6">
             AI that helps you learn, not just gives you answers.
           </h2>
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
