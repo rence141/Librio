@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -340,12 +339,16 @@ export default function LandingPage() {
                   className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition"
                 >
                   <span className="font-semibold text-gray-900 text-left">{item.question}</span>
-                  <ChevronDown
-                    size={20}
-                    className={`text-gray-600 transition-transform flex-shrink-0 ${
+                  <svg
+                    className={`w-5 h-5 text-gray-600 transition-transform flex-shrink-0 ${
                       openFaq === index ? 'rotate-180' : ''
                     }`}
-                  />
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
                 </button>
                 {openFaq === index && (
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
