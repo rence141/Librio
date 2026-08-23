@@ -68,12 +68,15 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <div className="mb-6 flex justify-center">
+          <div className="mb-6 flex justify-center items-center gap-4">
+            <h1 className="text-5xl font-bold text-gray-900">
+              Welcome to
+            </h1>
             <Image
               src="/images/Logo-Text.png"
               alt="Librio"
-              width={300}
-              height={100}
+              width={200}
+              height={60}
               priority
             />
           </div>
