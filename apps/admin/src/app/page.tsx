@@ -214,10 +214,10 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Powerful tools that simplify your life</h2>
           </div>
 
-          {/* Desktop/Tablet: Asymmetric Grid */}
-          <div className="hidden md:grid grid-cols-3 gap-5 auto-rows-[400px]">
-            {/* Left: Large AI Tutor Card (spans 2 columns and full height) */}
-            <div className="col-span-2 group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative">
+          {/* Desktop/Tablet: Asymmetric CSS Grid */}
+          <div className="hidden md:block" style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
+            {/* Left: Large AI Tutor Card (column 1, spans both rows) */}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '1', gridRow: '1 / 3', minHeight: '800px'}}>
               {features[0].image && (
                 <Image
                   src={features[0].image}
@@ -242,30 +242,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Column: Two Stacked Cards */}
-            {/* Top Right: AI Quizzes */}
-            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative">
-              {features[1].image && (
-                <Image
-                  src={features[1].image}
-                  alt={features[1].title}
-                  fill
-                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
-              
-              <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
-                <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
-                <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
-                  Learn more <span className="ml-2">→</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Bottom Right: Smart Flashcards */}
-            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative">
+            {/* Top Right: Smart Flashcards (column 2, row 1) */}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '2', gridRow: '1'}}>
               {features[2].image && (
                 <Image
                   src={features[2].image}
@@ -279,6 +257,27 @@ export default function LandingPage() {
               <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
                 <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
                 <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[2].description}</p>
+                <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                  Learn more <span className="ml-2">→</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Bottom Right: AI Quizzes (column 2, row 2) */}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '2', gridRow: '2'}}>
+              {features[1].image && (
+                <Image
+                  src={features[1].image}
+                  alt={features[1].title}
+                  fill
+                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
+              
+              <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
+                <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
+                <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
                 <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
                   Learn more <span className="ml-2">→</span>
                 </Link>
