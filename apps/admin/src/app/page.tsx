@@ -209,13 +209,28 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section id="features" className="py-24 bg-white">
+        <style>{`
+          @keyframes focusShift {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+          }
+          .feature-card {
+            animation: focusShift 6s ease-in-out infinite;
+          }
+          .feature-card:nth-child(2) {
+            animation-delay: 2s;
+          }
+          .feature-card:nth-child(3) {
+            animation-delay: 4s;
+          }
+        `}</style>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Powerful tools that simplify your life</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col h-full">
+              <div key={index} className="feature-card group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col h-full transition-all duration-300">
                 {feature.image && (
                   <div className="relative w-full h-56 flex-shrink-0">
                     <Image
