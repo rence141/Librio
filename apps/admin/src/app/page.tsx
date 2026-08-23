@@ -122,10 +122,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 inset-x-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center h-16 pl-4">
+        <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer pl-4">
               <Image
                 src="/images/Logo-Text.png"
                 alt="Librio"
@@ -146,7 +145,7 @@ export default function LandingPage() {
                 FAQ
               </a>
             </nav>
-            {/* Login / CTA */}
+            {/* Login / CTA - pinned to right edge */}
             <div className="hidden md:flex items-stretch h-16">
               <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors flex items-center px-4">
                 Log in
@@ -168,7 +167,6 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
-        </div>
       </header>
 
       {/* Hero Section */}
