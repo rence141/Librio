@@ -72,7 +72,7 @@ export default function Home() {
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 whitespace-nowrap">
               Welcome to
             </h1>
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent whitespace-nowrap">
+            <h1 className="text-4xl sm:text-5xl font-bold bg-librio-gradient bg-clip-text text-transparent whitespace-nowrap">
               Librio
             </h1>
           </div>
