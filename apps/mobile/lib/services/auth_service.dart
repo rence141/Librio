@@ -190,24 +190,36 @@ class AuthService extends ChangeNotifier {
       _setLoading(true);
       _setError(null);
 
+      DebugLogger.info(_tag, 'Starting Google Sign-In with client ID: ${GoogleConfig.debugClientId}');
+
       final GoogleSignIn googleSignIn = GoogleSignIn(
         clientId: GoogleConfig.debugClientId,
         scopes: GoogleConfig.scopes,
       );
 
+      DebugLogger.info(_tag, 'Requesting Google sign-in...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
       if (googleUser == null) {
+        DebugLogger.warning(_tag, 'Google sign-in cancelled by user');
         _setLoading(false);
         throw 'Google sign-in cancelled';
       }
 
+      DebugLogger.info(_tag, 'Google user signed in: ${googleUser.email}');
+
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
+      DebugLogger.info(_tag, 'Retrieved Google authentication tokens');
+
       final idToken = googleAuth.idToken;
       if (idToken == null) {
+        DebugLogger.error(_tag, 'Failed to get Google ID token', null);
         throw 'Failed to get Google ID token';
       }
+
+      DebugLogger.info(_tag, 'Signing in to Supabase with Google ID token...');
 
       // Sign in to Supabase with the Google ID token
       final response = await Supabase.instance.client.auth.signInWithIdToken(
@@ -216,17 +228,23 @@ class AuthService extends ChangeNotifier {
       );
 
       if (response.user == null) {
+        DebugLogger.error(_tag, 'Supabase returned no user', null);
         throw 'Supabase Google sign-in failed — no user returned';
       }
 
       _currentUserId = response.user!.id;
       _currentUserEmail = response.user!.email;
-      _currentUserName = googleUser.displayName ?? '';
+      _currentUserName = googleUser.displayName ?? response.user!.userMetadata?['username'] ?? '';
       _isAuthenticated = true;
 
-      DebugLogger.success(_tag, 'Google sign in: ${googleUser.email}');
+      DebugLogger.success(_tag, 'Google sign in successful: ${googleUser.email} (username: $_currentUserName)');
       _setLoading(false);
       return true;
+    } on AuthRetryableFetchException catch (e) {
+      DebugLogger.error(_tag, 'Network error during Google sign-in', e);
+      _setError('Network error. Please check your connection and try again.');
+      _setLoading(false);
+      rethrow;
     } on AuthException catch (e) {
       DebugLogger.error(_tag, 'Supabase Google sign-in error: ${e.message}', e);
       _setError(e.message);
