@@ -46,7 +46,8 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = true;
       _currentUserId = session.user.id;
       _currentUserEmail = session.user.email;
-      _currentUserName = session.user.userMetadata?['full_name'] as String? ??
+      _currentUserName = session.user.userMetadata?['username'] as String? ??
+          session.user.userMetadata?['full_name'] as String? ??
           session.user.userMetadata?['name'] as String? ??
           '';
     } else {
@@ -66,7 +67,8 @@ class AuthService extends ChangeNotifier {
         _isAuthenticated = true;
         _currentUserId = session.user.id;
         _currentUserEmail = session.user.email;
-        _currentUserName = session.user.userMetadata?['full_name'] as String? ??
+        _currentUserName = session.user.userMetadata?['username'] as String? ??
+            session.user.userMetadata?['full_name'] as String? ??
             session.user.userMetadata?['name'] as String? ??
             '';
         DebugLogger.success(_tag, 'User authenticated from Supabase session');
@@ -94,13 +96,15 @@ class AuthService extends ChangeNotifier {
         throw 'Password must be at least 8 characters';
       }
       if (name.trim().isEmpty) {
-        throw 'Name cannot be empty';
+        throw 'Username cannot be empty';
       }
+
+      DebugLogger.info(_tag, 'Signing up user: $email with username: $name');
 
       final response = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
-        data: {'full_name': name},
+        data: {'username': name, 'full_name': name},
       );
 
       if (response.user == null) {
@@ -112,7 +116,7 @@ class AuthService extends ChangeNotifier {
       _currentUserName = name;
       _isAuthenticated = true;
 
-      DebugLogger.success(_tag, 'User signed up: $email');
+      DebugLogger.success(_tag, 'User signed up: $email (username: $name)');
       _setLoading(false);
       return true;
     } on AuthException catch (e) {
@@ -144,6 +148,8 @@ class AuthService extends ChangeNotifier {
         throw 'Password cannot be empty';
       }
 
+      DebugLogger.info(_tag, 'Signing in user: $email');
+
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
@@ -155,12 +161,13 @@ class AuthService extends ChangeNotifier {
 
       _currentUserId = response.user!.id;
       _currentUserEmail = response.user!.email;
-      _currentUserName = response.user!.userMetadata?['full_name'] as String? ??
+      _currentUserName = response.user!.userMetadata?['username'] as String? ??
+          response.user!.userMetadata?['full_name'] as String? ??
           response.user!.userMetadata?['name'] as String? ??
           '';
       _isAuthenticated = true;
 
-      DebugLogger.success(_tag, 'User signed in: $email');
+      DebugLogger.success(_tag, 'User signed in: $email (username: $_currentUserName)');
       _setLoading(false);
       return true;
     } on AuthException catch (e) {

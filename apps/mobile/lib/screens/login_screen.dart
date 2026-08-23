@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/debug_logger.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -20,16 +22,17 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showPassword = false;
   String? _errorMessage;
   bool _isSignUpMode = false;
-  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
 
   static const Color _deepPurple = Color(0xFF7B2CBF);
   static const Color _cyan = Color(0xFF06B6D4);
+  static const String _tag = 'LoginScreen';
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _nameController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -41,8 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (_isSignUpMode && _nameController.text.isEmpty) {
-      setState(() => _errorMessage = 'Please enter your name');
+    if (_isSignUpMode && _usernameController.text.isEmpty) {
+      setState(() => _errorMessage = 'Please enter a username');
       return;
     }
 
@@ -50,30 +53,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authService = context.read<AuthService>();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      final username = _usernameController.text.trim();
+
+      DebugLogger.info(_tag, 'Starting ${_isSignUpMode ? 'sign up' : 'sign in'} for $email');
 
       if (_isSignUpMode) {
         await authService.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          name: _nameController.text.trim(),
+          email: email,
+          password: password,
+          name: username,
         );
+        DebugLogger.success(_tag, 'Sign up successful for $email');
       } else {
         await authService.signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+          email: email,
+          password: password,
         );
+        DebugLogger.success(_tag, 'Sign in successful for $email');
       }
 
       if (mounted) {
         widget.onLoginSuccess();
       }
+    } on AuthRetryableFetchException catch (e) {
+      DebugLogger.error(_tag, 'Network error during auth', e);
+      setState(() => _errorMessage = 'Network error. Please check your connection and try again.');
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Supabase auth error: ${e.message}', e);
+      setState(() => _errorMessage = _formatAuthError(e.message));
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      DebugLogger.error(_tag, 'Unexpected error during auth', e);
+      setState(() => _errorMessage = 'An unexpected error occurred. Please try again.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// Format Supabase auth error messages for user display
+  String _formatAuthError(String message) {
+    if (message.contains('Invalid login credentials')) {
+      return 'Invalid email or password';
+    }
+    if (message.contains('User already registered')) {
+      return 'This email is already registered';
+    }
+    if (message.contains('Password')) {
+      return 'Password must be at least 8 characters';
+    }
+    if (message.contains('Email')) {
+      return 'Please enter a valid email address';
+    }
+    return message;
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -82,13 +116,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authService = context.read<AuthService>();
+      DebugLogger.info(_tag, 'Starting Google Sign-In');
       await authService.signInWithGoogle();
+      DebugLogger.success(_tag, 'Google Sign-In successful');
 
       if (mounted) {
         widget.onLoginSuccess();
       }
+    } on AuthRetryableFetchException catch (e) {
+      DebugLogger.error(_tag, 'Network error during Google Sign-In', e);
+      setState(() => _errorMessage = 'Network error. Please check your connection and try again.');
+    } on AuthException catch (e) {
+      DebugLogger.error(_tag, 'Google Sign-In auth error: ${e.message}', e);
+      setState(() => _errorMessage = _formatAuthError(e.message));
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      DebugLogger.error(_tag, 'Google Sign-In failed', e);
+      setState(() => _errorMessage = 'Google Sign-In failed. Please try again.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -205,15 +248,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Name field (sign up only)
+              // Username field (sign up only)
               if (_isSignUpMode) ...[
-                const Text('Full Name',
+                const Text('Username',
                     style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 TextField(
-                  controller: _nameController,
+                  controller: _usernameController,
                   decoration: InputDecoration(
-                    hintText: 'Enter your full name',
+                    hintText: 'Choose a username',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
