@@ -31,18 +31,15 @@ export default function FeaturesPage() {
   const secondaryFeatures = [
     {
       title: 'Smart Summaries',
-      subtitle: 'Turn long study materials into concise explanations.',
-      longDescription: 'Turn long study materials into concise, digestible explanations. Smart Summaries extract the key points from your notes, textbooks, and documents so you can review them quickly.',
+      description: 'Turn long study materials into concise, digestible explanations. Smart Summaries extract the key points from your notes, textbooks, and documents so you can review them quickly.',
     },
     {
       title: 'Study Materials',
-      subtitle: 'Upload and organize materials that Librio can work with.',
-      longDescription: 'Upload and organize materials that Librio can work with. Support for notes, documents, PDFs, and more. Keep all your study content in one central, organized place.',
+      description: 'Upload and organize materials that Librio can work with. Support for notes, documents, PDFs, and more. Keep all your study content in one central, organized place.',
     },
     {
       title: 'AI Chat',
-      subtitle: 'Have an ongoing conversation with your personal study companion.',
-      longDescription: 'Have an ongoing conversation with your personal study companion. AI Chat remembers context from your previous interactions, making it feel like talking to a knowledgeable tutor who knows your learning journey.',
+      description: 'Have an ongoing conversation with your personal study companion. AI Chat remembers context from your previous interactions, making it feel like talking to a knowledgeable tutor who knows your learning journey.',
     },
   ];
 
@@ -115,8 +112,7 @@ export default function FeaturesPage() {
               />
             </div>
             <div className="p-8 flex-grow">
-              <h2 className="text-2xl font-bold mb-4">{primaryFeatures[0].title}</h2>
-              <h3 className="text-lg font-semibold mb-3 leading-snug">{primaryFeatures[0].subtitle}</h3>
+              <h2 className="text-2xl font-bold mb-3">{primaryFeatures[0].title}</h2>
               <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[0].longDescription}</p>
             </div>
           </article>
@@ -135,7 +131,6 @@ export default function FeaturesPage() {
               </div>
               <div className="p-8">
                 <h2 className="text-2xl font-bold mb-3">{primaryFeatures[1].title}</h2>
-                <h3 className="text-base font-semibold mb-2">{primaryFeatures[1].subtitle}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[1].longDescription}</p>
               </div>
             </article>
@@ -159,7 +154,6 @@ export default function FeaturesPage() {
             {/* Offline Intelligence */}
             <article className="rounded-3xl p-8 bg-librio-gradient text-white flex-1">
               <h2 className="text-xl font-bold mb-3">Offline Intelligence</h2>
-              <h3 className="text-sm font-semibold mb-2">Study anywhere, anytime, without an internet connection.</h3>
               <p className="text-white/90 text-sm leading-relaxed">
                 Once your materials are uploaded, Librio&apos;s AI goes to work — entirely on your device. Ask questions about difficult topics, generate concise summaries, create flashcards for review, and take AI-generated quizzes to test your knowledge. No internet required: the AI runs locally, so your study sessions work anywhere, even offline.
               </p>
@@ -172,8 +166,7 @@ export default function FeaturesPage() {
           {secondaryFeatures.map((feature, index) => (
             <article key={index} className="bg-white rounded-3xl p-8 shadow-sm">
               <h2 className="text-xl font-bold mb-3">{feature.title}</h2>
-              <h3 className="text-sm font-semibold mb-2">{feature.subtitle}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{feature.longDescription}</p>
+              <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
             </article>
           ))}
         </section>
