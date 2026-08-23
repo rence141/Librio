@@ -26,9 +26,10 @@ void main() async {
   }
 
   // Initialize Supabase
+  // Get these values from: https://app.supabase.com → Project Settings → API
   await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://YOUR_PROJECT.supabase.co'),
-    publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'YOUR_ANON_KEY'),
+    url: const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co'),
+    publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'YOUR_ANON_KEY_HERE'),
     debug: kDebugMode,
   );
 
