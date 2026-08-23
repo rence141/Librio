@@ -23,21 +23,13 @@ export default function Home() {
       {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
-            <Image
-              src="/icons/logo.png"
-              alt="Librio Logo"
-              width={40}
-              height={40}
-              priority
-            />
+          <Link href="/" className="hover:opacity-80 transition">
             <Image
               src="/images/Logo-Text.png"
               alt="Librio"
               width={120}
               height={40}
               priority
-              className="hidden sm:block"
             />
           </Link>
           <div className="flex gap-4">
@@ -76,9 +68,15 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Welcome to Librio
-          </h1>
+          <div className="mb-6 flex justify-center">
+            <Image
+              src="/images/Logo-Text.png"
+              alt="Librio"
+              width={300}
+              height={100}
+              priority
+            />
+          </div>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Your comprehensive platform for learning, studying, and managing educational content with AI-powered features.
           </p>
