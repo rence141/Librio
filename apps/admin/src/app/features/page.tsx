@@ -103,10 +103,10 @@ export default function FeaturesPage() {
         </section>
 
         {/* Feature Grid - AI Tutor large left, others stacked right */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:auto-rows-fr">
           {/* AI Tutor - Large Card */}
           <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <div className={`relative ${primaryFeatures[0].imageHeight}`}>
+            <div className={`relative w-full ${primaryFeatures[0].imageHeight}`}>
               <Image
                 src={primaryFeatures[0].image}
                 alt={primaryFeatures[0].title}
@@ -114,7 +114,7 @@ export default function FeaturesPage() {
                 className="object-cover"
               />
             </div>
-            <div className="p-8">
+            <div className="p-8 flex-grow">
               <h2 className="text-2xl font-bold mb-4">{primaryFeatures[0].title}</h2>
               <h3 className="text-lg font-semibold mb-3 leading-snug">{primaryFeatures[0].subtitle}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{primaryFeatures[0].longDescription}</p>
@@ -124,8 +124,8 @@ export default function FeaturesPage() {
           {/* Right column: Smart Flashcards + AI Quizzes + Offline Intelligence */}
           <div className="flex flex-col gap-6">
             {/* Smart Flashcards */}
-            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col">
-              <div className="relative h-48">
+            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col flex-1">
+              <div className="relative w-full h-48">
                 <Image
                   src={primaryFeatures[1].image}
                   alt={primaryFeatures[1].title}
@@ -141,8 +141,8 @@ export default function FeaturesPage() {
             </article>
 
             {/* AI Quizzes */}
-            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col">
-              <div className="relative h-48">
+            <article className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col flex-1">
+              <div className="relative w-full h-48">
                 <Image
                   src={primaryFeatures[2].image}
                   alt={primaryFeatures[2].title}
@@ -157,7 +157,7 @@ export default function FeaturesPage() {
             </article>
 
             {/* Offline Intelligence */}
-            <article className="rounded-3xl p-8 bg-librio-gradient text-white">
+            <article className="rounded-3xl p-8 bg-librio-gradient text-white flex-1">
               <h2 className="text-xl font-bold mb-3">Offline Intelligence</h2>
               <h3 className="text-sm font-semibold mb-2">Study anywhere, anytime, without an internet connection.</h3>
               <p className="text-white/90 text-sm leading-relaxed">
