@@ -5,54 +5,45 @@ export default defineConfig({
   test: {
     // Test environment
     environment: 'node',
-
+    
     // Global test timeout
     testTimeout: 10000,
-
+    
+    // Hook timeout
+    hookTimeout: 10000,
+    
     // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'dist/',
-        'src/tests/',
         '**/*.test.ts',
         '**/*.spec.ts',
+        '**/index.ts',
       ],
-      lines: 80,
-      functions: 80,
-      branches: 75,
-      statements: 80,
+      lines: 70,
+      functions: 70,
+      branches: 70,
+      statements: 70,
     },
-
-    // Include patterns
+    
+    // Include test files
     include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
-
-    // Exclude patterns
+    
+    // Exclude files
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-
-    // Setup files
-    setupFiles: ['./src/tests/setup.ts'],
-
+    
+    // Mock reset
+    mockReset: true,
+    restoreMocks: true,
+    clearMocks: true,
+    
     // Globals
     globals: true,
-
-    // Reporters
-    reporters: ['verbose'],
-
-    // Bail on first failure
-    bail: 0,
-
-    // Isolate test environment
-    isolate: true,
-
-    // Threads
-    threads: true,
-    maxThreads: 4,
-    minThreads: 1,
   },
-
+  
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

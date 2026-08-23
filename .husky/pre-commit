@@ -1,0 +1,45 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Check for .env files
+if git ls-files | grep -E '\.env$|\.env\.[^e]'; then
+  echo "❌ ERROR: .env files found in git!"
+  echo "Please remove .env files from git and use .env.example instead"
+  exit 1
+fi
+
+# Check for secrets
+echo "🔐 Checking for secrets..."
+if git diff --cached | grep -iE 'password|secret|token|api.?key|private.?key'; then
+  echo "⚠️  WARNING: Possible secrets detected in staged changes"
+  echo "Please review the changes above"
+  # Don't fail, just warn
+fi
+
+# Lint backend code
+if [ -d "services/api" ]; then
+  echo "📝 Linting backend code..."
+  cd services/api
+  npm run lint
+  if [ $? -ne 0 ]; then
+    echo "❌ Backend linting failed"
+    exit 1
+  fi
+  cd ../..
+fi
+
+# Lint mobile code
+if [ -d "apps/mobile" ]; then
+  echo "📝 Analyzing mobile code..."
+  cd apps/mobile
+  flutter analyze
+  if [ $? -ne 0 ]; then
+    echo "❌ Flutter analysis failed"
+    exit 1
+  fi
+  cd ../..
+fi
+
+echo "✅ Pre-commit checks passed!"
