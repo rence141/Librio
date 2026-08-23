@@ -223,16 +223,45 @@ export default function LandingPage() {
           .feature-card:nth-child(3) {
             animation-delay: 4s;
           }
+          .feature-card:nth-child(4) {
+            animation-delay: 0s;
+          }
+          .feature-card:nth-child(5) {
+            animation-delay: 2s;
+          }
+          .feature-card:nth-child(6) {
+            animation-delay: 4s;
+          }
         `}</style>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Powerful tools that simplify your life</h2>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="feature-card group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col h-full transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[300px]">
+            {/* Large card - spans 2 rows */}
+            <div className="feature-card lg:row-span-2 group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col transition-all duration-300">
+              {features[0].image && (
+                <div className="relative w-full h-full">
+                  <Image
+                    src={features[0].image}
+                    alt={features[0].title}
+                    fill
+                    className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none rounded-3xl"></div>
+              <div className="relative z-10 flex-1 p-8 flex flex-col justify-end">
+                <h3 className="text-2xl font-bold mb-3">{features[0].title}</h3>
+                <p className="text-gray-300 leading-relaxed text-sm">{features[0].description}</p>
+              </div>
+            </div>
+
+            {/* Medium cards */}
+            {features.slice(1, 3).map((feature, index) => (
+              <div key={index + 1} className="feature-card group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col transition-all duration-300">
                 {feature.image && (
-                  <div className="relative w-full h-56 flex-shrink-0">
+                  <div className="relative w-full h-full">
                     <Image
                       src={feature.image}
                       alt={feature.title}
@@ -242,9 +271,19 @@ export default function LandingPage() {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none rounded-3xl"></div>
-                <div className="relative z-10 flex-1 p-8 flex flex-col justify-end">
-                  <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-gray-300 leading-relaxed text-sm">{feature.description}</p>
+                <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
+                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                  <p className="text-gray-300 leading-relaxed text-xs">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+
+            {/* Small cards */}
+            {features.slice(3, 6).map((feature, index) => (
+              <div key={index + 3} className="feature-card group rounded-2xl overflow-hidden bg-gray-900 text-white shadow-xl flex flex-col transition-all duration-300">
+                <div className="relative z-10 flex-1 p-6 flex flex-col justify-center">
+                  <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                  <p className="text-gray-300 leading-relaxed text-xs">{feature.description}</p>
                 </div>
               </div>
             ))}
