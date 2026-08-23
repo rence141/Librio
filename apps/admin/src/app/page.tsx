@@ -74,7 +74,7 @@ export default function LandingPage() {
       icon: '→',
       title: 'Smart Flashcards',
       description: 'Turn lessons and study materials into flashcards for review.',
-      image: '/images/Flashcard-mg.jpg',
+      image: '/images/Flashcard-img.jpg',
     },
     {
       icon: '→',
@@ -186,6 +186,9 @@ export default function LandingPage() {
           >
             Get Started
           </Link>
+          <p className="mt-6 text-sm text-gray-300">
+            No credit card required. Start learning in seconds.
+          </p>
         </div>
       </section>
 
