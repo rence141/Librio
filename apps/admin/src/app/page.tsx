@@ -68,17 +68,19 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <div className="mb-6 flex justify-center items-center gap-4">
-            <h1 className="text-5xl font-bold text-gray-900">
+          <div className="mb-12 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-2">
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 whitespace-nowrap">
               Welcome to
             </h1>
-            <Image
-              src="/images/Logo-Text.png"
-              alt="Librio"
-              width={200}
-              height={60}
-              priority
-            />
+            <div className="flex-shrink-0">
+              <Image
+                src="/images/Logo-Text.png"
+                alt="Librio"
+                width={220}
+                height={65}
+                priority
+              />
+            </div>
           </div>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Your comprehensive platform for learning, studying, and managing educational content with AI-powered features.
