@@ -1,0 +1,21 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="white"/>
+  
+  <!-- Vertical bar -->
+  <rect x="128" y="85" width="64" height="320" rx="16" fill="url(#iconGradient512)" />
+  
+  <!-- Horizontal bar -->
+  <rect x="128" y="363" width="256" height="64" rx="16" fill="url(#iconGradient512)" />
+  
+  <!-- Accent elements -->
+  <circle cx="420" cy="280" r="40" fill="url(#iconGradient512)" opacity="0.2" />
+</svg>

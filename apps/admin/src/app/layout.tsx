@@ -10,7 +10,15 @@ export const metadata: Metadata = {
   description: 'Librio Admin Dashboard and Public Portal',
   viewport: 'width=device-width, initial-scale=1',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/images/favicon.svg',
+    apple: '/images/logo.svg',
+  },
+  manifest: '/manifest.json',
+  themeColor: '#3B82F6',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Librio',
   },
 };
 
