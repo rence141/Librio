@@ -7,8 +7,6 @@ import {
   CardHeader,
   Button,
   Input,
-  Select,
-  SelectItem,
   Skeleton,
 } from '@nextui-org/react';
 import {

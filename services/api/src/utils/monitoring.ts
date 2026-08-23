@@ -53,7 +53,7 @@ export function sentryRequestHandler() {
  * Sentry error handler middleware
  * Must be added after all other middleware and route handlers
  */
-export function sentryErrorHandler() {
+export function sentryErrorHandler(): any {
   return Sentry.Handlers.errorHandler();
 }
 

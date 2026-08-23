@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader, Divider, Skeleton } from '@nextui-org/react';
+import { Card, CardBody, CardHeader, Skeleton } from '@nextui-org/react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { apiClient } from '@/services/api';
 import { AnalyticsData } from '@/types/admin';

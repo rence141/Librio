@@ -8,12 +8,6 @@ import { Lightbulb, CheckCircle, Settings, Folder } from 'lucide-react';
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const socialLinks = [
-    { name: 'Facebook', href: '#' },
-    { name: 'Twitter', href: '#' },
-    { name: 'Instagram', href: '#' },
-  ];
-
   const faqItems = [
     {
       question: 'What is Librio?',
