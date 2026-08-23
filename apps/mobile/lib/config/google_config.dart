@@ -6,7 +6,7 @@ class GoogleConfig {
   /// Debug Client ID (for development/testing)
   /// Replace with your actual debug Client ID from Google Cloud Console
   static const String debugClientId =
-      'YOUR_DEBUG_CLIENT_ID.apps.googleusercontent.com';
+      '708492045380-dsradu2kso23e2eor85qbpn95sa8bn99.apps.googleusercontent.com';
 
   /// Release Client ID (for production/Google Play)
   /// Replace with your actual release Client ID from Google Cloud Console
@@ -36,5 +36,5 @@ class GoogleConfig {
 
   /// Your release keystore SHA-1 fingerprint
   /// Generate with: keytool -list -v -keystore librio-release-key.jks
-  static const String releaseSha1 = 'YOUR_RELEASE_SHA1_HERE';
+  static const String releaseSha1 = '42:13:1B:8F:CB:45:94:3F:B2:3E:D4:B1:39:23:2C:C3:0F:CD:65:C0';
 }
