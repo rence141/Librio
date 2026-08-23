@@ -2,6 +2,7 @@
 
 import { Card, CardBody } from '@nextui-org/react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function PrivacyPage() {
   return (
@@ -9,8 +10,14 @@ export default function PrivacyPage() {
       {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-indigo-600">
-            Librio
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/images/Logo-Text.png"
+              alt="Librio"
+              width={120}
+              height={40}
+              priority
+            />
           </Link>
         </div>
       </nav>
@@ -87,7 +94,7 @@ export default function PrivacyPage() {
         </Card>
 
         <div className="mt-8 text-center">
-          <Link href="/" className="text-indigo-600 hover:underline">
+          <Link href="/" className="text-librio-purple hover:underline">
             Back to home
           </Link>
         </div>
