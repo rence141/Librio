@@ -186,21 +186,16 @@ export default function LandingPage() {
               No credit card required. Start learning in seconds.
             </p>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-librio-gradient opacity-20 blur-3xl rounded-full"></div>
-            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-xl">
-              {/* Hero Product Preview */}
-              <div className="aspect-square relative">
-                <Image
-                  src="/images/Hero-Image.jpg"
-                  alt="Librio App Interface"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-              </div>
-            </div>
+          <div className="relative h-96 rounded-2xl overflow-hidden">
+            <Image
+              src="/images/Hero-Image.jpg"
+              alt="Librio App Interface"
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-librio-gradient opacity-10"></div>
           </div>
         </div>
       </section>
