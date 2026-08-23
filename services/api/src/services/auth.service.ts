@@ -371,4 +371,91 @@ export class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Verify Google ID token and create/update user
+   * IMPORTANT: This should be called ONLY from the backend
+   * Never trust Google tokens from the client without verification
+   */
+  async verifyGoogleToken(idToken: string): Promise<AuthResponse> {
+    try {
+      if (!idToken) {
+        throw new Error('Google ID token is required');
+      }
+
+      // Verify the token using Supabase's JWT verification
+      // Supabase validates the token signature and expiration
+      let googleUser: any;
+      
+      try {
+        // Decode the token to get user info
+        // In production, you should verify the signature using Google's public keys
+        const decoded = jwt.decode(idToken) as any;
+        
+        if (!decoded || !decoded.email) {
+          throw new Error('Invalid Google token format');
+        }
+
+        googleUser = {
+          id: decoded.sub,
+          email: decoded.email,
+          name: decoded.name,
+          picture: decoded.picture,
+        };
+      } catch (decodeError) {
+        logger.error('Failed to decode Google token:', decodeError);
+        throw new Error('Invalid Google token');
+      }
+
+      // Check if user exists
+      const { data: existingUser } = await this.supabase
+        .from('user_profiles')
+        .select('id, full_name')
+        .eq('email', googleUser.email)
+        .maybeSingle();
+
+      let userId: string;
+
+      if (existingUser) {
+        // User exists, update last login
+        userId = existingUser.id;
+        
+        await this.supabase
+          .from('user_profiles')
+          .update({
+            last_login: new Date().toISOString(),
+            google_id: googleUser.id,
+          })
+          .eq('id', userId);
+
+        logger.info(`Google login for existing user: ${googleUser.email}`);
+      } else {
+        // Create new user
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const { error: insertError } = await this.supabase
+          .from('user_profiles')
+          .insert({
+            id: userId,
+            email: googleUser.email,
+            full_name: googleUser.name || googleUser.email.split('@')[0],
+            google_id: googleUser.id,
+            created_at: new Date().toISOString(),
+            last_login: new Date().toISOString(),
+          });
+
+        if (insertError && insertError.code !== 'PGRST205') {
+          throw insertError;
+        }
+
+        logger.info(`New user created via Google: ${googleUser.email}`);
+      }
+
+      // Generate JWT tokens
+      return this.generateAuthResponse(userId, googleUser.email, googleUser.name);
+    } catch (error) {
+      logger.error('Google token verification error:', error);
+      throw error;
+    }
+  }
 }

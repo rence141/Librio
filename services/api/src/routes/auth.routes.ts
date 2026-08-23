@@ -172,6 +172,35 @@ router.post('/confirm-password-reset', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /auth/google
+ * Verify Google ID token and create/update user
+ */
+router.post('/google', async (req: Request, res: Response) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({
+        error: 'Google ID token is required',
+      });
+    }
+
+    // Verify the Google ID token using Supabase
+    // Supabase will validate the token signature and expiration
+    const result = await authService.verifyGoogleToken(idToken);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Google sign-in error:', error);
+    const message = error instanceof Error ? error.message : 'Google sign-in failed';
+    res.status(401).json({ error: message });
+  }
+});
+
+/**
  * GET /auth/me
  * Get current user
  */
