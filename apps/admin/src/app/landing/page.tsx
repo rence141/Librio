@@ -63,16 +63,19 @@ export default function LandingPage() {
       icon: '🤖',
       title: 'AI Tutor',
       description: 'Ask questions and get clear, student-friendly explanations.',
+      image: '/images/AI-Tutor.jpg',
     },
     {
       icon: '🎴',
       title: 'Smart Flashcards',
       description: 'Turn lessons and study materials into flashcards for review.',
+      image: '/images/Flashcard-img.jpg',
     },
     {
       icon: '❓',
       title: 'AI Quizzes',
       description: 'Generate practice questions based on your learning materials.',
+      image: '/images/AI-Quizzes.jpg',
     },
     {
       icon: '📄',
@@ -186,32 +189,17 @@ export default function LandingPage() {
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-librio-gradient opacity-20 blur-3xl rounded-full"></div>
-            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200 shadow-xl">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="ai-avatar ai-avatar-md flex-shrink-0">✨</div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">AI Tutor</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Ask any question about your study material and get clear, student-friendly explanations.
-                    </p>
-                  </div>
-                </div>
-                <div className="ai-divider"></div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">📚 Smart Flashcards</span>
-                    <span className="ai-badge text-xs">AI Generated</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">❓ Practice Quizzes</span>
-                    <span className="ai-badge text-xs">AI Generated</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">📄 Smart Summaries</span>
-                    <span className="ai-badge text-xs">AI Generated</span>
-                  </div>
-                </div>
+            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-xl">
+              {/* Hero Product Preview */}
+              <div className="aspect-square relative">
+                <Image
+                  src="/images/Hero-Image.jpg"
+                  alt="Librio App Interface"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
               </div>
             </div>
           </div>
@@ -253,7 +241,17 @@ export default function LandingPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="ai-feature">
+            <div key={index} className="ai-feature group">
+              {feature.image && (
+                <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                  <Image
+                    src={feature.image}
+                    alt={feature.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
               <div className="ai-feature-header">
                 <div className="text-3xl">{feature.icon}</div>
                 <h3 className="ai-feature-title">{feature.title}</h3>
@@ -264,63 +262,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Product Showcase */}
-      <section className="bg-gray-50 py-20 md:py-32">
+      {/* How It Works */}
+      <section id="how-it-works" className="bg-gray-50 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              See Librio in action.
+              From study material to understanding.
             </h2>
             <p className="text-xl text-gray-600">
-              Experience the Librio interface and discover how it transforms your study process.
+              Three simple steps to smarter learning.
             </p>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-librio-gradient opacity-10 blur-3xl rounded-3xl"></div>
-            <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xl">
-              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📱</div>
-                  <p className="text-gray-600 font-medium">Librio App Interface</p>
-                  <p className="text-sm text-gray-500 mt-2">AI Chat, Flashcards, Quizzes & More</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {steps.map((step, index) => (
+              <div key={index} className="relative">
+                {index < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-20 left-full w-8 h-0.5 bg-gradient-to-r from-librio-purple to-librio-cyan"></div>
+                )}
+                <div className="bg-white rounded-xl p-8 border border-gray-200">
+                  <div className="text-4xl font-bold bg-librio-gradient bg-clip-text text-transparent mb-4">
+                    {step.number}
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.description}</p>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            From study material to understanding.
-          </h2>
-          <p className="text-xl text-gray-600">
-            Three simple steps to smarter learning.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-20 left-full w-8 h-0.5 bg-gradient-to-r from-librio-purple to-librio-cyan"></div>
-              )}
-              <div className="bg-white rounded-xl p-8 border border-gray-200">
-                <div className="text-4xl font-bold bg-librio-gradient bg-clip-text text-transparent mb-4">
-                  {step.number}
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
       {/* Differentiation */}
-      <section className="bg-gray-50 py-20 md:py-32">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div className="text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             AI that helps you learn, not just gives you answers.
           </h2>
@@ -328,17 +302,17 @@ export default function LandingPage() {
             Librio is designed around how students actually learn. Rather than just answering questions, Librio guides you through understanding, practice, and active recall — the proven methods that build lasting knowledge.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="text-3xl mb-3">🎯</div>
               <h3 className="font-bold text-gray-900 mb-2">Personalized Learning</h3>
               <p className="text-sm text-gray-600">Adapts to your pace and learning style.</p>
             </div>
-            <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="text-3xl mb-3">📊</div>
               <h3 className="font-bold text-gray-900 mb-2">Track Progress</h3>
               <p className="text-sm text-gray-600">See what you've learned and what to focus on.</p>
             </div>
-            <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="text-3xl mb-3">🔄</div>
               <h3 className="font-bold text-gray-900 mb-2">Active Recall</h3>
               <p className="text-sm text-gray-600">Practice retrieval to strengthen memory.</p>
@@ -348,37 +322,39 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Frequently asked questions.
-          </h2>
-          <p className="text-xl text-gray-600">
-            Everything you need to know about Librio.
-          </p>
-        </div>
-        <div className="space-y-4">
-          {faqItems.map((item, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition"
-              >
-                <span className="font-semibold text-gray-900 text-left">{item.question}</span>
-                <ChevronDown
-                  size={20}
-                  className={`text-gray-600 transition-transform ${
-                    openFaq === index ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              {openFaq === index && (
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <p className="text-gray-700">{item.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+      <section id="faq" className="bg-gray-50 py-20 md:py-32">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Frequently asked questions.
+            </h2>
+            <p className="text-xl text-gray-600">
+              Everything you need to know about Librio.
+            </p>
+          </div>
+          <div className="space-y-4">
+            {faqItems.map((item, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <button
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition"
+                >
+                  <span className="font-semibold text-gray-900 text-left">{item.question}</span>
+                  <ChevronDown
+                    size={20}
+                    className={`text-gray-600 transition-transform flex-shrink-0 ${
+                      openFaq === index ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {openFaq === index && (
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <p className="text-gray-700">{item.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
