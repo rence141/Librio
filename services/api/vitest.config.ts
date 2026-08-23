@@ -23,10 +23,12 @@ export default defineConfig({
         '**/*.spec.ts',
         '**/index.ts',
       ],
-      lines: 70,
-      functions: 70,
-      branches: 70,
-      statements: 70,
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 70,
+        statements: 70,
+      },
     },
     
     // Include test files
