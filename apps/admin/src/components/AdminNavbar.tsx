@@ -44,6 +44,11 @@ export default function AdminNavbar() {
           />
         </div>
 
+        {/* AI Feature Badge */}
+        <div className="ai-badge hidden sm:flex">
+          AI Powered
+        </div>
+
         {/* Notifications */}
         <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
           <span className="text-xl">🔔</span>

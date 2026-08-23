@@ -49,9 +49,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Welcome back! Here's your system overview.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's your system overview.</p>
+        </div>
+        <div className="ai-badge">
+          AI Insights Available
+        </div>
       </div>
 
       {/* Key Metrics */}
@@ -175,6 +180,25 @@ export default function AdminDashboard() {
             </div>
           </CardBody>
         </Card>
+      </div>
+
+      {/* AI Features Section */}
+      <div className="ai-feature">
+        <div className="ai-feature-header">
+          <div className="ai-feature-icon">✨</div>
+          <h2 className="ai-feature-title text-lg">AI-Powered Insights</h2>
+        </div>
+        <p className="text-gray-700 mb-4">
+          Get AI-generated insights and recommendations for your platform. Our advanced analytics engine analyzes user behavior patterns and provides actionable insights.
+        </p>
+        <div className="flex gap-3 flex-wrap">
+          <button className="ai-button ai-button-sm">
+            Generate AI Report
+          </button>
+          <button className="ai-button-outline ai-button-sm">
+            View Recommendations
+          </button>
+        </div>
       </div>
     </div>
   );

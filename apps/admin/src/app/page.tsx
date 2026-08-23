@@ -84,15 +84,15 @@ export default function Home() {
               as={Link}
               href="/download"
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+              className="ai-button ai-button-lg"
             >
-              Download App
+              ✨ Download App
             </Button>
             <Button
               as={Link}
               href="/signup"
               size="lg"
-              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+              className="ai-button-outline ai-button-lg"
             >
               Get Started
             </Button>

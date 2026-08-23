@@ -52,6 +52,18 @@ export default function AdminSidebar() {
         </div>
       </div>
 
+      {/* AI Feature Indicator */}
+      {!collapsed && (
+        <div className="px-4 py-4 border-t border-gray-800">
+          <div className="ai-feature">
+            <div className="ai-feature-header">
+              <div className="ai-feature-icon">✨</div>
+              <span className="ai-feature-title text-sm">AI Powered</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Menu */}
       <nav className="flex-1 px-4 py-8 space-y-2">
         {menuItems.map((item) => {
