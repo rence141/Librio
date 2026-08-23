@@ -53,10 +53,10 @@ export default function Home() {
               </>
             ) : (
               <>
-                <Button as={Link} href="/login" variant="flat">
+                <Button as={Link} href="/login" className="bg-blue-600 text-white hover:bg-blue-700">
                   Login
                 </Button>
-                <Button as={Link} href="/signup" color="primary">
+                <Button as={Link} href="/signup" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700">
                   Sign Up
                 </Button>
               </>
@@ -85,12 +85,12 @@ export default function Home() {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Your comprehensive platform for learning, studying, and managing educational content with AI-powered features.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Button
               as={Link}
               href="/download"
               size="lg"
-              color="primary"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
             >
               Download App
             </Button>
@@ -98,7 +98,7 @@ export default function Home() {
               as={Link}
               href="/signup"
               size="lg"
-              variant="bordered"
+              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
             >
               Get Started
             </Button>
