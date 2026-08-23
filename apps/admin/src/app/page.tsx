@@ -42,22 +42,22 @@ export default function LandingPage() {
 
   const benefits = [
     {
-      icon: '💡',
+      icon: '→',
       title: 'Understand',
       description: 'Break difficult topics into simple, understandable explanations.',
     },
     {
-      icon: '✍️',
+      icon: '→',
       title: 'Practice',
       description: 'Generate questions and quizzes from your study materials.',
     },
     {
-      icon: '🧠',
+      icon: '→',
       title: 'Remember',
       description: 'Use flashcards and review tools to reinforce what you\'ve learned.',
     },
     {
-      icon: '📚',
+      icon: '→',
       title: 'Organize',
       description: 'Keep your study materials and learning tools together.',
     },
@@ -65,35 +65,35 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: '🤖',
+      icon: '→',
       title: 'AI Tutor',
       description: 'Ask questions and get clear, student-friendly explanations.',
       image: '/images/AI-Tutor.jpg',
     },
     {
-      icon: '🎴',
+      icon: '→',
       title: 'Smart Flashcards',
       description: 'Turn lessons and study materials into flashcards for review.',
       image: '/images/Flashcard-img.jpg',
     },
     {
-      icon: '❓',
+      icon: '→',
       title: 'AI Quizzes',
       description: 'Generate practice questions based on your learning materials.',
       image: '/images/AI-Quizzes.jpg',
     },
     {
-      icon: '📄',
+      icon: '→',
       title: 'Smart Summaries',
       description: 'Turn long study materials into concise explanations.',
     },
     {
-      icon: '📁',
+      icon: '→',
       title: 'Study Materials',
       description: 'Upload and organize materials that Librio can work with.',
     },
     {
-      icon: '💬',
+      icon: '→',
       title: 'AI Chat',
       description: 'Have an ongoing conversation with your personal study companion.',
     },
@@ -184,7 +184,7 @@ export default function LandingPage() {
             href="/signup"
             className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-full shadow-lg text-white bg-blue-600 hover:bg-blue-700 hover:scale-105 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Get Started Free
+            Get Started
           </Link>
         </div>
       </section>
@@ -228,7 +228,7 @@ export default function LandingPage() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none rounded-3xl"></div>
                 <div className="relative z-10 flex-1 p-8 flex flex-col justify-end">
-                  <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">{feature.title} ✨</h3>
+                  <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
                   <p className="text-gray-300 leading-relaxed text-sm">{feature.description}</p>
                 </div>
               </div>
@@ -278,17 +278,14 @@ export default function LandingPage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="text-3xl mb-3">🎯</div>
               <h3 className="font-bold text-gray-900 mb-2">Personalized Learning</h3>
               <p className="text-sm text-gray-600">Adapts to your pace and learning style.</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="text-3xl mb-3">📊</div>
               <h3 className="font-bold text-gray-900 mb-2">Track Progress</h3>
               <p className="text-sm text-gray-600">See what you've learned and what to focus on.</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="text-3xl mb-3">🔄</div>
               <h3 className="font-bold text-gray-900 mb-2">Active Recall</h3>
               <p className="text-sm text-gray-600">Practice retrieval to strengthen memory.</p>
             </div>
