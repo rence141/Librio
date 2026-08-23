@@ -3,10 +3,10 @@
 /// Get your Client IDs from Google Cloud Console:
 /// https://console.cloud.google.com/apis/credentials
 class GoogleConfig {
-  /// Debug Client ID (for development/testing)
-  /// Replace with your actual debug Client ID from Google Cloud Console
+  /// Debug Client ID (for development/testing on Android)
+  /// This is the Android OAuth Client ID from Google Cloud Console
   static const String debugClientId =
-      '708492045380-dsradu2kso23e2eor85qbpn95sa8bn99.apps.googleusercontent.com';
+      '123074140690-s3ernbne0bfeffprnokhmbnn6o8jkr25.apps.googleusercontent.com';
 
   /// Release Client ID (for production/Google Play)
   /// Replace with your actual release Client ID from Google Cloud Console
