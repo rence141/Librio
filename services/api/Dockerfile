@@ -10,7 +10,8 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
 
 # Build application
 RUN npm run build
@@ -24,11 +25,9 @@ WORKDIR /app
 RUN apk add --no-cache dumb-init
 
 # Copy from builder
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./next.config.js
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -36,15 +35,15 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
-# Expose port (Railway sets PORT env var, Next.js reads it automatically)
+# Expose port (Railway sets PORT env var)
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 # Use dumb-init to handle signals
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]

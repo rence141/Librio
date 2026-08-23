@@ -20,16 +20,19 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 // Logging middleware
 app.use(pinoHttp());
 
-// CORS middleware
+// CORS middleware - support Railway and custom origins via env
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  : [
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'http://localhost:8081',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:8080',
+      'http://127.0.0.1:8081',
+    ];
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://localhost:8081',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:8081',
-  ],
+  origin: corsOrigins,
   credentials: true,
 }));
 

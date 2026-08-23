@@ -8,6 +8,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   },
+  // Railway sets PORT env var - Next.js uses it automatically for `next start`
   webpack: (config, { isServer }) => {
     return config;
   },
