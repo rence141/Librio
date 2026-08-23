@@ -74,7 +74,7 @@ export default function LandingPage() {
       icon: '→',
       title: 'Smart Flashcards',
       description: 'Turn lessons and study materials into flashcards for review.',
-      image: '/images/Flashcard-img.jpg',
+      image: '/images/Flashcard-mg.jpg',
     },
     {
       icon: '→',
