@@ -170,13 +170,13 @@ export default function FAQPage() {
               />
             </Link>
             <div className="flex gap-8 text-sm text-gray-600">
-              <Link href="/privacy" className="hover:text-gray-900 transition">
+              <Link href="/privacy" className="hover:text-white transition">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="hover:text-gray-900 transition">
+              <Link href="/terms" className="hover:text-white transition">
                 Terms of Service
               </Link>
-              <a href="mailto:support@librio.com" className="hover:text-gray-900 transition">
+              <a href="mailto:support@librio.com" className="hover:text-white transition">
                 Contact
               </a>
             </div>
