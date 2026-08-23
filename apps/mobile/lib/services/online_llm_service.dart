@@ -4,6 +4,36 @@ import 'package:http/http.dart' as http;
 import '../utils/debug_logger.dart';
 import 'online_model_config.dart';
 
+/// Response wrapper that includes token usage data
+class AiResponse {
+  final String text;
+  final int? inputTokens;
+  final int? outputTokens;
+  final int? totalTokens;
+  final String? model;
+  final int? remaining;
+
+  AiResponse({
+    required this.text,
+    this.inputTokens,
+    this.outputTokens,
+    this.totalTokens,
+    this.model,
+    this.remaining,
+  });
+
+  factory AiResponse.fromJson(Map<String, dynamic> json) {
+    return AiResponse(
+      text: json['text'] ?? '',
+      inputTokens: json['usage']?['inputTokens'] as int?,
+      outputTokens: json['usage']?['outputTokens'] as int?,
+      totalTokens: json['usage']?['totalTokens'] as int?,
+      model: json['model'] as String?,
+      remaining: json['remaining'] as int?,
+    );
+  }
+}
+
 /// Online LLM service via Supabase Edge Function.
 ///
 /// Architecture:
@@ -67,6 +97,76 @@ class OnlineLlmService {
         lower.endsWith('.png') ||
         lower.endsWith('.gif') ||
         lower.endsWith('.webp');
+  }
+
+  /// Generate a response with token usage data.
+  /// Returns AiResponse which includes text and token counts.
+  Future<AiResponse> generateResponseWithUsage(
+    String prompt, {
+    String model = 'gemini-2.0-flash',
+    List<String> imagePaths = const [],
+    List<Map<String, String>>? conversationContext,
+    String? authToken,
+  }) async {
+    const tag = 'OnlineLlm';
+
+    if (!OnlineModelConfig.isConfigured) {
+      return AiResponse(text: 'Online model not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
+    }
+
+    try {
+      final url = Uri.parse(OnlineModelConfig.edgeFunctionUrl);
+
+      final body = <String, dynamic>{
+        'prompt': prompt,
+        'model': model,
+      };
+
+      if (imagePaths.isNotEmpty) {
+        body['imageContent'] = _buildUserContent(prompt, imagePaths);
+      }
+
+      if (conversationContext != null && conversationContext.isNotEmpty) {
+        body['conversationContext'] = conversationContext;
+      }
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await http.post(url, headers: headers, body: jsonEncode(body));
+
+      if (response.statusCode == 401) {
+        DebugLogger.error(tag, 'Authentication required', null, null);
+        return AiResponse(text: 'Error: Authentication required. Please sign in to use AI features.');
+      }
+
+      if (response.statusCode == 429) {
+        final data = jsonDecode(response.body);
+        final message = data['error']?['message'] ?? 'Rate limit exceeded.';
+        DebugLogger.error(tag, 'Rate limited: $message', null, null);
+        return AiResponse(text: 'Error: $message');
+      }
+
+      if (response.statusCode != 200) {
+        DebugLogger.error(tag, 'Edge Function error: ${response.statusCode}',
+            Exception(response.body), null);
+        final data = jsonDecode(response.body);
+        final message = data['error']?['message'] ?? 'Request failed.';
+        return AiResponse(text: 'Error: $message');
+      }
+
+      final data = jsonDecode(response.body);
+      DebugLogger.success(tag, 'Response: ${data['text']?.length ?? 0} chars');
+      return AiResponse.fromJson(data);
+    } catch (e, st) {
+      DebugLogger.error(tag, 'Request failed', e, st);
+      return AiResponse(text: 'Error connecting to AI service: $e');
+    }
   }
 
   /// Generate a response (non-streaming).
@@ -138,6 +238,7 @@ class OnlineLlmService {
       final data = jsonDecode(response.body);
       final text = data['text'] ?? '';
       DebugLogger.success(tag, 'Response: ${text.length} chars');
+      // Token usage is available in data['usage'] if needed by caller
       return text;
     } catch (e, st) {
       DebugLogger.error(tag, 'Request failed', e, st);

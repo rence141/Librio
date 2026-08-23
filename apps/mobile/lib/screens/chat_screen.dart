@@ -15,6 +15,7 @@ import '../services/embeddings_service.dart';
 import '../services/document_upload_service.dart';
 import '../services/flashcard_generator.dart';
 import '../models/conversation.dart';
+import '../models/context_window.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
@@ -70,6 +71,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Map<String, bool> _installedModels = {};
   final OnlineLlmService _onlineLlm = OnlineLlmService();
 
+  // Context window tracking
+  late ContextWindow _contextWindow;
+
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
   static const Color _cyan = Color(0xFF06B6D4);
@@ -120,6 +124,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _currentConversation = _conversations.first;
         await _loadConversationHistory();
       }
+
+      // Initialize context window tracker
+      _contextWindow = ContextWindow(conversationId: _currentConversation.id);
 
       // Check model status
       _isOffline = !widget.llmService.isInitialized;
@@ -184,6 +191,17 @@ class _ChatScreenState extends State<ChatScreen> {
     if (userMessage.isEmpty && attachments.isEmpty) return;
     if (_isGenerating) return;
 
+    // Check context limit
+    if (_contextWindow.isLimitExceeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Context limit exceeded. Start a new conversation.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     _messageController.clear();
     _pendingAttachments.clear();
 
@@ -236,6 +254,18 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         await _databaseService.addMessage(_currentConversation.id, response, false);
         _scrollToBottom();
+
+        // Show context window status if online model
+        if (_currentModelIsOnline && _contextWindow.warningLevel > 0) {
+          final color = _contextWindow.warningLevel == 2 ? Colors.red : Colors.orange;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_contextWindow.statusMessage),
+              backgroundColor: color,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
 
         // Auto-generate title if this is the first exchange
         if (_currentConversation.title == 'New Chat' && _databaseService.isAvailable) {
@@ -1273,6 +1303,42 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
               ),
+            // Context window status (if online model and usage > 0)
+            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: _contextWindow.warningLevel == 2
+                    ? Colors.red[50]
+                    : _contextWindow.warningLevel == 1
+                        ? Colors.orange[50]
+                        : Colors.transparent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _contextWindow.statusMessage,
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 12,
+                          color: _contextWindow.warningLevel == 2
+                              ? Colors.red[700]
+                              : _contextWindow.warningLevel == 1
+                                  ? Colors.orange[700]
+                                  : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    if (_contextWindow.warningLevel > 0)
+                      Icon(
+                        _contextWindow.warningLevel == 2 ? Icons.warning : Icons.info,
+                        size: 16,
+                        color: _contextWindow.warningLevel == 2 ? Colors.red[700] : Colors.orange[700],
+                      ),
+                  ],
+                ),
+              ),
             // Input row
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1678,13 +1744,21 @@ class _ChatScreenState extends State<ChatScreen> {
   Stream<String> _streamLlmResponse(String prompt, {List<String> imagePaths = const []}) async* {
     if (_currentModelIsOnline) {
       // Use online model via Supabase Edge Function — supports vision
+      // Get response with token usage data
       final authToken = Supabase.instance.client.auth.currentSession?.accessToken;
-      yield* _onlineLlm.streamResponse(
+      final response = await _onlineLlm.generateResponseWithUsage(
         prompt,
         model: _currentModelId,
         imagePaths: imagePaths,
         authToken: authToken,
       );
+      
+      // Track token usage
+      if (response.inputTokens != null && response.outputTokens != null) {
+        _contextWindow.addUsage(response.inputTokens!, response.outputTokens!);
+      }
+      
+      yield response.text;
     } else {
       // Use local on-device LLM — no vision support, just text
       // If images were attached, note that they can't be processed locally
