@@ -12,7 +12,9 @@ export class SupabaseService {
     const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
 
     if (!url || !serviceKey) {
-      throw new Error('Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_SECRET_KEY');
+      logger.warn('Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SECRET_KEY. Supabase features will be unavailable.');
+      this.client = null as any;
+      return;
     }
 
     this.client = createClient(url, serviceKey);
@@ -387,5 +389,9 @@ export function getSupabaseService(): SupabaseService {
   return instance;
 }
 
-// Export singleton (lazy initialized)
-export const supabaseService = getSupabaseService();
+// Lazy proxy - only initializes when accessed, not at module load
+export const supabaseService = new Proxy({} as SupabaseService, {
+  get(_target, prop) {
+    return Reflect.get(getSupabaseService(), prop);
+  },
+});
