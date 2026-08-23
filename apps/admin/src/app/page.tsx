@@ -136,16 +136,16 @@ export default function LandingPage() {
             </Link>
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#features" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 Features
               </a>
-              <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 How It Works
               </a>
-              <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 FAQ
               </a>
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-librio-purple transition-colors">
                 Log In
               </Link>
             </nav>
@@ -153,7 +153,7 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-4">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="ai-button ai-button-sm rounded-full"
               >
                 Get Started
               </Link>
@@ -162,7 +162,7 @@ export default function LandingPage() {
             <div className="md:hidden">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                className="ai-button ai-button-sm rounded-full"
               >
                 Get Started
               </Link>
@@ -183,7 +183,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-full shadow-lg text-white bg-blue-600 hover:bg-blue-700 hover:scale-105 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="ai-button ai-button-lg rounded-full inline-flex items-center justify-center hover:scale-105 transform transition-all duration-200"
           >
             Get Started
           </Link>
@@ -204,7 +204,7 @@ export default function LandingPage() {
               const IconComponent = benefit.icon;
               return (
                 <div key={index} className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] transition-shadow border border-gray-100">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-6 text-blue-600">
+                  <div className="w-12 h-12 rounded-xl bg-librio-purple/10 flex items-center justify-center mb-6 text-librio-purple">
                     <IconComponent size={24} />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h3>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                     <span className="text-2xl bg-librio-gradient bg-clip-text text-transparent">✦</span>
                   </h3>
                   <p className="text-gray-100 leading-relaxed text-lg mb-6">{features[0].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors font-semibold">
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -281,7 +281,7 @@ export default function LandingPage() {
                 <div className="max-w-xs">
                   <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
                   <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[2].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -311,7 +311,7 @@ export default function LandingPage() {
                 <div className="max-w-xs">
                   <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
                   <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                     Learn more <span className="ml-2">→</span>
                   </Link>
                 </div>
@@ -347,7 +347,7 @@ export default function LandingPage() {
                       {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
                     </h3>
                     <p className="text-gray-200 leading-relaxed text-sm mb-4">{feature.description}</p>
-                    <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                    <Link href="/signup" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
                       Learn more <span className="ml-2">→</span>
                     </Link>
                   </div>
