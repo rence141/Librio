@@ -217,70 +217,95 @@ export default function LandingPage() {
           {/* Desktop/Tablet: Asymmetric CSS Grid */}
           <div className="hidden md:block" style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
             {/* Left: Large AI Tutor Card (column 1, spans both rows) */}
-            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '1', gridRow: '1 / 3', minHeight: '800px'}}>
-              {features[0].image && (
-                <Image
-                  src={features[0].image}
-                  alt={features[0].title}
-                  fill
-                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                />
-              )}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative" style={{gridColumn: '1', gridRow: '1 / 3', minHeight: '800px'}}>
+              {/* Background Image - fills entire card */}
+              <div className="absolute inset-0 overflow-hidden">
+                {features[0].image && (
+                  <Image
+                    src={features[0].image}
+                    alt={features[0].title}
+                    fill
+                    className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{objectPosition: 'center'}}
+                  />
+                )}
+              </div>
+              
               {/* Gradient overlay for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent pointer-events-none"></div>
               
-              {/* Content */}
-              <div className="relative z-10 flex-1 p-10 flex flex-col justify-end">
-                <h3 className="text-4xl font-bold mb-4 flex items-center gap-3">
-                  {features[0].title}
-                  <span className="text-2xl bg-librio-gradient bg-clip-text text-transparent">✦</span>
-                </h3>
-                <p className="text-gray-100 leading-relaxed text-lg mb-6">{features[0].description}</p>
-                <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors font-semibold">
-                  Learn more <span className="ml-2">→</span>
-                </Link>
+              {/* Content - independent layer, never cropped */}
+              <div className="relative z-10 h-full flex flex-col justify-end p-10">
+                <div className="max-w-xs">
+                  <h3 className="text-4xl font-bold mb-4 flex items-center gap-3">
+                    {features[0].title}
+                    <span className="text-2xl bg-librio-gradient bg-clip-text text-transparent">✦</span>
+                  </h3>
+                  <p className="text-gray-100 leading-relaxed text-lg mb-6">{features[0].description}</p>
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors font-semibold">
+                    Learn more <span className="ml-2">→</span>
+                  </Link>
+                </div>
               </div>
             </div>
 
             {/* Top Right: Smart Flashcards (column 2, row 1) */}
-            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '2', gridRow: '1'}}>
-              {features[2].image && (
-                <Image
-                  src={features[2].image}
-                  alt={features[2].title}
-                  fill
-                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                />
-              )}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative" style={{gridColumn: '2', gridRow: '1'}}>
+              {/* Background Image - fills entire card */}
+              <div className="absolute inset-0 overflow-hidden">
+                {features[2].image && (
+                  <Image
+                    src={features[2].image}
+                    alt={features[2].title}
+                    fill
+                    className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{objectPosition: 'center'}}
+                  />
+                )}
+              </div>
+              
+              {/* Gradient overlay for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
               
-              <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
-                <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[2].description}</p>
-                <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
-                  Learn more <span className="ml-2">→</span>
-                </Link>
+              {/* Content - independent layer, never cropped */}
+              <div className="relative z-10 h-full flex flex-col justify-end p-6">
+                <div className="max-w-xs">
+                  <h3 className="text-2xl font-bold mb-2">{features[2].title}</h3>
+                  <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[2].description}</p>
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                    Learn more <span className="ml-2">→</span>
+                  </Link>
+                </div>
               </div>
             </div>
 
             {/* Bottom Right: AI Quizzes (column 2, row 2) */}
-            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative" style={{gridColumn: '2', gridRow: '2'}}>
-              {features[1].image && (
-                <Image
-                  src={features[1].image}
-                  alt={features[1].title}
-                  fill
-                  className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                />
-              )}
+            <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative" style={{gridColumn: '2', gridRow: '2'}}>
+              {/* Background Image - fills entire card */}
+              <div className="absolute inset-0 overflow-hidden">
+                {features[1].image && (
+                  <Image
+                    src={features[1].image}
+                    alt={features[1].title}
+                    fill
+                    className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{objectPosition: 'center'}}
+                  />
+                )}
+              </div>
+              
+              {/* Gradient overlay for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
               
-              <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
-                <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
-                <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
-                  Learn more <span className="ml-2">→</span>
-                </Link>
+              {/* Content - independent layer, never cropped */}
+              <div className="relative z-10 h-full flex flex-col justify-end p-6">
+                <div className="max-w-xs">
+                  <h3 className="text-2xl font-bold mb-2">{features[1].title}</h3>
+                  <p className="text-gray-200 leading-relaxed text-sm mb-4">{features[1].description}</p>
+                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                    Learn more <span className="ml-2">→</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -288,26 +313,35 @@ export default function LandingPage() {
           {/* Mobile: Stacked Layout */}
           <div className="md:hidden space-y-5">
             {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl flex flex-col relative h-80">
-                {feature.image && (
-                  <Image
-                    src={feature.image}
-                    alt={feature.title}
-                    fill
-                    className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                  />
-                )}
+              <div key={index} className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative h-80">
+                {/* Background Image - fills entire card */}
+                <div className="absolute inset-0 overflow-hidden">
+                  {feature.image && (
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{objectPosition: 'center'}}
+                    />
+                  )}
+                </div>
+                
+                {/* Gradient overlay for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
                 
-                <div className="relative z-10 flex-1 p-6 flex flex-col justify-end">
-                  <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                    {feature.title}
-                    {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
-                  </h3>
-                  <p className="text-gray-200 leading-relaxed text-sm mb-4">{feature.description}</p>
-                  <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
-                    Learn more <span className="ml-2">→</span>
-                  </Link>
+                {/* Content - independent layer, never cropped */}
+                <div className="relative z-10 h-full flex flex-col justify-end p-6">
+                  <div className="max-w-xs">
+                    <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                      {feature.title}
+                      {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
+                    </h3>
+                    <p className="text-gray-200 leading-relaxed text-sm mb-4">{feature.description}</p>
+                    <Link href="/signup" className="inline-flex items-center text-white hover:text-blue-300 transition-colors text-sm font-semibold">
+                      Learn more <span className="ml-2">→</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
