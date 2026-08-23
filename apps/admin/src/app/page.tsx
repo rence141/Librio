@@ -171,18 +171,9 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-32 lg:pt-40 lg:pb-40">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/Hero-Image.jpg"
-            alt="Librio Hero"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/40"></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative overflow-hidden min-h-screen flex items-center justify-center" style={{backgroundImage: 'url(/images/Hero-Image.jpg)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
+        <div className="absolute inset-0 bg-black/40 z-0"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
             Your AI Study <br className="hidden sm:block" /> Companion
           </h1>
