@@ -372,8 +372,15 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Handle health check (keep Railway warm)
+  if (req.method === "GET") {
+    return new Response(JSON.stringify({ status: "ok", timestamp: new Date().toISOString() }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method !== "POST") {
-    return errorResponse(405, "METHOD_NOT_ALLOWED", "Only POST is supported.");
+    return errorResponse(405, "METHOD_NOT_ALLOWED", "Only POST and GET are supported.");
   }
 
   // ── 1. Authenticate ──

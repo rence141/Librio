@@ -1342,21 +1342,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
-            // Compact rate limit indicator
-            if (_currentModelIsOnline && _lastRateLimitRemaining != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                color: Colors.grey[100],
-                child: Text(
-                  '📊 ${_lastRateLimitRemaining} requests remaining today',
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 11,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
             // Input row
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1408,6 +1393,58 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            // Context & Rate Limit Indicator (square)
+            if (_currentModelIsOnline)
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _contextWindow.warningLevel == 2
+                      ? Colors.red[100]
+                      : _contextWindow.warningLevel == 1
+                          ? Colors.orange[100]
+                          : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _contextWindow.warningLevel == 2
+                        ? Colors.red[300]!
+                        : _contextWindow.warningLevel == 1
+                            ? Colors.orange[300]!
+                            : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
+                child: Tooltip(
+                  message: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"}',
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${_contextWindow.usagePercentage.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: _contextWindow.warningLevel == 2
+                              ? Colors.red[700]
+                              : _contextWindow.warningLevel == 1
+                                  ? Colors.orange[700]
+                                  : Colors.grey[700],
+                        ),
+                      ),
+                      Text(
+                        '${_lastRateLimitRemaining ?? "?"}',
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 9,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             const SizedBox(width: 8),
             // Send / Stop button
             SizedBox(
