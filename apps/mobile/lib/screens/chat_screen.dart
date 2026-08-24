@@ -20,6 +20,8 @@ import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
 import '../widgets/context_meter.dart';
+import '../widgets/ai_usage_panel.dart';
+import '../services/ai_usage_service.dart';
 import 'flashcard_review_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Libro
@@ -1400,6 +1402,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ContextMeter(
                 usage: _contextWindow.usagePercentage / 100.0,
                 tooltip: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
+                onTap: () => showAiUsagePanel(context),
               ),
             const SizedBox(width: 8),
             // Send / Stop button
