@@ -161,7 +161,7 @@ class _AiUsagePanelState extends State<AiUsagePanel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Plan',
                   style: TextStyle(
                     fontFamily: 'Fredoka',

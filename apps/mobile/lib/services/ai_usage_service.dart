@@ -28,7 +28,7 @@ class AiUsageService {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        DebugLogger.warn('AiUsageService', 'No authenticated user');
+        DebugLogger.warning('AiUsageService', 'No authenticated user');
         return null;
       }
 
