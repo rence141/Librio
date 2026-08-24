@@ -111,7 +111,8 @@ class OnlineLlmService {
     const tag = 'OnlineLlm';
 
     if (!OnlineModelConfig.isConfigured) {
-      return AiResponse(text: 'Online model not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
+      final errorMsg = _getConfigurationErrorMessage();
+      return AiResponse(text: errorMsg);
     }
 
     try {
@@ -182,7 +183,7 @@ class OnlineLlmService {
     const tag = 'OnlineLlm';
 
     if (!OnlineModelConfig.isConfigured) {
-      return 'Online model not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.';
+      return _getConfigurationErrorMessage();
     }
 
     try {
@@ -260,7 +261,7 @@ class OnlineLlmService {
     const tag = 'OnlineLlm';
 
     if (!OnlineModelConfig.isConfigured) {
-      yield 'Online model not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.';
+      yield _getConfigurationErrorMessage();
       return;
     }
 
@@ -387,5 +388,21 @@ class OnlineLlmService {
     final words = userMessage.trim().split(RegExp(r'\s+'));
     if (words.length <= 7) return userMessage.trim();
     return words.take(7).join(' ');
+  }
+
+  /// Generate a helpful error message when Supabase is not configured
+  String _getConfigurationErrorMessage() {
+    final url = OnlineModelConfig.supabaseUrl;
+    final key = OnlineModelConfig.supabaseAnonKey;
+
+    if (url.isEmpty) {
+      return '❌ Supabase URL not configured. Check that Supabase is initialized in main.dart with a valid URL.';
+    }
+
+    if (key.isEmpty) {
+      return '❌ Supabase anon key not configured. Check that Supabase is initialized in main.dart with a valid anon key.';
+    }
+
+    return '❌ Supabase configuration incomplete. Please ensure Supabase is properly initialized before using the online model.';
   }
 }
