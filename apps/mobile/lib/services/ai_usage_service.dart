@@ -79,9 +79,14 @@ class AiUsageService {
       int totalOutputTokens = 0;
       int imageAnalysis = 0;
       int documentAnalysis = 0;
+      int concurrentRequests = 0;
 
       for (final record in response) {
         final createdAt = DateTime.parse(record['created_at'] as String);
+        final success = record['success'] as bool? ?? true;
+        
+        // Only count successful requests
+        if (!success) continue;
         
         if (createdAt.isAfter(oneMinuteAgo)) {
           requestsThisMinute++;
@@ -102,6 +107,10 @@ class AiUsageService {
           }
         }
       }
+      
+      // Note: Concurrent requests tracking would require checking request status
+      // For now, we set it to 0 as it's not tracked client-side
+      // The server enforces concurrent limits in the Edge Function
 
       // Get user's plan from profile
       final profileResponse = await _supabase
@@ -118,7 +127,7 @@ class AiUsageService {
         requestsThisMinute: requestsThisMinute,
         requestsThisHour: requestsThisHour,
         messagesThisDay: messagesThisDay,
-        concurrentRequests: 0, // Not tracked client-side
+        concurrentRequests: concurrentRequests,
         imageAnalysisThisDay: imageAnalysis,
         documentAnalysisThisDay: documentAnalysis,
         totalInputTokensThisDay: totalInputTokens,

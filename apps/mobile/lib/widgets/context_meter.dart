@@ -79,19 +79,29 @@ class _ContextMeterState extends State<ContextMeter>
         child: AnimatedBuilder(
           animation: _animation,
           builder: (context, child) {
+            final percent = _animation.value * 100;
+            final isWarning = percent >= 75;
+            final isCritical = percent >= 90;
+            
             return CustomPaint(
               size: const Size(44, 44),
               painter: _ContextMeterPainter(
                 progress: _animation.value,
+                isWarning: isWarning,
+                isCritical: isCritical,
               ),
               child: Center(
                 child: Text(
-                  '${(_animation.value * 100).toStringAsFixed(0)}%',
+                  '${percent.toStringAsFixed(0)}%',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: isCritical
+                        ? Colors.red[600]
+                        : isWarning
+                            ? Colors.orange[600]
+                            : Colors.grey[700],
                   ),
                 ),
               ),
@@ -105,8 +115,14 @@ class _ContextMeterState extends State<ContextMeter>
 
 class _ContextMeterPainter extends CustomPainter {
   final double progress; // 0.0 to 1.0
+  final bool isWarning;
+  final bool isCritical;
 
-  _ContextMeterPainter({required this.progress});
+  _ContextMeterPainter({
+    required this.progress,
+    this.isWarning = false,
+    this.isCritical = false,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -134,9 +150,15 @@ class _ContextMeterPainter extends CustomPainter {
       const Radius.circular(cornerRadius),
     );
 
-    // Inactive border (subtle background)
+    // Inactive border (subtle background) — color-coded by warning level
+    final inactiveBorderColor = isCritical
+        ? Colors.red[100]!
+        : isWarning
+            ? Colors.orange[100]!
+            : Colors.grey[200]!;
+    
     final inactivePaint = Paint()
-      ..color = Colors.grey[200]!
+      ..color = inactiveBorderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -189,18 +211,22 @@ class _ContextMeterPainter extends CustomPainter {
     double progressLength,
     double totalPerimeter,
   ) {
+    // Choose gradient colors based on warning level
+    final (startColor, endColor) = isCritical
+        ? (Colors.red[400]!, Colors.red[600]!)
+        : isWarning
+            ? (Colors.orange[400]!, Colors.orange[600]!)
+            : (const Color(0xFF7B2CBF), const Color(0xFF06B6D4)); // Purple to cyan
+    
     // Create gradient paint
     final gradientPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          const Color(0xFF7B2CBF), // Deep purple
-          const Color(0xFF06B6D4), // Cyan
-        ],
+        colors: [startColor, endColor],
       ).createShader(Rect.fromLTWH(left, top, right - left, bottom - top))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
+      ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
@@ -261,6 +287,8 @@ class _ContextMeterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ContextMeterPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.isWarning != isWarning ||
+        oldDelegate.isCritical != isCritical;
   }
 }
