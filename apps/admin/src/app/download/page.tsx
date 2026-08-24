@@ -39,7 +39,7 @@ export default function DownloadPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-20">
+      <main className="flex-1 flex items-center justify-center px-6 py-32">
         <div className="max-w-6xl w-full flex items-center gap-20">
           {/* Left: Phone Mockup */}
           <div className="flex-1 flex justify-center">
@@ -52,17 +52,15 @@ export default function DownloadPage() {
 
           {/* Right: Content */}
           <div className="flex-1">
-            <h1 className="text-6xl font-bold mb-8 text-black">Get The App</h1>
+            <h1 className="text-6xl font-bold mb-6 text-black">Get the App NOW</h1>
             
-            <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-              Are you ready to redefine your shopping experience?
+            <p className="text-2xl text-gray-700 mb-8 leading-relaxed font-semibold">
+              Your AI study companion in your pocket.
             </p>
             
             <p className="text-lg text-gray-600 mb-10 leading-relaxed">
-              Set up an account in seconds, buy what you love and split your purchase into 3 easy payments. Track your payment schedule, anytime, anywhere.
+              Chat with Claude, study offline, generate flashcards. Get instant answers to any question, anytime, anywhere.
             </p>
-            
-            <p className="text-2xl font-bold text-black mb-8">Time to own it.</p>
             
             <div className="flex gap-4 flex-wrap">
               <a 
