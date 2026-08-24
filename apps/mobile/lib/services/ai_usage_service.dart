@@ -113,14 +113,23 @@ class AiUsageService {
       // The server enforces concurrent limits in the Edge Function
 
       // Get user's plan from profile
-      final profileResponse = await _supabase
-          .from('user_profiles')
-          .select('subscription_tier')
-          .eq('id', user.id)
-          .single();
+      AiPlan plan = AiPlan.free;
+      String planString = 'free';
+      try {
+        final profileResponse = await _supabase
+            .from('user_profiles')
+            .select('subscription_tier')
+            .eq('id', user.id)
+            .single();
 
-      final planString = profileResponse['subscription_tier'] as String? ?? 'free';
-      final plan = AiPlans.fromString(planString).plan;
+        planString = profileResponse['subscription_tier'] as String? ?? 'free';
+        plan = AiPlans.fromString(planString).plan;
+      } catch (e) {
+        // Profile doesn't exist or query failed, default to free
+        DebugLogger.warning('AiUsageService', 'Could not fetch user profile, defaulting to free plan: $e');
+        plan = AiPlan.free;
+        planString = 'free';
+      }
 
       _cachedUsage = AiUsageSnapshot(
         currentPlan: plan,
