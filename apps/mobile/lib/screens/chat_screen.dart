@@ -151,7 +151,7 @@ class _ChatScreenState extends State<ChatScreen> {
       DebugLogger.error(tag, 'Initialization failed', e, st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Setup error: $e')),
+          const SnackBar(content: Text('Unable to load chat. Please restart the app.')),
         );
       }
     }

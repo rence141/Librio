@@ -143,22 +143,22 @@ class OnlineLlmService {
 
       if (response.statusCode == 401) {
         DebugLogger.error(tag, 'Authentication required', null, null);
-        return AiResponse(text: 'Error: Authentication required. Please sign in to use AI features.');
+        return AiResponse(text: 'Please sign in to use AI features.');
       }
 
       if (response.statusCode == 429) {
         final data = jsonDecode(response.body);
-        final message = data['error']?['message'] ?? 'Rate limit exceeded.';
+        final message = data['error']?['message'] ?? 'You\'ve reached your AI usage limit.';
         DebugLogger.error(tag, 'Rate limited: $message', null, null);
-        return AiResponse(text: 'Error: $message');
+        return AiResponse(text: message);
       }
 
       if (response.statusCode != 200) {
         DebugLogger.error(tag, 'Edge Function error: ${response.statusCode}',
             Exception(response.body), null);
         final data = jsonDecode(response.body);
-        final message = data['error']?['message'] ?? 'Request failed.';
-        return AiResponse(text: 'Error: $message');
+        final message = data['error']?['message'] ?? 'Unable to process your request. Please try again.';
+        return AiResponse(text: message);
       }
 
       final data = jsonDecode(response.body);
@@ -166,7 +166,7 @@ class OnlineLlmService {
       return AiResponse.fromJson(data);
     } catch (e, st) {
       DebugLogger.error(tag, 'Request failed', e, st);
-      return AiResponse(text: 'Error connecting to AI service: $e');
+      return AiResponse(text: 'Unable to connect to AI service. Please check your internet connection and try again.');
     }
   }
 
