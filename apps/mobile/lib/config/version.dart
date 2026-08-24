@@ -2,6 +2,7 @@
 /// 
 /// This file is the single source of truth for version information.
 /// Update this file when releasing new versions.
+library version;
 
 class AppVersion {
   /// Semantic versioning: MAJOR.MINOR.PATCH

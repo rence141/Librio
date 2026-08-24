@@ -21,7 +21,6 @@ import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
 import '../widgets/context_meter.dart';
 import '../widgets/ai_usage_panel.dart';
-import '../services/ai_usage_service.dart';
 import 'flashcard_review_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Libro

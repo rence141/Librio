@@ -2,6 +2,7 @@
 /// 
 /// This is the single source of truth for all AI usage limits.
 /// Server-side enforcement is mandatory; client-side checks are for UX only.
+library ai_plans;
 
 enum AiPlan {
   free,
