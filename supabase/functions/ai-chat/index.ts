@@ -21,7 +21,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const FREELLM_BASE_URL = Deno.env.get("FREELLM_BASE_URL") || "https://freellmapi.co/v1";
 const FREELLM_API_KEY = Deno.env.get("FREELLM_API_KEY");
-const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "auto";
+const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "gemini-3.6-flash";
 
 // Rate limits per tier (rolling window: resets every hour/day)
 const RATE_LIMITS = {
@@ -300,54 +300,68 @@ async function callFreeLLMAPI(
   const url = `${FREELLM_BASE_URL}/chat/completions`;
   const startTime = Date.now();
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${FREELLM_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.3,
-      top_p: 0.85,
-      max_tokens: maxTokens,
-      stream: false, // Edge Function handles streaming to client separately
-    }),
-  });
+  console.log(`[FreeLLMAPI] Calling ${url} with model: ${model}`);
+  console.log(`[FreeLLMAPI] Base URL: ${FREELLM_BASE_URL}`);
+  console.log(`[FreeLLMAPI] API Key configured: ${FREELLM_API_KEY ? "yes" : "no"}`);
 
-  if (!response.ok) {
-    const body = await response.text();
-    console.error(`FreeLLMAPI error ${response.status}: ${body}`);
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${FREELLM_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.3,
+        top_p: 0.85,
+        max_tokens: maxTokens,
+        stream: false,
+      }),
+    });
 
-    if (response.status === 401) {
-      throw new Error("INVALID_API_KEY");
-    } else if (response.status === 429) {
-      throw new Error("RATE_LIMIT_REACHED");
-    } else if (response.status === 503) {
-      throw new Error("PROVIDER_UNAVAILABLE");
-    } else if (response.status >= 500) {
-      throw new Error("SERVER_ERROR");
-    } else {
-      throw new Error("REQUEST_FAILED");
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`[FreeLLMAPI] Error ${response.status}: ${body}`);
+
+      if (response.status === 401) {
+        throw new Error("INVALID_API_KEY");
+      } else if (response.status === 429) {
+        throw new Error("RATE_LIMIT_REACHED");
+      } else if (response.status === 503) {
+        throw new Error("PROVIDER_UNAVAILABLE");
+      } else if (response.status >= 500) {
+        throw new Error("SERVER_ERROR");
+      } else {
+        throw new Error("REQUEST_FAILED");
+      }
     }
+
+    console.log(`[FreeLLMAPI] Success: ${response.status}`);
+
+    const data = await response.json();
+    console.log(`[FreeLLMAPI] Response data: ${JSON.stringify(data).substring(0, 200)}`);
+    
+    const choices = data.choices;
+    if (!choices || choices.length === 0) {
+      throw new Error("NO_RESPONSE");
+    }
+
+    const text = choices[0].message?.content || "";
+    const usage = data.usage || {};
+
+    return {
+      text,
+      inputTokens: usage.prompt_tokens || 0,
+      outputTokens: usage.completion_tokens || 0,
+      model: data.model || model,
+    };
+  } catch (error) {
+    console.error(`[FreeLLMAPI] Error: ${error instanceof Error ? error.message : String(error)}`);
+    throw error;
   }
-
-  const data = await response.json();
-  const choices = data.choices;
-  if (!choices || choices.length === 0) {
-    throw new Error("NO_RESPONSE");
-  }
-
-  const text = choices[0].message?.content || "";
-  const usage = data.usage || {};
-
-  return {
-    text,
-    inputTokens: usage.prompt_tokens || 0,
-    outputTokens: usage.completion_tokens || 0,
-    model: data.model || model,
-  };
 }
 
 // ─── Main Handler ────────────────────────────────────────────────────────────

@@ -73,6 +73,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Context window tracking
   late ContextWindow _contextWindow;
+  
+  // Rate limit tracking
+  int? _lastRateLimitRemaining;
 
   // Colors — used sparingly for accents only
   static const Color _deepPurple = Color(0xFF7B2CBF);
@@ -1339,6 +1342,21 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
+            // Compact rate limit indicator
+            if (_currentModelIsOnline && _lastRateLimitRemaining != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                color: Colors.grey[100],
+                child: Text(
+                  '📊 ${_lastRateLimitRemaining} requests remaining today',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
             // Input row
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1756,6 +1774,13 @@ class _ChatScreenState extends State<ChatScreen> {
       // Track token usage
       if (response.inputTokens != null && response.outputTokens != null) {
         _contextWindow.addUsage(response.inputTokens!, response.outputTokens!);
+      }
+      
+      // Track rate limit
+      if (response.remaining != null) {
+        setState(() {
+          _lastRateLimitRemaining = response.remaining;
+        });
       }
       
       yield response.text;
