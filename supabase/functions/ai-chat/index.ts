@@ -527,7 +527,7 @@ Deno.serve(async (req: Request) => {
     // Map to clean error
     const errorMap: Record<string, { code: string; message: string; status: number }> = {
       "INVALID_API_KEY": { code: "PROVIDER_CONFIG_ERROR", message: "AI service is not properly configured.", status: 503 },
-      "RATE_LIMIT_REACHED": { code: "PROVIDER_RATE_LIMIT", message: "AI provider rate limit reached. Please try again later.", status: 429 },
+      "RATE_LIMIT_REACHED": { code: "PROVIDER_RATE_LIMIT", message: "The AI service is temporarily busy. Please try again in a moment.", status: 429 },
       "PROVIDER_UNAVAILABLE": { code: "PROVIDER_UNAVAILABLE", message: "AI service is temporarily unavailable.", status: 503 },
       "NO_RESPONSE": { code: "NO_RESPONSE", message: "The AI model returned no response.", status: 502 },
       "REQUEST_FAILED": { code: "REQUEST_FAILED", message: "Failed to reach AI service.", status: 502 },
