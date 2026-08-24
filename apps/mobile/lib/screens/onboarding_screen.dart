@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Onboarding screen shown to first-time users.
 ///
-/// Introduces Libro's key features in 3 swipeable pages:
+/// Introduces Librio's key features in 3 swipeable pages:
 /// 1. AI Tutor — Ask anything, get help studying
 /// 2. Offline First — Works without internet
 /// 3. Study Tools — Flashcards, quizzes, materials
@@ -38,13 +38,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingPage(
       icon: Icons.psychology,
       title: 'Ask Anything',
-      subtitle: 'Libro is your AI study companion. Ask questions, get explanations, and learn faster.',
+      subtitle: 'Librio is your AI study companion. Ask questions, get explanations, and learn faster.',
       gradient: const [Color(0xFF7B2CBF), Color(0xFF4F46E5)],
     ),
     _OnboardingPage(
       icon: Icons.cloud_off,
       title: 'Works Offline',
-      subtitle: 'No internet? No problem. Libro runs a local AI model right on your device.',
+      subtitle: 'No internet? No problem. Librio runs a local AI model right on your device.',
       gradient: const [Color(0xFF4F46E5), Color(0xFF3B82F6)],
     ),
     _OnboardingPage(

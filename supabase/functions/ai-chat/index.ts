@@ -49,7 +49,7 @@ const AI_PLANS = {
 
 // ─── Librio System Prompt (preserved from Flutter) ───────────────────────────
 
-const LIBRO_SYSTEM_PROMPT = `You are Libro, a helpful, intelligent study tutor.
+const LIBRIO_SYSTEM_PROMPT = `You are Librio, a helpful, intelligent study tutor.
 
 Your job is to understand the user's actual input and respond to what they are asking or showing. Do not follow a generic greeting behavior when the user has provided meaningful content.
 
@@ -483,7 +483,7 @@ Deno.serve(async (req: Request) => {
 
   // ── 6. Build messages ──
   const apiMessages: Array<Record<string, any>> = [
-    { role: "system", content: LIBRO_SYSTEM_PROMPT },
+    { role: "system", content: LIBRIO_SYSTEM_PROMPT },
   ];
 
   // Add conversation context if provided

@@ -1,4 +1,4 @@
-/// Application version and build information for Libro.
+/// Application version and build information for Librio.
 /// 
 /// This file is the single source of truth for version information.
 /// Update this file when releasing new versions.
@@ -20,7 +20,7 @@ class AppVersion {
   static String get fullVersion => '$version+$buildNumber';
 
   /// Application name
-  static const String appName = 'Libro';
+  static const String appName = 'Librio';
 
   /// Application description
   static const String appDescription = 'Offline-first AI academic tutor for mobile';
