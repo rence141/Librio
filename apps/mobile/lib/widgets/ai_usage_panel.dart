@@ -67,13 +67,29 @@ class _AiUsagePanelState extends State<AiUsagePanel> {
   Widget _buildErrorState() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: const Text(
-        'Unable to load usage information',
-        style: TextStyle(
-          fontFamily: 'Fredoka',
-          fontSize: 14,
-          color: Colors.grey,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Usage Information',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Unable to load usage details, but you can still use AI.\n\nFree Plan:\n• 5 requests per minute\n• 30 requests per hour\n• 100 messages per day',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 12,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }

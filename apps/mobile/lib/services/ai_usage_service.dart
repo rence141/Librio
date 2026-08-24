@@ -140,9 +140,22 @@ class AiUsageService {
         'Usage: ${messagesThisDay} messages, ${totalInputTokens} input tokens, plan: $planString');
 
       return _cachedUsage;
-    } catch (e) {
-      DebugLogger.error('AiUsageService', 'Failed to get usage', e, null);
-      return null;
+    } catch (e, st) {
+      DebugLogger.error('AiUsageService', 'Failed to get usage: $e', e, st);
+      // Return default free plan usage instead of null
+      // This prevents "Unable to load usage info" error
+      return AiUsageSnapshot(
+        currentPlan: AiPlan.free,
+        requestsThisMinute: 0,
+        requestsThisHour: 0,
+        messagesThisDay: 0,
+        concurrentRequests: 0,
+        imageAnalysisThisDay: 0,
+        documentAnalysisThisDay: 0,
+        totalInputTokensThisDay: 0,
+        totalOutputTokensThisDay: 0,
+        lastResetTime: DateTime.now().toUtc(),
+      );
     }
   }
 

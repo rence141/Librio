@@ -21,7 +21,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const FREELLM_BASE_URL = Deno.env.get("FREELLM_BASE_URL") || "https://freellmapi.co/v1";
 const FREELLM_API_KEY = Deno.env.get("FREELLM_API_KEY");
-const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "gemini-3.6-flash";
+const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "claude-3.5-sonnet";
 
 // AI Plans configuration (must match Flutter config/ai_plans.dart)
 const AI_PLANS = {
