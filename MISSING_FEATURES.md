@@ -431,9 +431,9 @@ Based on the prototype-to-production roadmap, here are all features needed to re
 
 ## Optional Features (Nice to Have)
 
-### Analytics
+### Mobile Analytics
 - [ ] **User Analytics**
-  - Track user behavior
+  - Track user behavior in app
   - Identify usage patterns
   - Priority: LOW
 
@@ -451,27 +451,39 @@ Based on the prototype-to-production roadmap, here are all features needed to re
   - Detect and prevent abuse
   - Priority: LOW
 
-### Localization
+### Localization (Mobile)
 - [ ] **Multi-language Support**
-  - Support multiple languages
+  - Support multiple languages in app
   - Priority: LOW
 
 - [ ] **Regional Pricing**
   - Different pricing by region
   - Priority: LOW
 
-### Advanced Features
+### Advanced Mobile Features
 - [ ] **Conversation History**
   - Save and restore conversations
   - Status: Partially implemented
   - Priority: MEDIUM
 
 - [ ] **Export Conversations**
-  - Export as PDF/text
+  - Export as PDF/text from app
   - Priority: LOW
 
-- [ ] **Sharing**
-  - Share conversations with others
+- [ ] **Share Conversations**
+  - Share via messaging apps
+  - Priority: LOW
+
+- [ ] **Voice Input**
+  - Speech-to-text for messages
+  - Priority: LOW
+
+- [ ] **Voice Output**
+  - Text-to-speech for responses
+  - Priority: LOW
+
+- [ ] **Biometric Auth**
+  - Face ID / Touch ID unlock
   - Priority: LOW
 
 ---

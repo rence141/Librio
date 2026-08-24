@@ -1,14 +1,19 @@
 # Mobile-Only Development Roadmap
 
 **Date**: 2026-08-25
-**Scope**: Flutter mobile app only
+**Scope**: Flutter mobile app ONLY (Android & iOS)
 **Status**: Production-ready in 4-6 weeks
 
 ---
 
 ## Overview
 
-Librio is a **mobile-first AI chat app** with no web version. All features are optimized for mobile devices (Android, iOS).
+Librio is a **mobile-exclusive AI chat app**. 
+- ✅ Android app
+- ✅ iOS app
+- ❌ NO web version
+- ❌ NO desktop version
+- ❌ NO tablet-specific UI
 
 ---
 
@@ -367,26 +372,30 @@ Librio is a **mobile-first AI chat app** with no web version. All features are o
 - App store distribution
 
 ### Excluded ❌
-- Web version
-- Desktop version
-- Tablet-specific UI
+- Web version (NO browser app)
+- Desktop version (NO Windows/Mac/Linux)
+- Tablet-specific UI (phone-only)
 - Web analytics
 - Web payment processing
 - Web hosting
+- PWA (Progressive Web App)
+- Electron app
+- Cross-platform desktop
 
 ---
 
 ## Summary
 
-**Librio is a mobile-first AI chat app** with:
+**Librio is a mobile-exclusive AI chat app**:
+- ✅ Android app (Google Play Store)
+- ✅ iOS app (Apple App Store)
 - ✅ Native mobile experience
-- ✅ Optimized for phones
-- ✅ App store distribution
+- ✅ Phone-optimized UI
 - ✅ In-app purchases
 - ✅ Push notifications
 - ✅ Offline support
 
-**No web version** - Focus entirely on mobile excellence.
+**NO web, NO desktop, NO tablet UI** - Mobile phones ONLY
 
 **Timeline**: 4-6 weeks to production-ready
 
