@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 /// Online model configuration.
 ///
 /// AI requests are routed through Supabase Edge Functions, NOT directly
@@ -14,40 +12,29 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// SETUP:
 /// 1. Deploy the ai-chat Edge Function to Supabase
 /// 2. Set FREELLM_API_KEY as a Supabase secret
-/// 3. Supabase URL and anon key are initialized in main.dart
+/// 3. Call OnlineModelConfig.initialize() after Supabase.initialize() in main.dart
 class OnlineModelConfig {
-  /// Get Supabase URL from the already-initialized Supabase instance.
-  /// This works at runtime on all platforms (Android, iOS, web, desktop).
-  static String get supabaseUrl {
-    try {
-      final url = Supabase.instance.client.supabaseUrl;
-      if (url.isNotEmpty) {
-        return url;
-      }
-    } catch (e) {
-      // Supabase not initialized yet
-    }
-    return '';
+  // Static storage for Supabase credentials
+  // Set by initialize() after Supabase is initialized
+  static String _supabaseUrl = '';
+  static String _supabaseAnonKey = '';
+
+  /// Initialize the online model configuration with Supabase credentials.
+  /// Call this in main.dart after Supabase.initialize().
+  static void initialize({
+    required String supabaseUrl,
+    required String supabaseAnonKey,
+  }) {
+    _supabaseUrl = supabaseUrl;
+    _supabaseAnonKey = supabaseAnonKey;
   }
 
-  /// Get Supabase anon key from the already-initialized Supabase instance.
+  /// Get the Supabase URL (set during initialize())
+  static String get supabaseUrl => _supabaseUrl;
+
+  /// Get the Supabase anon key (set during initialize())
   /// This is the public key — safe to expose.
-  /// 
-  /// Note: The anon key is stored in the Supabase client's rest client.
-  /// We access it via the client's internal state.
-  static String get supabaseAnonKey {
-    try {
-      final client = Supabase.instance.client;
-      // The anon key is passed as 'apikey' header in REST requests
-      final key = client.rest.headers['apikey'];
-      if (key != null && key.isNotEmpty) {
-        return key;
-      }
-    } catch (e) {
-      // Supabase not initialized yet or key not available
-    }
-    return '';
-  }
+  static String get supabaseAnonKey => _supabaseAnonKey;
 
   /// Edge Function endpoint — constructed from Supabase URL
   static String get edgeFunctionUrl => '$supabaseUrl/functions/v1/ai-chat';

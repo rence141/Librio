@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
 import 'services/auth_service.dart';
+import 'services/online_model_config.dart';
 import 'screens/chat_screen.dart';
 import 'screens/intro_splash_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -27,10 +28,19 @@ void main() async {
 
   // Initialize Supabase
   // Get these values from: https://app.supabase.com → Project Settings → API
+  final supabaseUrl = const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co');
+  final supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0cmxjbHpmZ3dpY3doc2tlcG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMzY0OTAsImV4cCI6MjEwMjkxMjQ5MH0.eyUB94euG37V6VcYB2gfpDvavcTHbcBPMEuOd80l4fk');
+  
   await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co'),
-    publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0cmxjbHpmZ3dpY3doc2tlcG5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMzY0OTAsImV4cCI6MjEwMjkxMjQ5MH0.eyUB94euG37V6VcYB2gfpDvavcTHbcBPMEuOd80l4fk'),
+    url: supabaseUrl,
+    publishableKey: supabaseAnonKey,
     debug: kDebugMode,
+  );
+
+  // Initialize online model configuration with Supabase credentials
+  OnlineModelConfig.initialize(
+    supabaseUrl: supabaseUrl,
+    supabaseAnonKey: supabaseAnonKey,
   );
 
   // Global error handler for Flutter framework errors
