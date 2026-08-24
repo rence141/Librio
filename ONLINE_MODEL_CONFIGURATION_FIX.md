@@ -31,44 +31,63 @@ static const String supabaseUrl = String.fromEnvironment(
 
 ## Solution
 
-Changed `OnlineModelConfig` to read from the **already-initialized Supabase instance** at runtime:
+Changed `OnlineModelConfig` to use **explicit initialization** with Supabase credentials passed from `main.dart`:
 
 ```dart
 // NEW (works at runtime on all platforms)
-static String get supabaseUrl {
-  try {
-    final url = Supabase.instance.client.supabaseUrl;
-    if (url.isNotEmpty) {
-      return url;
-    }
-  } catch (e) {
-    // Supabase not initialized yet
-  }
-  return '';
-}
+class OnlineModelConfig {
+  static String _supabaseUrl = '';
+  static String _supabaseAnonKey = '';
 
-static String get supabaseAnonKey {
-  try {
-    final client = Supabase.instance.client;
-    final key = client.rest.headers['apikey'];
-    if (key != null && key.isNotEmpty) {
-      return key;
-    }
-  } catch (e) {
-    // Supabase not initialized yet
+  /// Initialize with Supabase credentials after Supabase.initialize()
+  static void initialize({
+    required String supabaseUrl,
+    required String supabaseAnonKey,
+  }) {
+    _supabaseUrl = supabaseUrl;
+    _supabaseAnonKey = supabaseAnonKey;
   }
-  return '';
+
+  static String get supabaseUrl => _supabaseUrl;
+  static String get supabaseAnonKey => _supabaseAnonKey;
 }
+```
+
+In `main.dart`:
+
+```dart
+// Extract credentials from environment (compile-time)
+final supabaseUrl = const String.fromEnvironment('SUPABASE_URL', 
+  defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co');
+final supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY',
+  defaultValue: 'eyJ...');
+
+// Initialize Supabase
+await Supabase.initialize(
+  url: supabaseUrl,
+  publishableKey: supabaseAnonKey,
+);
+
+// Initialize online model config with same credentials
+OnlineModelConfig.initialize(
+  supabaseUrl: supabaseUrl,
+  supabaseAnonKey: supabaseAnonKey,
+);
 ```
 
 ## Files Changed
 
 ### 1. `apps/mobile/lib/services/online_model_config.dart`
-- **Before:** Used `String.fromEnvironment()` with compile-time defaults
-- **After:** Reads from `Supabase.instance.client` at runtime
-- **Impact:** Configuration now works on all platforms without build flags
+- **Before:** Used `String.fromEnvironment()` with compile-time defaults (doesn't work at runtime on Android)
+- **After:** Stores credentials in static variables via `initialize()` method
+- **Impact:** Configuration works at runtime on all platforms
 
-### 2. `apps/mobile/lib/services/online_llm_service.dart`
+### 2. `apps/mobile/lib/main.dart`
+- **Before:** Supabase initialized, but OnlineModelConfig couldn't access credentials
+- **After:** Extracts credentials, passes to both Supabase and OnlineModelConfig
+- **Impact:** Single source of truth for credentials
+
+### 3. `apps/mobile/lib/services/online_llm_service.dart`
 - **Before:** Generic error message "Set SUPABASE_URL and SUPABASE_ANON_KEY"
 - **After:** Specific error messages via `_getConfigurationErrorMessage()`
 - **Impact:** Better debugging info for developers
@@ -121,32 +140,48 @@ The system architecture remains unchanged:
 
 ### For Development
 
-1. **Supabase is initialized in `main.dart`:**
+1. **Supabase is initialized in `main.dart` with credentials:**
    ```dart
+   final supabaseUrl = const String.fromEnvironment('SUPABASE_URL', 
+     defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co');
+   final supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY',
+     defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+   
    await Supabase.initialize(
-     url: const String.fromEnvironment('SUPABASE_URL', 
-       defaultValue: 'https://itrlclzfgwicwhskepnf.supabase.co'),
-     publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY',
-       defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'),
+     url: supabaseUrl,
+     publishableKey: supabaseAnonKey,
    );
    ```
 
-2. **OnlineModelConfig reads from Supabase instance:**
-   - No additional configuration needed
-   - Works automatically at runtime
+2. **OnlineModelConfig is initialized with same credentials:**
+   ```dart
+   OnlineModelConfig.initialize(
+     supabaseUrl: supabaseUrl,
+     supabaseAnonKey: supabaseAnonKey,
+   );
+   ```
+
+3. **No additional configuration needed:**
+   - Works automatically at runtime on all platforms
+   - Credentials available immediately after initialization
 
 ### For Production
 
-1. **Set environment variables at build time (optional):**
+1. **Option A: Use hardcoded defaults (simplest)**
+   ```bash
+   flutter run
+   ```
+   - App uses defaults from `main.dart`
+   - No build flags needed
+
+2. **Option B: Override with environment variables at build time**
    ```bash
    flutter run \
      --dart-define=SUPABASE_URL=https://your-project.supabase.co \
      --dart-define=SUPABASE_ANON_KEY=your-anon-key
    ```
-
-2. **Or use defaults in `main.dart`:**
-   - The app will use the hardcoded defaults
-   - These are read at runtime from the Supabase instance
+   - Overrides defaults from `main.dart`
+   - Useful for CI/CD pipelines
 
 3. **Ensure Supabase Edge Function is deployed:**
    - Function: `/functions/v1/ai-chat`

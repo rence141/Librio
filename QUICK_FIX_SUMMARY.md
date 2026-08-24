@@ -12,10 +12,11 @@ Even though Supabase was working and authentication was successful.
 
 ## What Was Fixed
 
-Changed `OnlineModelConfig` to read from the **already-initialized Supabase instance** instead of environment variables.
+Changed `OnlineModelConfig` to use **explicit initialization** with credentials passed from `main.dart`.
 
 ### Before (Broken)
 ```dart
+// Tried to read from environment at runtime (doesn't work on Android)
 static const String supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'https://YOUR_PROJECT.supabase.co', // ← Falls back to this
@@ -24,18 +25,40 @@ static const String supabaseUrl = String.fromEnvironment(
 
 ### After (Fixed)
 ```dart
-static String get supabaseUrl {
-  return Supabase.instance.client.supabaseUrl; // ← Reads from runtime instance
+// Store credentials in static variables at runtime
+static String _supabaseUrl = '';
+
+static void initialize({required String supabaseUrl, ...}) {
+  _supabaseUrl = supabaseUrl;  // ← Set at runtime in main.dart
 }
+
+static String get supabaseUrl => _supabaseUrl;
+```
+
+In `main.dart`:
+```dart
+// Extract credentials once
+final supabaseUrl = const String.fromEnvironment(...);
+final supabaseAnonKey = const String.fromEnvironment(...);
+
+// Pass to both Supabase and OnlineModelConfig
+await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+OnlineModelConfig.initialize(supabaseUrl: supabaseUrl, supabaseAnonKey: supabaseAnonKey);
 ```
 
 ## Files Changed
 
 1. **`apps/mobile/lib/services/online_model_config.dart`**
-   - Reads Supabase URL and anon key from runtime instance
-   - Better error checking
+   - Added `initialize(supabaseUrl, supabaseAnonKey)` method
+   - Store credentials in static variables
+   - `isConfigured` checks stored values
 
-2. **`apps/mobile/lib/services/online_llm_service.dart`**
+2. **`apps/mobile/lib/main.dart`**
+   - Extract URL and anon key from `String.fromEnvironment()`
+   - Pass to both `Supabase.initialize()` and `OnlineModelConfig.initialize()`
+   - Single source of truth for credentials
+
+3. **`apps/mobile/lib/services/online_llm_service.dart`**
    - Improved error messages with debugging info
    - Specific feedback for missing URL vs missing key
 
