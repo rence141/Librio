@@ -235,11 +235,12 @@ async function checkRateLimit(
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Check per-minute limit
+  // Check per-minute limit (only count successful requests)
   const { count: minuteCount } = await supabase
     .from("ai_usage")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("success", true)
     .gte("created_at", oneMinuteAgo.toISOString());
 
   if ((minuteCount || 0) >= planLimits.requestsPerMinute) {
@@ -250,11 +251,12 @@ async function checkRateLimit(
     };
   }
 
-  // Check per-hour limit
+  // Check per-hour limit (only count successful requests)
   const { count: hourlyCount } = await supabase
     .from("ai_usage")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("success", true)
     .gte("created_at", oneHourAgo.toISOString());
 
   if ((hourlyCount || 0) >= planLimits.requestsPerHour) {
@@ -265,11 +267,12 @@ async function checkRateLimit(
     };
   }
 
-  // Check daily message limit
+  // Check daily message limit (only count successful requests)
   const { count: dailyCount } = await supabase
     .from("ai_usage")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("success", true)
     .gte("created_at", oneDayAgo.toISOString());
 
   if ((dailyCount || 0) >= planLimits.messagesPerDay) {
