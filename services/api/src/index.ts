@@ -5,6 +5,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import pinoHttp from 'pino-http';
 import cors from 'cors';
+import path from 'path';
 
 // Import routes (after dotenv.config())
 import authRoutes from './routes/auth.routes';
@@ -39,6 +40,9 @@ app.use(cors({
 // JSON parsing — limit body size to prevent abuse
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files (landing page, etc.)
+app.use(express.static(path.join(__dirname, '../../public')));
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
