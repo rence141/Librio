@@ -235,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      'Librio',
+                      'Libro',
                       style: TextStyle(
                         fontFamily: 'Fredoka',
                         fontSize: 32,

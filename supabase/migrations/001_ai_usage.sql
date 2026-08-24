@@ -3,12 +3,13 @@
 -- AI usage tracking table for rate limiting and quota enforcement.
 -- Used by the ai-chat Edge Function to enforce per-user rate limits.
 
--- Enable UUID extension if not already enabled
+-- Enable extensions
+create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 
 -- AI usage table — tracks every AI request for rate limiting and analytics
 create table if not exists public.ai_usage (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
   model_id text not null,
   provider text not null default 'freellmapi',
@@ -40,7 +41,7 @@ revoke insert, update, delete on public.ai_usage from anon, authenticated;
 
 -- Ensure user_profiles table exists (for tier-based rate limits)
 create table if not exists public.user_profiles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   email text unique,
   full_name text,
   subscription_tier text not null default 'free',

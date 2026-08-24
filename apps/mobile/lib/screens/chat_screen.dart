@@ -22,7 +22,7 @@ import '../widgets/llm_markdown.dart';
 import '../widgets/context_meter.dart';
 import 'flashcard_review_screen.dart';
 
-/// Chat screen — ChatGPT-inspired mobile UX for Librio
+/// Chat screen — ChatGPT-inspired mobile UX for Libro
 ///
 /// Design principles:
 /// - Conversation is the product
@@ -238,7 +238,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Buffer the full response — do NOT update UI during generation.
       // Streaming is kept internally for cancellation and progress, but
-      // the user only sees "Librio is thinking..." until complete.
+      // the user only sees "Libro is thinking..." until complete.
       final responseBuffer = StringBuffer();
       await for (final chunk in _streamLlmResponse(userMessage, imagePaths: attachments)) {
         if (!_isGenerating) break; // User pressed stop
@@ -288,7 +288,7 @@ class _ChatScreenState extends State<ChatScreen> {
       DebugLogger.error('ChatScreen', 'Generation failed', e, st);
       setState(() {
         if (_messages.isNotEmpty && !_messages.last.isUser) {
-          _messages.last.text = 'Librio couldn\'t generate a response.\n\nPlease try again or check your model settings.';
+          _messages.last.text = 'Libro couldn\'t generate a response.\n\nPlease try again or check your model settings.';
           _messages.last.isStreaming = false;
         }
         _isGenerating = false;
@@ -606,7 +606,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _buildLogoMark(48),
             const SizedBox(height: 24),
             const Text(
-              'Loading Librio...',
+              'Loading Libro...',
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 18,
@@ -650,7 +650,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       title: const Text(
-        'Librio',
+        'Libro',
         style: TextStyle(
           fontFamily: 'Fredoka',
           fontSize: 20,
@@ -833,7 +833,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // Label
           const Text(
-            'Librio',
+            'Libro',
             style: TextStyle(
               fontFamily: 'Fredoka',
               fontSize: 14,
@@ -849,7 +849,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 CrystalLoader(size: 100),
                 const SizedBox(width: 12),
                 const Text(
-                  'Librio is thinking...',
+                  'Libro is thinking...',
                   style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: Colors.grey),
                 ),
               ],
@@ -1374,7 +1374,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   controller: _messageController,
                   focusNode: _inputFocusNode,
                   decoration: InputDecoration(
-                    hintText: 'Ask Librio anything...',
+                    hintText: 'Ask Libro anything...',
                     hintStyle: TextStyle(
                       fontFamily: 'Fredoka',
                       color: Colors.grey[400],
@@ -1890,7 +1890,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     _buildLogoMark(32),
                     const SizedBox(width: 10),
                     const Text(
-                      'Librio',
+                      'Libro',
                       style: TextStyle(
                         fontFamily: 'Fredoka',
                         fontSize: 22,

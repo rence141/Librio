@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 ///
 /// Animation sequence:
 /// 1. Logo scales up from 0 with a bounce effect
-/// 2. "Librio" text fades in below
+/// 2. "Libro" text fades in below
 /// 3. Tagline fades in
 /// 4. Crystal loader appears
 /// 5. After ~2.5s, transitions to the next screen

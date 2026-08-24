@@ -13,6 +13,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 import 'utils/debug_logger.dart';
+import 'config/version.dart';
 
 // Web database support
 import 'package:sqflite/sqflite.dart';
@@ -54,7 +55,7 @@ void main() async {
     return true;
   };
 
-  DebugLogger.info('Main', 'Starting Librio app...');
+  DebugLogger.info('Main', 'Starting ${AppVersion.appName} ${AppVersion.displayVersion}...');
 
   // Initialize services in parallel with the intro splash
   DebugLogger.info('Main', 'Initializing model loader...');
@@ -79,19 +80,19 @@ void main() async {
     DebugLogger.error('Main', 'Onboarding check failed, defaulting to show', e, null);
   }
 
-  runApp(LibrioApp(
+  runApp(LibroApp(
     modelLoader: modelLoader,
     llmService: llmService,
     needsOnboarding: needsOnboarding,
   ));
 }
 
-class LibrioApp extends StatelessWidget {
+class LibroApp extends StatelessWidget {
   final ModelLoader modelLoader;
   final LlmService llmService;
   final bool needsOnboarding;
 
-  const LibrioApp({
+  const LibroApp({
     super.key,
     required this.modelLoader,
     required this.llmService,
@@ -103,7 +104,7 @@ class LibrioApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuthService(),
       child: MaterialApp(
-        title: 'Librio',
+        title: AppVersion.appName,
         theme: LibrioTheme.lightTheme,
         home: _AppEntry(
           llmService: llmService,
