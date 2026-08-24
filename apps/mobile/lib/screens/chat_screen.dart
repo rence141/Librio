@@ -19,6 +19,7 @@ import '../models/context_window.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
+import '../widgets/context_meter.dart';
 import 'flashcard_review_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Librio
@@ -1394,56 +1395,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            // Context & Rate Limit Indicator (square)
+            // Context Meter (elegant rounded-square progress indicator)
             if (_currentModelIsOnline)
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _contextWindow.warningLevel == 2
-                      ? Colors.red[100]
-                      : _contextWindow.warningLevel == 1
-                          ? Colors.orange[100]
-                          : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _contextWindow.warningLevel == 2
-                        ? Colors.red[300]!
-                        : _contextWindow.warningLevel == 1
-                            ? Colors.orange[300]!
-                            : Colors.grey[300]!,
-                    width: 1,
-                  ),
-                ),
-                child: Tooltip(
-                  message: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"}',
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${_contextWindow.usagePercentage.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: _contextWindow.warningLevel == 2
-                              ? Colors.red[700]
-                              : _contextWindow.warningLevel == 1
-                                  ? Colors.orange[700]
-                                  : Colors.grey[700],
-                        ),
-                      ),
-                      Text(
-                        '${_lastRateLimitRemaining ?? "?"}',
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 9,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              ContextMeter(
+                usage: _contextWindow.usagePercentage / 100.0,
+                tooltip: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
               ),
             const SizedBox(width: 8),
             // Send / Stop button
