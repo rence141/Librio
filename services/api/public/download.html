@@ -3,258 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Librio - AI Chat App</title>
+    <title>Get The App - Librio</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #7B2CBF 0%, #4F46E5 25%, #3B82F6 50%, #06B6D4 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            display: flex;
-            align-items: center;
-            gap: 80px;
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        .image-section {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-        }
-
-        .phone-mockup {
-            width: 350px;
-            height: 450px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 40px;
-            border: 8px solid rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .phone-mockup img {
-            width: 100%;
-            height: 100%;
-            border-radius: 32px;
-            object-fit: cover;
-        }
-
-        .content-section {
-            flex: 1;
-        }
-
-        h1 {
-            font-size: 56px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            color: #fff;
-            line-height: 1.2;
-        }
-
-        .subtitle {
-            font-size: 18px;
-            color: #f0f0f0;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-
-        .description {
-            font-size: 16px;
-            color: #e0e0e0;
-            margin-bottom: 40px;
-            line-height: 1.8;
-        }
-
-        .cta-text {
-            font-size: 18px;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 40px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 16px 40px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            font-family: 'Fredoka', sans-serif;
-        }
-
-        .btn-app-store {
-            background-color: #fff;
-            color: #000;
-        }
-
-        .btn-app-store:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-google-play {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border: 2px solid #fff;
-        }
-
-        .btn-google-play:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .icon {
-            font-size: 20px;
-        }
-
-        .features {
-            margin-top: 60px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .feature {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .feature-icon {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .feature-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .feature-desc {
-            font-size: 12px;
-            color: #e0e0e0;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                gap: 40px;
-            }
-
-            h1 {
-                font-size: 36px;
-            }
-
-            .phone-mockup {
-                width: 280px;
-                height: 360px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .features {
-                grid-template-columns: 1fr;
-            }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #e8e8e8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+        
+        .container { display: flex; align-items: center; gap: 100px; max-width: 1400px; width: 100%; }
+        
+        .image-section { flex: 0 0 400px; }
+        .phone-box { width: 350px; height: 450px; background: linear-gradient(135deg, #7B8C2E 0%, #CDDC39 100%); border-radius: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
+        .phone-placeholder { color: #fff; font-size: 14px; text-align: center; }
+        
+        .content-section { flex: 1; }
+        h1 { font-size: 56px; font-weight: 700; margin-bottom: 30px; color: #000; }
+        .subtitle { font-size: 20px; color: #333; margin-bottom: 30px; line-height: 1.6; }
+        .description { font-size: 18px; color: #555; margin-bottom: 40px; line-height: 1.8; }
+        .cta { font-size: 20px; font-weight: 600; color: #000; }
+        
+        .buttons { display: flex; gap: 15px; margin-top: 40px; flex-wrap: wrap; }
+        .btn { padding: 14px 32px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #000; color: #fff; }
+        .btn-primary:hover { background: #333; transform: translateY(-2px); }
+        
+        @media (max-width: 1024px) {
+            .container { flex-direction: column; gap: 50px; }
+            .image-section { flex: 0 0 auto; }
+            h1 { font-size: 42px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Image Section -->
         <div class="image-section">
-            <div class="phone-mockup">
-                [Phone mockup image goes here]
+            <div class="phone-box">
+                <div class="phone-placeholder">[Phone mockup image]</div>
             </div>
         </div>
-
-        <!-- Content Section -->
+        
         <div class="content-section">
-            <h1>Download Librio</h1>
+            <h1>Get The App</h1>
+            <p class="subtitle">Are you ready to redefine your shopping experience?</p>
+            <p class="description">Set up an account in seconds, buy what you love and split your purchase into 3 easy payments. Track your payment schedule, anytime, anywhere.</p>
+            <p class="cta">Time to own it.</p>
             
-            <p class="subtitle">Available on iOS and Android. Chat with AI anywhere, anytime - even offline.</p>
-            
-            <p class="description">
-                Get instant answers from AI. Track your usage, manage your subscription, anytime, anywhere.
-            </p>
-            
-            <p class="cta-text">Get started in seconds</p>
-            
-            <div class="button-group">
-                <a href="https://apps.apple.com/" class="btn btn-app-store">
-                    <span class="icon">🍎</span>
-                    Download on App Store
-                </a>
-                <a href="https://play.google.com/" class="btn btn-google-play">
-                    <span class="icon">▶️</span>
-                    Get it on Google Play
-                </a>
-            </div>
-
-            <!-- Features -->
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">�</div>
-                    <div class="feature-title">Works Offline</div>
-                    <div class="feature-desc">Chat anywhere - no internet required</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🤖</div>
-                    <div class="feature-title">AI-Powered</div>
-                    <div class="feature-desc">Powered by Claude, GPT, and more</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">💰</div>
-                    <div class="feature-title">Free to Start</div>
-                    <div class="feature-desc">Core features free, premium plans available</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🔒</div>
-                    <div class="feature-title">Private & Secure</div>
-                    <div class="feature-desc">Your data is always protected</div>
-                </div>
+            <div class="buttons">
+                <a href="https://apps.apple.com/" class="btn btn-primary">🍎 Download on App Store</a>
+                <a href="https://play.google.com/" class="btn btn-primary">▶️ Get it on Google Play</a>
             </div>
         </div>
     </div>
