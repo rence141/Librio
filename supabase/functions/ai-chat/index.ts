@@ -236,33 +236,47 @@ async function checkRateLimit(
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Check per-minute limit (only count successful requests)
-  const { count: minuteCount } = await supabase
+  const { count: minuteCount, data: minuteData } = await supabase
     .from("ai_usage")
-    .select("*", { count: "exact", head: true })
+    .select("created_at", { count: "exact", head: false })
     .eq("user_id", userId)
     .eq("success", true)
-    .gte("created_at", oneMinuteAgo.toISOString());
+    .gte("created_at", oneMinuteAgo.toISOString())
+    .order("created_at", { ascending: true })
+    .limit(1);
 
   if ((minuteCount || 0) >= planLimits.requestsPerMinute) {
+    // Calculate when the oldest request ages out
+    const oldestRequest = minuteData?.[0]?.created_at ? new Date(minuteData[0].created_at) : now;
+    const resetTime = new Date(oldestRequest.getTime() + 60 * 1000);
+    const resetTimeStr = resetTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    
     return {
       allowed: false,
-      reason: "You've reached your AI limit for this minute.\nPlease wait a moment and try again.",
+      reason: `You've reached your AI limit for this minute.\nYour rate will return at ${resetTimeStr}.`,
       remaining: 0,
     };
   }
 
   // Check per-hour limit (only count successful requests)
-  const { count: hourlyCount } = await supabase
+  const { count: hourlyCount, data: hourlyData } = await supabase
     .from("ai_usage")
-    .select("*", { count: "exact", head: true })
+    .select("created_at", { count: "exact", head: false })
     .eq("user_id", userId)
     .eq("success", true)
-    .gte("created_at", oneHourAgo.toISOString());
+    .gte("created_at", oneHourAgo.toISOString())
+    .order("created_at", { ascending: true })
+    .limit(1);
 
   if ((hourlyCount || 0) >= planLimits.requestsPerHour) {
+    // Calculate when the oldest request ages out
+    const oldestRequest = hourlyData?.[0]?.created_at ? new Date(hourlyData[0].created_at) : now;
+    const resetTime = new Date(oldestRequest.getTime() + 60 * 60 * 1000);
+    const resetTimeStr = resetTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    
     return {
       allowed: false,
-      reason: "You've reached your AI limit for this hour.\nPlease wait a moment and try again.",
+      reason: `You've reached your AI limit for this hour.\nYour rate will return at ${resetTimeStr}.`,
       remaining: 0,
     };
   }
@@ -276,9 +290,15 @@ async function checkRateLimit(
     .gte("created_at", oneDayAgo.toISOString());
 
   if ((dailyCount || 0) >= planLimits.messagesPerDay) {
+    // Daily limit resets at midnight
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const resetTimeStr = tomorrow.toLocaleDateString([], { month: "short", day: "numeric" });
+    
     return {
       allowed: false,
-      reason: "You've reached today's AI usage limit.\nYour limit will reset tomorrow.",
+      reason: `You've reached today's AI usage limit.\nYour rate will return on ${resetTimeStr}.`,
       remaining: 0,
     };
   }
