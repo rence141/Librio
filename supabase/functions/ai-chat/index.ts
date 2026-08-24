@@ -23,11 +23,11 @@ const FREELLM_BASE_URL = Deno.env.get("FREELLM_BASE_URL") || "https://freellmapi
 const FREELLM_API_KEY = Deno.env.get("FREELLM_API_KEY");
 const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "auto";
 
-// Rate limits per tier
+// Rate limits per tier (rolling window: resets every hour/day)
 const RATE_LIMITS = {
-  free: { requestsPerHour: 300, requestsPerDay: 1000 },
-  premium: { requestsPerHour: 2000, requestsPerDay: 10000 },
-  enterprise: { requestsPerHour: 10000, requestsPerDay: 100000 },
+  free: { requestsPerHour: 100, requestsPerDay: 1000 },
+  premium: { requestsPerHour: 500, requestsPerDay: 5000 },
+  enterprise: { requestsPerHour: 2000, requestsPerDay: 20000 },
 } as const;
 
 // ─── Librio System Prompt (preserved from Flutter) ───────────────────────────
