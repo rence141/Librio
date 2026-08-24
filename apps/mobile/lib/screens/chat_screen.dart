@@ -1767,6 +1767,9 @@ class _ChatScreenState extends State<ChatScreen> {
         authToken: authToken,
       );
       
+      // Invalidate usage cache so next fetch gets fresh data
+      _aiUsageService.invalidateCache();
+      
       // Track token usage
       if (response.inputTokens != null && response.outputTokens != null) {
         _contextWindow.addUsage(response.inputTokens!, response.outputTokens!);
