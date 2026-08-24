@@ -25,9 +25,9 @@ const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "auto";
 
 // Rate limits per tier
 const RATE_LIMITS = {
-  free: { requestsPerHour: 30, requestsPerDay: 100 },
-  premium: { requestsPerHour: 200, requestsPerDay: 1000 },
-  enterprise: { requestsPerHour: 1000, requestsPerDay: 10000 },
+  free: { requestsPerHour: 300, requestsPerDay: 1000 },
+  premium: { requestsPerHour: 2000, requestsPerDay: 10000 },
+  enterprise: { requestsPerHour: 10000, requestsPerDay: 100000 },
 } as const;
 
 // ─── Librio System Prompt (preserved from Flutter) ───────────────────────────
