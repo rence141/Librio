@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/ai_plans.dart';
 import '../services/ai_usage_service.dart';
-import '../utils/debug_logger.dart';
 
 /// Compact AI usage details panel.
 /// 
@@ -81,9 +80,6 @@ class _AiUsagePanelState extends State<AiUsagePanel> {
 
   Widget _buildUsagePanel(AiUsageSnapshot usage) {
     final limits = usage.planLimits;
-    final contextPercent = usage.contextUsagePercent.toStringAsFixed(0);
-    final messagesPercent = ((usage.messagesThisDay / limits.messagesPerDay) * 100).toStringAsFixed(0);
-    final requestsPercent = ((usage.requestsThisMinute / limits.requestsPerMinute) * 100).toStringAsFixed(0);
 
     return Container(
       decoration: BoxDecoration(
@@ -233,7 +229,6 @@ class _AiUsagePanelState extends State<AiUsagePanel> {
     bool isWarning = false,
     bool isCritical = false,
   }) {
-    final percentStr = percent.toStringAsFixed(0);
     final color = isCritical
         ? Colors.red[600]
         : isWarning
