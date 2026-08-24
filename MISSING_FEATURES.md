@@ -2,7 +2,7 @@
 
 **Date**: 2026-08-25
 **Status**: Comprehensive feature gap analysis
-**Scope**: Excluding web chat interface
+**Scope**: Mobile app only (NO web version)
 
 ---
 
