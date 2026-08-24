@@ -20,6 +20,7 @@ import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
 import '../widgets/context_meter.dart';
+import '../widgets/compact_context_indicator.dart';
 import '../widgets/ai_usage_panel.dart';
 import 'flashcard_review_screen.dart';
 
@@ -1395,15 +1396,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            // Context Meter (elegant rounded-square progress indicator)
+            const SizedBox(width: 4),
+            // Compact context indicator (tiny square percentage display)
             if (_currentModelIsOnline)
-              ContextMeter(
+              CompactContextIndicator(
                 usage: _contextWindow.usagePercentage / 100.0,
                 tooltip: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
                 onTap: () => showAiUsagePanel(context),
               ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             // Send / Stop button
             SizedBox(
               width: 44,
