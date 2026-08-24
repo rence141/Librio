@@ -23,16 +23,33 @@ const FREELLM_BASE_URL = Deno.env.get("FREELLM_BASE_URL") || "https://freellmapi
 const FREELLM_API_KEY = Deno.env.get("FREELLM_API_KEY");
 const AI_DEFAULT_MODEL = Deno.env.get("AI_DEFAULT_MODEL") || "gemini-3.6-flash";
 
-// Rate limits per tier (rolling window: resets every hour/day)
-const RATE_LIMITS = {
-  free: { requestsPerHour: 100, requestsPerDay: 1000 },
-  premium: { requestsPerHour: 500, requestsPerDay: 5000 },
-  enterprise: { requestsPerHour: 2000, requestsPerDay: 20000 },
+// AI Plans configuration (must match Flutter config/ai_plans.dart)
+const AI_PLANS = {
+  free: {
+    requestsPerMinute: 5,
+    requestsPerHour: 30,
+    messagesPerDay: 100,
+    maxInputTokens: 16000,
+    maxOutputTokens: 2000,
+    maxConcurrentRequests: 1,
+    imageAnalysisPerDay: 5,
+    documentAnalysisPerDay: 3,
+  },
+  paid: {
+    requestsPerMinute: 15,
+    requestsPerHour: 100,
+    messagesPerDay: 500,
+    maxInputTokens: 32000,
+    maxOutputTokens: 4000,
+    maxConcurrentRequests: 3,
+    imageAnalysisPerDay: 30,
+    documentAnalysisPerDay: 20,
+  },
 } as const;
 
 // ─── Librio System Prompt (preserved from Flutter) ───────────────────────────
 
-const LIBRIO_SYSTEM_PROMPT = `You are Librio, a helpful, intelligent study tutor.
+const LIBRO_SYSTEM_PROMPT = `You are Libro, a helpful, intelligent study tutor.
 
 Your job is to understand the user's actual input and respond to what they are asking or showing. Do not follow a generic greeting behavior when the user has provided meaningful content.
 
@@ -210,46 +227,62 @@ async function checkRateLimit(
   userId: string,
   tier: string,
 ): Promise<{ allowed: boolean; reason?: string; remaining?: number }> {
-  const limits = RATE_LIMITS[tier as keyof typeof RATE_LIMITS] || RATE_LIMITS.free;
+  const planLimits = AI_PLANS[tier as keyof typeof AI_PLANS] || AI_PLANS.free;
   const now = new Date();
+  const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Check hourly limit
+  // Check per-minute limit
+  const { count: minuteCount } = await supabase
+    .from("ai_usage")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", oneMinuteAgo.toISOString());
+
+  if ((minuteCount || 0) >= planLimits.requestsPerMinute) {
+    return {
+      allowed: false,
+      reason: "You've reached your AI limit for this minute.\nPlease wait a moment and try again.",
+      remaining: 0,
+    };
+  }
+
+  // Check per-hour limit
   const { count: hourlyCount } = await supabase
     .from("ai_usage")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .gte("created_at", oneHourAgo.toISOString());
 
-  if ((hourlyCount || 0) >= limits.requestsPerHour) {
+  if ((hourlyCount || 0) >= planLimits.requestsPerHour) {
     return {
       allowed: false,
-      reason: `Rate limit exceeded: ${limits.requestsPerHour} requests per hour.`,
+      reason: "You've reached your AI limit for this hour.\nPlease wait a moment and try again.",
       remaining: 0,
     };
   }
 
-  // Check daily limit
+  // Check daily message limit
   const { count: dailyCount } = await supabase
     .from("ai_usage")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .gte("created_at", oneDayAgo.toISOString());
 
-  if ((dailyCount || 0) >= limits.requestsPerDay) {
+  if ((dailyCount || 0) >= planLimits.messagesPerDay) {
     return {
       allowed: false,
-      reason: `Daily limit exceeded: ${limits.requestsPerDay} requests per day.`,
+      reason: "You've reached today's AI usage limit.\nYour limit will reset tomorrow.",
       remaining: 0,
     };
   }
 
   return {
     allowed: true,
-    remaining: limits.requestsPerDay - (dailyCount || 0),
+    remaining: planLimits.messagesPerDay - (dailyCount || 0),
   };
 }
 
@@ -450,7 +483,7 @@ Deno.serve(async (req: Request) => {
 
   // ── 6. Build messages ──
   const apiMessages: Array<Record<string, any>> = [
-    { role: "system", content: LIBRIO_SYSTEM_PROMPT },
+    { role: "system", content: LIBRO_SYSTEM_PROMPT },
   ];
 
   // Add conversation context if provided
