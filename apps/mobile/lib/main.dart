@@ -123,16 +123,21 @@ class _LibroAppState extends State<LibroApp> {
 
   Future<void> _initializePreferences() async {
     _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = _prefs?.getBool('darkMode') ?? false;
-    });
+    if (mounted) {
+      setState(() {
+        _isDarkMode = _prefs?.getBool('darkMode') ?? false;
+      });
+    }
   }
 
   void _updateTheme() {
     if (_prefs == null) return;
-    setState(() {
-      _isDarkMode = _prefs!.getBool('darkMode') ?? false;
-    });
+    final newDarkMode = _prefs!.getBool('darkMode') ?? false;
+    if (newDarkMode != _isDarkMode && mounted) {
+      setState(() {
+        _isDarkMode = newDarkMode;
+      });
+    }
   }
 
   @override
@@ -141,9 +146,9 @@ class _LibroAppState extends State<LibroApp> {
       create: (_) => AuthService(),
       child: MaterialApp(
         title: AppVersion.appName,
-        theme: _isDarkMode ? LibrioTheme.darkTheme : LibrioTheme.lightTheme,
+        theme: LibrioTheme.lightTheme,
         darkTheme: LibrioTheme.darkTheme,
-        themeMode: ThemeMode.light,
+        themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
         home: _AppEntry(
           llmService: widget.llmService,
           needsOnboarding: widget.needsOnboarding,
