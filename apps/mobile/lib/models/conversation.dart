@@ -114,6 +114,7 @@ class ChatMessage {
   bool isStreaming;
   final List<Document> sources;
   final List<String> attachmentPaths; // local file paths for images/files
+  final bool isImageScan; // true when sent as image-only (scan mode)
 
   ChatMessage({
     required this.text,
@@ -122,5 +123,6 @@ class ChatMessage {
     this.isStreaming = false,
     this.sources = const [],
     this.attachmentPaths = const [],
+    this.isImageScan = false,
   });
 }

@@ -94,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // Theme-aware colors
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
   Color get _textColor => _isDark ? Colors.white : Colors.black87;
+  Color get _subTextColor => _isDark ? Colors.white70 : Colors.black54;
   Color get _bubbleColor => _isDark ? const Color(0xFF2A2A3E) : _userBubbleColor;
 
   @override
@@ -224,6 +225,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (userMessage.isEmpty && attachments.isEmpty) return;
     if (_isGenerating) return;
 
+    // Image scan mode: only images, no text
+    final isImageScan = userMessage.isEmpty &&
+        attachments.isNotEmpty &&
+        attachments.every(_isImagePath);
+
     // Check context limit
     if (_contextWindow.isLimitExceeded) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -243,7 +249,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       isUser: true,
       timestamp: DateTime.now(),
       attachmentPaths: attachments,
+      isImageScan: isImageScan,
     );
+
+    // For image scans, use a default prompt so the AI knows to analyze
+    final effectivePrompt = isImageScan
+        ? 'Analyze this image. Identify what it shows, extract any text, and provide useful study notes.'
+        : userMessage;
 
     setState(() {
       _messages.add(userChatMessage);
@@ -251,15 +263,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _canStop = true;
     });
 
-    await _databaseService.addMessage(_currentConversation.id, userMessage, true);
+    await _databaseService.addMessage(_currentConversation.id, effectivePrompt, true);
     _scrollToBottom();
 
     // Show delivery notification only when app is in background
     if (mounted && !_isAppInForeground) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Message delivered ✓'),
-          duration: Duration(milliseconds: 1500),
+        SnackBar(
+          content: Text(isImageScan ? 'Image sent for analysis ✓' : 'Message delivered ✓'),
+          duration: const Duration(milliseconds: 1500),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -280,7 +292,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // Streaming is kept internally for cancellation and progress, but
       // the user only sees "Librio is thinking..." until complete.
       final responseBuffer = StringBuffer();
-      await for (final chunk in _streamLlmResponse(userMessage, imagePaths: attachments)) {
+      await for (final chunk in _streamLlmResponse(effectivePrompt, imagePaths: attachments)) {
         if (!_isGenerating) break; // User pressed stop
         responseBuffer.write(chunk);
         // No setState here — no partial text display
@@ -790,6 +802,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildMessage(ChatMessage message, int index) {
     if (message.isUser) {
+      if (message.isImageScan) {
+        return _buildImageScanCard(message, index);
+      }
       return _buildUserMessage(message);
     }
     return _buildAiMessage(message, index);
@@ -870,6 +885,168 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
         ],
       ),
+    );
+  }
+
+  // Image scan card: full-width image with scan overlay, no chat bubble
+  Widget _buildImageScanCard(ChatMessage message, int index) {
+    final isAnalyzing = index < _messages.length - 1
+        ? _messages[index + 1].isStreaming
+        : _isGenerating;
+    final hasResult = index < _messages.length - 1 && !_messages[index + 1].isUser;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image with scan overlay
+            Stack(
+              children: [
+                // The image
+                AspectRatio(
+                  aspectRatio: 4 / 3,
+                  child: Image.file(
+                    File(message.attachmentPaths.first),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => Container(
+                      color: _isDark ? Colors.grey[800] : Colors.grey[200],
+                      child: Center(
+                        child: Icon(Icons.broken_image, size: 40, color: _subTextColor),
+                      ),
+                    ),
+                  ),
+                ),
+                // Scan label badge
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.document_scanner, color: Colors.white, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          'SCAN',
+                          style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Analyzing overlay
+                if (isAnalyzing)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Analyzing...',
+                              style: TextStyle(
+                                fontFamily: 'Fredoka',
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                // Scan line animation effect (simple gradient bar)
+                if (isAnalyzing)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: _buildScanLineOverlay(),
+                  ),
+              ],
+            ),
+            // Footer
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    hasResult ? Icons.check_circle : (isAnalyzing ? Icons.hourglass_top : Icons.image),
+                    size: 16,
+                    color: hasResult ? Colors.green : (isAnalyzing ? Colors.orange : _subTextColor),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      hasResult
+                          ? 'Analysis complete'
+                          : (isAnalyzing ? 'AI is analyzing your image...' : 'Image sent'),
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 12,
+                        color: _subTextColor,
+                      ),
+                    ),
+                  ),
+                  // Timestamp
+                  Text(
+                    '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 11,
+                      color: _subTextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Animated scan line overlay
+  Widget _buildScanLineOverlay() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 2),
+      builder: (context, value, child) {
+        return CustomPaint(
+          painter: _ScanLinePainter(value),
+          child: const SizedBox.expand(),
+        );
+      },
     );
   }
 
@@ -1575,11 +1752,87 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               title: const Text('Camera', style: TextStyle(fontFamily: 'Fredoka')),
               onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
             ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.document_scanner, color: _cyan),
+              title: const Text('Scan Image', style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+              subtitle: const Text('AI analyzes the image instantly', style: TextStyle(fontFamily: 'Fredoka', fontSize: 12)),
+              onTap: () { Navigator.pop(context); _scanImage(); },
+            ),
             const SizedBox(height: 8),
           ],
         ),
       ),
     );
+  }
+
+  /// Pick an image and immediately send it for AI scanning (no text needed)
+  Future<void> _scanImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: _isDark ? const Color(0xFF1F1F2E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Scan with AI',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _textColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Choose an image to analyze',
+              style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: _subTextColor),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: _deepPurple),
+              title: Text('Choose from Gallery', style: TextStyle(fontFamily: 'Fredoka', color: _textColor)),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: Icon(Icons.camera_alt, color: _deepPurple),
+              title: Text('Take Photo', style: TextStyle(fontFamily: 'Fredoka', color: _textColor)),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final xFile = await picker.pickImage(source: source, maxWidth: 1024, imageQuality: 85);
+      if (xFile == null) return;
+
+      // Immediately send as image scan (no text)
+      setState(() {
+        _pendingAttachments.add(xFile.path);
+      });
+      _sendMessage();
+      DebugLogger.info('ChatScreen', 'Image scan sent: ${xFile.path}');
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Image scan failed', e, st);
+    }
   }
 
   /// Pick an image from gallery or camera
@@ -2224,4 +2477,40 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
     }
   }
+}
+
+/// Custom painter for the scanning line animation overlay
+class _ScanLinePainter extends CustomPainter {
+  final double progress;
+
+  _ScanLinePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = progress * size.height;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.transparent,
+          _ChatScreenColors.deepPurple.withValues(alpha: 0.4),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, y - 30, size.width, 60));
+    canvas.drawRect(Rect.fromLTWH(0, y - 30, size.width, 60), paint);
+
+    // Bright line
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..strokeWidth = 2;
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+  }
+
+  @override
+  bool shouldRepaint(_ScanLinePainter oldDelegate) => oldDelegate.progress != progress;
+}
+
+class _ChatScreenColors {
+  static const Color deepPurple = Color(0xFF7B2CBF);
 }
