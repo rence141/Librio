@@ -141,9 +141,9 @@ class _LibroAppState extends State<LibroApp> {
       create: (_) => AuthService(),
       child: MaterialApp(
         title: AppVersion.appName,
-        theme: LibrioTheme.lightTheme,
+        theme: _isDarkMode ? LibrioTheme.darkTheme : LibrioTheme.lightTheme,
         darkTheme: LibrioTheme.darkTheme,
-        themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+        themeMode: ThemeMode.light,
         home: _AppEntry(
           llmService: widget.llmService,
           needsOnboarding: widget.needsOnboarding,
