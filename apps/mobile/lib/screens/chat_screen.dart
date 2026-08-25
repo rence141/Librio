@@ -984,15 +984,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                // Scan line animation effect (simple gradient bar)
-                if (isAnalyzing)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: _buildScanLineOverlay(),
-                  ),
               ],
             ),
             // Footer
@@ -1033,20 +1024,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
-    );
-  }
-
-  // Animated scan line overlay
-  Widget _buildScanLineOverlay() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(seconds: 2),
-      builder: (context, value, child) {
-        return CustomPaint(
-          painter: _ScanLinePainter(value),
-          child: const SizedBox.expand(),
-        );
-      },
     );
   }
 
@@ -2477,40 +2454,4 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
     }
   }
-}
-
-/// Custom painter for the scanning line animation overlay
-class _ScanLinePainter extends CustomPainter {
-  final double progress;
-
-  _ScanLinePainter(this.progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final y = progress * size.height;
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.transparent,
-          _ChatScreenColors.deepPurple.withValues(alpha: 0.4),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, y - 30, size.width, 60));
-    canvas.drawRect(Rect.fromLTWH(0, y - 30, size.width, 60), paint);
-
-    // Bright line
-    final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
-      ..strokeWidth = 2;
-    canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
-  }
-
-  @override
-  bool shouldRepaint(_ScanLinePainter oldDelegate) => oldDelegate.progress != progress;
-}
-
-class _ChatScreenColors {
-  static const Color deepPurple = Color(0xFF7B2CBF);
 }
