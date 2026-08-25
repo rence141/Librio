@@ -20,6 +20,20 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px; /* Prevents zoom on input focus */
+  }
+  
+  input, textarea, select {
+    font-size: 16px;
+  }
 }
 
 /* Scrollbar Styling */
