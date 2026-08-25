@@ -211,7 +211,7 @@ export default function LandingPage() {
           </div>
 
           {/* Desktop/Tablet: Asymmetric CSS Grid */}
-          <div className="hidden lg:block" style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
+          <div className="hidden lg:grid" style={{gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
             {/* Left: Large AI Tutor Card (column 1, spans both rows) */}
             <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative" style={{gridColumn: '1', gridRow: '1 / 3', minHeight: '800px'}}>
               {/* Background Image - fills entire card */}
