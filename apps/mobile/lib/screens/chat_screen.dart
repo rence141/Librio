@@ -233,6 +233,17 @@ class _ChatScreenState extends State<ChatScreen> {
     await _databaseService.addMessage(_currentConversation.id, userMessage, true);
     _scrollToBottom();
 
+    // Show delivery notification
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message delivered ✓'),
+          duration: Duration(milliseconds: 1500),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
     try {
       // Create a placeholder AI message (empty — not shown until complete)
       final aiChatMessage = ChatMessage(
@@ -266,6 +277,17 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         await _databaseService.addMessage(_currentConversation.id, response, false);
         _scrollToBottom();
+
+        // Show delivery notification
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Response received ✓'),
+              duration: Duration(milliseconds: 1500),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
 
         // Show context window status if online model
         if (_currentModelIsOnline && _contextWindow.warningLevel > 0) {
