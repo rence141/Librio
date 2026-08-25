@@ -38,8 +38,13 @@ import 'settings_screen.dart';
 /// - Offline indicator (subtle, not an error)
 class ChatScreen extends StatefulWidget {
   final LlmService llmService;
+  final VoidCallback? onThemeChanged;
 
-  const ChatScreen({super.key, required this.llmService});
+  const ChatScreen({
+    super.key,
+    required this.llmService,
+    this.onThemeChanged,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -1407,10 +1412,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 4),
             // Compact context indicator (tiny square percentage display)
-            if (_currentModelIsOnline)
+            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
               CompactContextIndicator(
-                usage: _contextWindow.usagePercentage / 100.0,
-                tooltip: 'Context: ${_contextWindow.usagePercentage.toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
+                usage: _contextWindow.usagePercentage,
+                tooltip: 'Context: ${(_contextWindow.usagePercentage * 100).toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
                 onTap: () => showAiUsagePanel(context),
               ),
             const SizedBox(width: 4),
@@ -2000,7 +2005,11 @@ class _ChatScreenState extends State<ChatScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(
+                    onThemeChanged: widget.onThemeChanged,
+                  ),
+                ),
               );
             },
           ),

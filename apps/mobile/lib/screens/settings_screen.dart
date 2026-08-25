@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final VoidCallback? onThemeChanged;
+
+  const SettingsScreen({super.key, this.onThemeChanged});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -151,6 +153,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _isDarkMode = value;
                     });
                     _saveSetting('darkMode', value);
+                    // Notify parent to update theme
+                    widget.onThemeChanged?.call();
                   },
                   activeColor: Colors.purple,
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'services/model_loader.dart';
 import 'services/llm_service.dart';
 import 'services/auth_service.dart';
@@ -94,7 +95,7 @@ void main() async {
   ));
 }
 
-class LibroApp extends StatelessWidget {
+class LibroApp extends StatefulWidget {
   final ModelLoader modelLoader;
   final LlmService llmService;
   final bool needsOnboarding;
@@ -107,15 +108,38 @@ class LibroApp extends StatelessWidget {
   });
 
   @override
+  State<LibroApp> createState() => _LibroAppState();
+}
+
+class _LibroAppState extends State<LibroApp> {
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDarkModeSetting();
+  }
+
+  Future<void> _loadDarkModeSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('darkMode') ?? false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AuthService(),
       child: MaterialApp(
         title: AppVersion.appName,
-        theme: LibrioTheme.lightTheme,
+        theme: _isDarkMode ? LibrioTheme.darkTheme : LibrioTheme.lightTheme,
+        darkTheme: LibrioTheme.darkTheme,
+        themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
         home: _AppEntry(
-          llmService: llmService,
-          needsOnboarding: needsOnboarding,
+          llmService: widget.llmService,
+          needsOnboarding: widget.needsOnboarding,
+          onThemeChanged: _loadDarkModeSetting,
         ),
         builder: (context, widget) {
           // Catch widget build errors
@@ -169,10 +193,12 @@ class LibroApp extends StatelessWidget {
 class _AppEntry extends StatefulWidget {
   final LlmService llmService;
   final bool needsOnboarding;
+  final VoidCallback? onThemeChanged;
 
   const _AppEntry({
     required this.llmService,
     required this.needsOnboarding,
+    this.onThemeChanged,
   });
 
   @override
@@ -220,6 +246,9 @@ class _AppEntryState extends State<_AppEntry> {
     }
 
     // Step 4: Main chat screen
-    return ChatScreen(llmService: widget.llmService);
+    return ChatScreen(
+      llmService: widget.llmService,
+      onThemeChanged: widget.onThemeChanged,
+    );
   }
 }
