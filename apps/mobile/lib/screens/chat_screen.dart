@@ -50,7 +50,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
   final List<Conversation> _conversations = [];
@@ -62,6 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isInitialized = false;
   final List<String> _pendingAttachments = []; // paths of images/files to send
   bool _isOffline = true; // Default to offline (local model)
+  bool _isAppInForeground = true; // Track if app is in foreground
 
   // Generated flashcards from chat (pending save)
   List<ParsedFlashcard> _pendingFlashcards = [];
@@ -95,8 +96,25 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeDatabase();
     _messageController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _messageController.dispose();
+    _scrollController.dispose();
+    _inputFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      _isAppInForeground = state == AppLifecycleState.resumed;
+    });
   }
 
   Future<void> _initializeDatabase() async {
@@ -233,8 +251,8 @@ class _ChatScreenState extends State<ChatScreen> {
     await _databaseService.addMessage(_currentConversation.id, userMessage, true);
     _scrollToBottom();
 
-    // Show delivery notification
-    if (mounted) {
+    // Show delivery notification only when app is in background
+    if (mounted && !_isAppInForeground) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Message delivered ✓'),
@@ -278,8 +296,8 @@ class _ChatScreenState extends State<ChatScreen> {
         await _databaseService.addMessage(_currentConversation.id, response, false);
         _scrollToBottom();
 
-        // Show delivery notification
-        if (mounted) {
+        // Show delivery notification only when app is in background
+        if (mounted && !_isAppInForeground) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Response received ✓'),
