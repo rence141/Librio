@@ -211,7 +211,7 @@ export default function LandingPage() {
           </div>
 
           {/* Desktop/Tablet: Asymmetric CSS Grid */}
-          <div className="hidden md:block" style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
+          <div className="hidden lg:block" style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: '20px'}}>
             {/* Left: Large AI Tutor Card (column 1, spans both rows) */}
             <div className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative" style={{gridColumn: '1', gridRow: '1 / 3', minHeight: '800px'}}>
               {/* Background Image - fills entire card */}
@@ -307,7 +307,7 @@ export default function LandingPage() {
           </div>
 
           {/* Mobile: Stacked Layout */}
-          <div className="md:hidden space-y-3">
+          <div className="lg:hidden space-y-3">
             {features.slice(0, 3).map((feature, index) => (
               <div key={index} className="group rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg relative h-56 sm:h-64">
                 {/* Background Image - fills entire card */}
