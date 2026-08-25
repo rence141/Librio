@@ -113,7 +113,7 @@ class LibroApp extends StatefulWidget {
 
 class _LibroAppState extends State<LibroApp> {
   bool _isDarkMode = false;
-  late SharedPreferences _prefs;
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
@@ -124,13 +124,14 @@ class _LibroAppState extends State<LibroApp> {
   Future<void> _initializePreferences() async {
     _prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = _prefs.getBool('darkMode') ?? false;
+      _isDarkMode = _prefs?.getBool('darkMode') ?? false;
     });
   }
 
   void _updateTheme() {
+    if (_prefs == null) return;
     setState(() {
-      _isDarkMode = _prefs.getBool('darkMode') ?? false;
+      _isDarkMode = _prefs!.getBool('darkMode') ?? false;
     });
   }
 
