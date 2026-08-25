@@ -612,14 +612,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    _inputFocusNode.dispose();
-    super.dispose();
-  }
-
   // ============ Build ============
 
   @override
