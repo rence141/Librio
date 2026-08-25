@@ -38,13 +38,14 @@ export default function DownloadPage() {
         <div className="max-w-6xl w-full flex flex-col md:flex-row items-center gap-8 md:gap-16">
           {/* Left: Gradient Box with Phone */}
           <div className="flex-1 flex justify-center w-full md:w-auto">
-            <div className="relative w-64 h-80 sm:w-80 sm:h-96 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-purple-600 via-purple-400 to-cyan-300 flex items-center justify-center">
+            <div className="relative w-64 h-80 sm:w-80 sm:h-96 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-purple-600 via-purple-400 to-cyan-300 flex items-center justify-center flex-shrink-0">
               <Image
                 src="/images/Phone-librio.png"
                 alt="Librio App"
-                fill
+                width={320}
+                height={384}
                 priority
-                className="object-cover"
+                className="object-cover w-full h-full"
               />
             </div>
           </div>
