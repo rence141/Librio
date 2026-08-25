@@ -30,11 +30,7 @@ export default function DownloadPage() {
               FAQ
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium">
-              Sign In
-            </Link>
-          </div>
+
         </div>
       </nav>
 
@@ -43,16 +39,19 @@ export default function DownloadPage() {
         <div className="max-w-6xl w-full flex items-center gap-20">
           {/* Left: Phone Mockup */}
           <div className="flex-1 flex justify-center">
-            <div className="w-80 h-96 bg-gradient-to-br from-yellow-600 to-yellow-300 rounded-3xl shadow-2xl flex items-center justify-center">
-              <div className="text-white text-center">
-                <p className="text-sm">[Phone mockup image]</p>
-              </div>
-            </div>
+            <Image
+              src="/images/Phone-librio.png"
+              alt="Librio App"
+              width={350}
+              height={450}
+              priority
+              className="drop-shadow-2xl"
+            />
           </div>
 
           {/* Right: Content */}
           <div className="flex-1">
-            <h1 className="text-6xl font-bold mb-6 text-black">Get the App NOW</h1>
+            <h1 className="text-6xl font-bold mb-6 text-black">Get The App</h1>
             
             <p className="text-2xl text-gray-700 mb-8 leading-relaxed font-semibold">
               Your AI study companion in your pocket.
