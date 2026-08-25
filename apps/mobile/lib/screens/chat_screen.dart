@@ -886,13 +886,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Label
-          const Text(
+          Text(
             'Librio',
             style: TextStyle(
               fontFamily: 'Fredoka',
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.black54,
+              color: _isDark ? Colors.white70 : Colors.black54,
             ),
           ),
           const SizedBox(height: 8),
