@@ -12,36 +12,78 @@ class FlashcardReviewScreen extends StatefulWidget {
   State<FlashcardReviewScreen> createState() => _FlashcardReviewScreenState();
 }
 
-class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
+class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
+    with TickerProviderStateMixin {
   List<Flashcard> _cards = [];
   List<String> _decks = [];
   String? _selectedDeck;
-  Set<String> _selectedDecksForGroup = {}; // For group review
+  Set<String> _selectedDecksForGroup = {};
   bool _isGroupReviewMode = false;
   bool _isLoading = true;
   bool _isReviewing = false;
   int _currentIndex = 0;
   int _correct = 0;
   int _total = 0;
+  bool _showAnswer = false;
+
+  // Spaced repetition stats
+  final Map<String, int> _streaks = {};
+  int _sessionBest = 0;
 
   // Colors
   static const Color _deepPurple = Color(0xFF7B2CBF);
   static const Color _cyan = Color(0xFF06B6D4);
+
+  // Theme helpers
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _textColor => _isDark ? Colors.white : Colors.black87;
+  Color get _subTextColor => _isDark ? Colors.white70 : Colors.black54;
+  Color get _cardBg => _isDark ? const Color(0xFF1F1F2E) : Colors.white;
+  Color get _divider => _isDark ? Colors.grey[700]! : Colors.grey[200]!;
 
   // Review state
   String? _selectedOption;
   bool? _answeredCorrectly;
   final TextEditingController _textController = TextEditingController();
 
+  // Card flip animation
+  late AnimationController _flipController;
+  late Animation<double> _flipAnimation;
+  bool _frontSide = true;
+
+  // Slide transition animation between cards
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
+
   @override
   void initState() {
     super.initState();
+    _flipController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _flipController, curve: Curves.easeInOutQuad),
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
     _loadData();
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    _flipController.dispose();
+    _slideController.dispose();
     super.dispose();
   }
 
@@ -49,10 +91,10 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     try {
       _decks = await widget.databaseService.getFlashcardDecks();
       _cards = await widget.databaseService.getFlashcards(deck: _selectedDeck);
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     } catch (e, st) {
       DebugLogger.error('FlashcardReview', 'Failed to load data', e, st);
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -62,7 +104,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
       _isLoading = true;
     });
     _cards = await widget.databaseService.getFlashcards(deck: deck);
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _loadGroupReviewCards() async {
@@ -92,7 +134,12 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
       _selectedOption = null;
       _answeredCorrectly = null;
       _textController.clear();
+      _showAnswer = false;
+      _frontSide = true;
+      _streaks.clear();
+      _sessionBest = 0;
     });
+    _slideController.forward(from: 0);
   }
 
   void _answerMultipleChoice(int index) {
@@ -102,7 +149,13 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     setState(() {
       _selectedOption = card.options[index];
       _answeredCorrectly = isCorrect;
-      if (isCorrect) _correct++;
+      if (isCorrect) {
+        _correct++;
+        _streaks[card.id] = (_streaks[card.id] ?? 0) + 1;
+        if (_streaks[card.id]! > _sessionBest) _sessionBest = _streaks[card.id]!;
+      } else {
+        _streaks[card.id] = 0;
+      }
     });
     widget.databaseService.updateFlashcardReview(card.id, isCorrect);
   }
@@ -118,67 +171,148 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             userAnswer.contains(correctAnswer));
     setState(() {
       _answeredCorrectly = isCorrect;
-      if (isCorrect) _correct++;
+      if (isCorrect) {
+        _correct++;
+        _streaks[card.id] = (_streaks[card.id] ?? 0) + 1;
+        if (_streaks[card.id]! > _sessionBest) _sessionBest = _streaks[card.id]!;
+      } else {
+        _streaks[card.id] = 0;
+      }
     });
     widget.databaseService.updateFlashcardReview(card.id, isCorrect);
   }
 
+  void _flipCard() {
+    if (_frontSide) {
+      _flipController.forward();
+    } else {
+      _flipController.reverse();
+    }
+    _frontSide = !_frontSide;
+    setState(() => _showAnswer = !_showAnswer);
+  }
+
   void _nextCard() {
     if (_currentIndex >= _cards.length - 1) {
-      // Last card — finish review
       setState(() => _isReviewing = false);
       _showResults();
     } else {
-      // More cards — go to next
+      _slideController.reset();
       setState(() {
         _currentIndex++;
         _selectedOption = null;
         _answeredCorrectly = null;
         _textController.clear();
+        _showAnswer = false;
+        _frontSide = true;
       });
+      _flipController.reset();
+      _slideController.forward();
     }
   }
 
+  void _previousCard() {
+    if (_currentIndex <= 0) return;
+    _slideController.reset();
+    setState(() {
+      _currentIndex--;
+      _selectedOption = null;
+      _answeredCorrectly = null;
+      _textController.clear();
+      _showAnswer = false;
+      _frontSide = true;
+    });
+    _flipController.reset();
+    _slideController.forward();
+  }
+
   void _showResults() {
+    final accuracy = (_correct / _total * 100).round();
+    final isGreat = accuracy >= 70;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Review Complete!',
-            style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+        backgroundColor: _isDark ? const Color(0xFF1F1F2E) : Colors.white,
+        title: Text('Review Complete!',
+            style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontWeight: FontWeight.bold,
+                color: _textColor)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              _correct >= _total * 0.7 ? Icons.celebration : Icons.school,
-              size: 64,
-              color: _correct >= _total * 0.7 ? Colors.green : _deepPurple,
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: isGreat
+                      ? [Colors.green, Colors.teal]
+                      : [_deepPurple, _cyan],
+                ),
+              ),
+              child: Icon(
+                isGreat ? Icons.celebration : Icons.school,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               '$_correct / $_total correct',
-              style: const TextStyle(
-                  fontFamily: 'Fredoka', fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _textColor),
             ),
             const SizedBox(height: 8),
             Text(
-              '${(_correct / _total * 100).round()}% accuracy',
+              '$accuracy% accuracy',
               style: TextStyle(
-                  fontFamily: 'Fredoka', fontSize: 16, color: Colors.grey[600]),
+                  fontFamily: 'Fredoka', fontSize: 16, color: _subTextColor),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: _isDark ? Colors.grey[800] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.local_fire_department,
+                      color: Colors.orange, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Best streak: $_sessionBest',
+                    style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 14,
+                        color: _textColor),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Done',
-                style: TextStyle(fontFamily: 'Fredoka')),
+            child: Text('Done', style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _startReview();
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _deepPurple,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Review Again',
                 style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
           ),
@@ -190,6 +324,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         flexibleSpace: Container(
@@ -231,24 +366,32 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.style, size: 80, color: Colors.grey[300]),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _isDark ? Colors.grey[800] : Colors.grey[100],
+                ),
+                child: Icon(Icons.style, size: 50, color: _deepPurple.withValues(alpha: 0.5)),
+              ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'No Flashcards Yet',
                 style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 20,
-                    fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.bold,
+                    color: _textColor),
               ),
               const SizedBox(height: 8),
               Text(
                 'Create flashcards to start studying.',
                 style: TextStyle(
-                    fontFamily: 'Fredoka', color: Colors.grey[600], fontSize: 14),
+                    fontFamily: 'Fredoka', color: _subTextColor, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // Create manually button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -266,7 +409,6 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              // Generate from chat button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -320,12 +462,12 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                 Expanded(
                   child: DropdownButton<String>(
                     value: _isGroupReviewMode ? null : _selectedDeck,
-                    hint: const Text('All Decks',
-                        style: TextStyle(fontFamily: 'Fredoka')),
+                    hint: Text('All Decks',
+                        style: TextStyle(fontFamily: 'Fredoka', color: _textColor)),
                     isExpanded: true,
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('All Decks')),
-                      ..._decks.map((d) => DropdownMenuItem(value: d, child: Text(d))),
+                      DropdownMenuItem(value: null, child: Text('All Decks', style: TextStyle(color: _textColor))),
+                      ..._decks.map((d) => DropdownMenuItem(value: d, child: Text(d, style: TextStyle(color: _textColor)))),
                     ],
                     onChanged: _isGroupReviewMode
                         ? null
@@ -336,7 +478,6 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Group review toggle button
                 ElevatedButton.icon(
                   onPressed: () {
                     setState(() {
@@ -379,10 +520,10 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                       _loadGroupReviewCards();
                     });
                   },
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: _isDark ? Colors.grey[800] : Colors.grey[200],
                   selectedColor: _deepPurple.withValues(alpha: 0.3),
                   side: BorderSide(
-                    color: isSelected ? _deepPurple : Colors.grey[300]!,
+                    color: isSelected ? _deepPurple : _divider,
                   ),
                 );
               }).toList(),
@@ -440,21 +581,23 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: _cardBg,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _divider, width: 1),
         ),
         child: Column(
           children: [
             Icon(icon, color: _deepPurple, size: 28),
             const SizedBox(height: 8),
             Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 20,
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold,
+                    color: _textColor)),
             Text(label,
                 style: TextStyle(
-                    fontFamily: 'Fredoka', fontSize: 12, color: Colors.grey[600])),
+                    fontFamily: 'Fredoka', fontSize: 12, color: _subTextColor)),
           ],
         ),
       ),
@@ -479,16 +622,45 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
         break;
     }
 
+    final accuracy = card.reviewCount > 0
+        ? (card.correctCount / card.reviewCount * 100).round()
+        : null;
+
     return Card(
+      color: _cardBg,
       margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(typeIcon, color: _deepPurple),
         title: Text(card.question,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
-        subtitle: Text('$typeLabel • ${card.deck}',
-            style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: Colors.grey[600])),
+            style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
+        subtitle: Row(
+          children: [
+            Text('$typeLabel • ${card.deck}',
+                style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: _subTextColor)),
+            if (accuracy != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: accuracy >= 70 ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$accuracy%',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: accuracy >= 70 ? Colors.green : Colors.orange,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'edit') {
@@ -498,29 +670,29 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             }
           },
           itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'edit',
               child: Row(
                 children: [
                   Icon(Icons.edit, size: 18, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text('Edit', style: TextStyle(fontFamily: 'Fredoka')),
+                  Text('Edit', style: TextStyle(fontFamily: 'Fredoka', color: _textColor)),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
                   Icon(Icons.delete, size: 18, color: Colors.red),
                   SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(fontFamily: 'Fredoka')),
+                  Text('Delete', style: TextStyle(fontFamily: 'Fredoka', color: _textColor)),
                 ],
               ),
             ),
           ],
           position: PopupMenuPosition.under,
-          icon: const Icon(Icons.more_vert, size: 20),
+          icon: Icon(Icons.more_vert, size: 20, color: _subTextColor),
         ),
       ),
     );
@@ -533,146 +705,239 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
         // Progress bar
         LinearProgressIndicator(
           value: (_currentIndex + 1) / _total,
-          backgroundColor: Colors.grey[200],
+          backgroundColor: _divider,
           valueColor: const AlwaysStoppedAnimation<Color>(_deepPurple),
         ),
-        // Progress text
+        // Progress text + streak
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Card ${_currentIndex + 1} of $_total',
-                  style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey[600])),
-              Text('Score: $_correct',
-                  style: const TextStyle(
-                      fontFamily: 'Fredoka', fontWeight: FontWeight.bold, color: _deepPurple)),
+                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
+              Row(
+                children: [
+                  if (_sessionBest > 0) ...[
+                    Icon(Icons.local_fire_department, color: Colors.orange, size: 16),
+                    const SizedBox(width: 4),
+                    Text('$_sessionBest',
+                        style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange)),
+                    const SizedBox(width: 12),
+                  ],
+                  Text('Score: $_correct',
+                      style: const TextStyle(
+                          fontFamily: 'Fredoka', fontWeight: FontWeight.bold, color: _deepPurple)),
+                ],
+              ),
             ],
           ),
         ),
-        // Card content
+        // Card content with slide animation
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Type badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [_deepPurple, _cyan]),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    card.type.name.toUpperCase(),
-                    style: const TextStyle(
-                        fontFamily: 'Fredoka',
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Question
-                const Text('Question',
-                    style: TextStyle(
-                        fontFamily: 'Fredoka',
-                        fontSize: 14,
-                        color: Colors.grey)),
-                const SizedBox(height: 8),
-                Text(
-                  card.question,
-                  style: const TextStyle(
-                      fontFamily: 'Fredoka', fontSize: 20, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 24),
-                // Answer area based on type
-                if (card.type == FlashcardType.multipleChoice)
-                  _buildMultipleChoiceOptions(card)
-                else
-                  _buildTextAnswer(card),
-                // Show answer after answering
-                if (_answeredCorrectly != null) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _answeredCorrectly!
-                          ? Colors.green[50]
-                          : Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _answeredCorrectly! ? Colors.green : Colors.red,
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity == null) return;
+                if (details.primaryVelocity! < -300 && _answeredCorrectly != null) {
+                  _nextCard();
+                } else if (details.primaryVelocity! > 300) {
+                  _previousCard();
+                }
+              },
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Type badge + flip hint
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              _answeredCorrectly! ? Icons.check_circle : Icons.cancel,
-                              color: _answeredCorrectly! ? Colors.green : Colors.red,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _answeredCorrectly! ? 'Correct!' : 'Incorrect',
-                              style: TextStyle(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [_deepPurple, _cyan]),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            card.type.name.toUpperCase(),
+                            style: const TextStyle(
                                 fontFamily: 'Fredoka',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: _answeredCorrectly! ? Colors.green : Colors.red,
-                              ),
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const Spacer(),
+                        if (card.type == FlashcardType.identification ||
+                            card.type == FlashcardType.enumeration)
+                          TextButton.icon(
+                            onPressed: _flipCard,
+                            icon: Icon(Icons.flip, size: 18, color: _deepPurple),
+                            label: Text(
+                              _showAnswer ? 'Hide' : 'Reveal',
+                              style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: _deepPurple),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('Correct Answer:',
-                            style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
-                        const SizedBox(height: 4),
-                        Text(
-                          card.answer,
-                          style: const TextStyle(
-                              fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                          ),
                       ],
                     ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        // Next button
-        if (_answeredCorrectly != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _currentIndex >= _cards.length - 1
-                    ? () {
-                        setState(() => _isReviewing = false);
-                        _showResults();
-                      }
-                    : _nextCard,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _deepPurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(
-                  _currentIndex < _cards.length - 1 ? 'Next Card' : 'Finish',
-                  style: const TextStyle(
-                      fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 24),
+                    // Question
+                    Text('Question',
+                        style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 14,
+                            color: _subTextColor)),
+                    const SizedBox(height: 8),
+                    Text(
+                      card.question,
+                      style: TextStyle(
+                          fontFamily: 'Fredoka', fontSize: 20, fontWeight: FontWeight.w600, color: _textColor),
+                    ),
+                    const SizedBox(height: 24),
+                    // Answer area based on type
+                    if (card.type == FlashcardType.multipleChoice)
+                      _buildMultipleChoiceOptions(card)
+                    else
+                      _buildTextAnswer(card),
+                    // Show answer after answering or flip
+                    if (_answeredCorrectly != null || _showAnswer) ...[
+                      const SizedBox(height: 24),
+                      AnimatedBuilder(
+                        animation: _flipAnimation,
+                        builder: (context, child) {
+                          final angle = _showAnswer ? _flipAnimation.value * 3.14159 : 0;
+                          return Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()..setEntry(3, 2, 0.001)..rotateX(angle.toDouble()),
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: _answeredCorrectly == false
+                                ? Colors.red.withValues(alpha: _isDark ? 0.15 : 0.08)
+                                : _answeredCorrectly == true
+                                    ? Colors.green.withValues(alpha: _isDark ? 0.15 : 0.08)
+                                    : _isDark ? Colors.grey[800] : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _answeredCorrectly == false
+                                  ? Colors.red
+                                  : _answeredCorrectly == true
+                                      ? Colors.green
+                                      : _divider,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_answeredCorrectly != null) ...[
+                                Row(
+                                  children: [
+                                    Icon(
+                                      _answeredCorrectly! ? Icons.check_circle : Icons.cancel,
+                                      color: _answeredCorrectly! ? Colors.green : Colors.red,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _answeredCorrectly! ? 'Correct!' : 'Incorrect',
+                                      style: TextStyle(
+                                        fontFamily: 'Fredoka',
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: _answeredCorrectly! ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              Text('Correct Answer:',
+                                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
+                              const SizedBox(height: 4),
+                              Text(
+                                card.answer,
+                                style: TextStyle(
+                                    fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.w600, color: _textColor),
+                              ),
+                              // Review stats
+                              if (card.reviewCount > 0) ...[
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(Icons.history, size: 14, color: _subTextColor),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Reviewed ${card.reviewCount}x • ${card.correctCount} correct',
+                                      style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: _subTextColor),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
           ),
+        ),
+        // Navigation buttons
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              if (_currentIndex > 0)
+                IconButton(
+                  onPressed: _previousCard,
+                  icon: Icon(Icons.arrow_back, color: _subTextColor),
+                  tooltip: 'Previous',
+                ),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _answeredCorrectly != null
+                      ? (_currentIndex >= _cards.length - 1
+                          ? () {
+                              setState(() => _isReviewing = false);
+                              _showResults();
+                            }
+                          : _nextCard)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _deepPurple,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: _isDark ? Colors.grey[700] : Colors.grey[300],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    _currentIndex < _cards.length - 1 ? 'Next Card' : 'Finish',
+                    style: const TextStyle(
+                        fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              if (_currentIndex < _cards.length - 1 && _answeredCorrectly != null)
+                IconButton(
+                  onPressed: _nextCard,
+                  icon: Icon(Icons.arrow_forward, color: _deepPurple),
+                  tooltip: 'Next',
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -688,10 +953,10 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
         Color? borderColor;
         if (_answeredCorrectly != null) {
           if (index == card.correctOptionIndex) {
-            bgColor = Colors.green[50];
+            bgColor = Colors.green.withValues(alpha: _isDark ? 0.15 : 0.08);
             borderColor = Colors.green;
           } else if (isSelected) {
-            bgColor = Colors.red[50];
+            bgColor = Colors.red.withValues(alpha: _isDark ? 0.15 : 0.08);
             borderColor = Colors.red;
           }
         }
@@ -705,10 +970,10 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: bgColor ?? Colors.grey[50],
+                color: bgColor ?? (_isDark ? Colors.grey[850] : Colors.grey[50]),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: borderColor ?? Colors.grey[300]!,
+                  color: borderColor ?? _divider,
                   width: isSelected || (index == card.correctOptionIndex && _answeredCorrectly != null) ? 2 : 1,
                 ),
               ),
@@ -719,7 +984,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                     height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: borderColor ?? Colors.grey[400]!),
+                      border: Border.all(color: borderColor ?? (_isDark ? Colors.grey[600]! : Colors.grey[400]!)),
                       color: isSelected ? (borderColor ?? Colors.grey) : Colors.transparent,
                     ),
                     child: isSelected
@@ -729,7 +994,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(option,
-                        style: const TextStyle(fontFamily: 'Fredoka', fontSize: 16)),
+                        style: TextStyle(fontFamily: 'Fredoka', fontSize: 16, color: _textColor)),
                   ),
                 ],
               ),
@@ -744,8 +1009,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Your Answer',
-            style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+        Text('Your Answer',
+            style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
         const SizedBox(height: 8),
         TextField(
           controller: _textController,
@@ -755,31 +1020,45 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
             hintText: card.type == FlashcardType.enumeration
                 ? 'List your answers (one per line)'
                 : 'Type your answer...',
-            hintStyle: const TextStyle(fontFamily: 'Fredoka'),
+            hintStyle: TextStyle(fontFamily: 'Fredoka', color: _subTextColor),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: _deepPurple, width: 2),
             ),
           ),
-          style: const TextStyle(fontFamily: 'Fredoka', fontSize: 16),
+          style: TextStyle(fontFamily: 'Fredoka', fontSize: 16, color: _textColor),
         ),
         const SizedBox(height: 12),
         if (_answeredCorrectly == null)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _answerText,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _deepPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _answerText,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Submit Answer',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+                ),
               ),
-              child: const Text('Submit Answer',
-                  style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
-            ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _flipCard,
+                icon: Icon(Icons.flip, size: 18, color: _deepPurple),
+                label: Text('Reveal', style: TextStyle(fontFamily: 'Fredoka', color: _deepPurple)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  side: const BorderSide(color: _deepPurple),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
           ),
       ],
     );
@@ -798,31 +1077,31 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Create Flashcard',
-              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+          backgroundColor: _isDark ? const Color(0xFF1F1F2E) : Colors.white,
+          title: Text('Create Flashcard',
+              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold, color: _textColor)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Deck name
-                const Text('Deck Name',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Deck Name',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: deckController,
                   decoration: InputDecoration(
                     hintText: 'e.g., Biology 101',
+                    hintStyle: TextStyle(color: _subTextColor),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                 ),
                 const SizedBox(height: 16),
-                // Type selector
-                const Text('Type',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Type',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -835,7 +1114,6 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                     onSelectionChanged: (Set<String> newSelection) {
                       setState(() {
                         selectedType = newSelection.first;
-                        // Initialize choices if switching to multiple choice
                         if (selectedType == 'multiple_choice' && choiceControllers.isEmpty) {
                           choiceControllers = List.generate(2, (_) => TextEditingController());
                         }
@@ -844,41 +1122,41 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Question
-                const Text('Question',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Question',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: questionController,
                   decoration: InputDecoration(
                     hintText: 'Enter the question',
+                    hintStyle: TextStyle(color: _subTextColor),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
-                // Answer section (dynamic based on type)
                 if (selectedType == 'identification') ...[
-                  const Text('Answer',
-                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  Text('Answer',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: answerController,
                     decoration: InputDecoration(
                       hintText: 'Enter the answer',
+                      hintStyle: TextStyle(color: _subTextColor),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
-                    style: const TextStyle(fontFamily: 'Fredoka'),
+                    style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                     maxLines: 3,
                   ),
                 ] else ...[
-                  const Text('Choices (max 5)',
-                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  Text('Choices (max 5)',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                   const SizedBox(height: 8),
                   Column(
                     children: List.generate(choiceControllers.length, (index) {
@@ -891,12 +1169,13 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                                 controller: choiceControllers[index],
                                 decoration: InputDecoration(
                                   hintText: 'Choice ${index + 1}',
+                                  hintStyle: TextStyle(color: _subTextColor),
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 10),
                                 ),
-                                style: const TextStyle(fontFamily: 'Fredoka'),
+                                style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -951,8 +1230,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                 }
                 Navigator.pop(context);
               },
-              child: const Text('Cancel',
-                  style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+              child: Text('Cancel',
+                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1063,79 +1342,79 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Flashcard',
-              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+          backgroundColor: _isDark ? const Color(0xFF1F1F2E) : Colors.white,
+          title: Text('Edit Flashcard',
+              style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold, color: _textColor)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Deck name
-                const Text('Deck Name',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Deck Name',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: deckController,
                   decoration: InputDecoration(
                     hintText: 'e.g., Biology 101',
+                    hintStyle: TextStyle(color: _subTextColor),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                 ),
                 const SizedBox(height: 16),
-                // Type selector (read-only for existing cards)
-                const Text('Type',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Type',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(color: _divider),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     selectedType == 'multiple_choice' ? 'Multiple Choice' : 'Short Answer',
-                    style: const TextStyle(fontFamily: 'Fredoka', fontSize: 14),
+                    style: TextStyle(fontFamily: 'Fredoka', fontSize: 14, color: _textColor),
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Question
-                const Text('Question',
-                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                Text('Question',
+                    style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: questionController,
                   decoration: InputDecoration(
                     hintText: 'Enter the question',
+                    hintStyle: TextStyle(color: _subTextColor),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
-                  style: const TextStyle(fontFamily: 'Fredoka'),
+                  style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
-                // Answer section (dynamic based on type)
                 if (selectedType == 'identification') ...[
-                  const Text('Answer',
-                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  Text('Answer',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: answerController,
                     decoration: InputDecoration(
                       hintText: 'Enter the answer',
+                      hintStyle: TextStyle(color: _subTextColor),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
-                    style: const TextStyle(fontFamily: 'Fredoka'),
+                    style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                     maxLines: 3,
                   ),
                 ] else ...[
-                  const Text('Choices (max 5)',
-                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600)),
+                  Text('Choices (max 5)',
+                      style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
                   const SizedBox(height: 8),
                   Column(
                     children: List.generate(choiceControllers.length, (index) {
@@ -1148,12 +1427,13 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                                 controller: choiceControllers[index],
                                 decoration: InputDecoration(
                                   hintText: 'Choice ${index + 1}',
+                                  hintStyle: TextStyle(color: _subTextColor),
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 10),
                                 ),
-                                style: const TextStyle(fontFamily: 'Fredoka'),
+                                style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -1208,8 +1488,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
                 }
                 Navigator.pop(context);
               },
-              child: const Text('Cancel',
-                  style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+              child: Text('Cancel',
+                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1308,17 +1588,18 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Flashcard?',
-            style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+        backgroundColor: _isDark ? const Color(0xFF1F1F2E) : Colors.white,
+        title: Text('Delete Flashcard?',
+            style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold, color: _textColor)),
         content: Text(
           'Are you sure you want to delete "${card.question.length > 50 ? card.question.substring(0, 50) + '...' : card.question}"?',
-          style: const TextStyle(fontFamily: 'Fredoka'),
+          style: TextStyle(fontFamily: 'Fredoka', color: _textColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Fredoka', color: Colors.grey)),
+            child: Text('Cancel',
+                style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
           ),
           ElevatedButton(
             onPressed: () async {
