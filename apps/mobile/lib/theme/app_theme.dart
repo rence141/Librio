@@ -178,6 +178,144 @@ class LibrioTheme {
     );
   }
 
+  /// Get the dark theme with Fredoka font
+  static ThemeData get darkTheme {
+    final base = ThemeData.dark(useMaterial3: true);
+    return base.copyWith(
+      // Primary color
+      primaryColor: deepPurple,
+
+      // Color scheme
+      colorScheme: const ColorScheme.dark(
+        primary: deepPurple,
+        secondary: cyan,
+        surface: Color(0xFF1E1E2E),
+        onSurface: Color(0xFFE0E0E0),
+        error: Colors.red,
+      ),
+
+      // Text theme with Fredoka
+      textTheme: base.textTheme.copyWith(
+        displayLarge: base.textTheme.displayLarge?.copyWith(fontFamily: font, color: Colors.white),
+        displayMedium: base.textTheme.displayMedium?.copyWith(fontFamily: font, color: Colors.white),
+        displaySmall: base.textTheme.displaySmall?.copyWith(fontFamily: font, color: Colors.white),
+        headlineLarge: base.textTheme.headlineLarge?.copyWith(fontFamily: font, color: Colors.white),
+        headlineMedium: base.textTheme.headlineMedium?.copyWith(fontFamily: font, color: Colors.white),
+        headlineSmall: base.textTheme.headlineSmall?.copyWith(fontFamily: font, color: Colors.white),
+        titleLarge: base.textTheme.titleLarge?.copyWith(fontFamily: font, color: Colors.white),
+        titleMedium: base.textTheme.titleMedium?.copyWith(fontFamily: font, color: Colors.white),
+        titleSmall: base.textTheme.titleSmall?.copyWith(fontFamily: font, color: Colors.white),
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(fontFamily: font, color: Colors.white),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(fontFamily: font, color: Colors.white),
+        bodySmall: base.textTheme.bodySmall?.copyWith(fontFamily: font, color: Colors.white),
+        labelLarge: base.textTheme.labelLarge?.copyWith(fontFamily: font, color: Colors.white),
+        labelMedium: base.textTheme.labelMedium?.copyWith(fontFamily: font, color: Colors.white),
+        labelSmall: base.textTheme.labelSmall?.copyWith(fontFamily: font, color: Colors.white),
+      ),
+
+      // AppBar theme
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        backgroundColor: Color(0xFF2A2A3E),
+        titleTextStyle: TextStyle(
+          fontFamily: font,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+
+      // Button themes
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: deepPurple,
+          foregroundColor: white,
+          textStyle: const TextStyle(
+            fontFamily: font,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+
+      // Text button theme
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: cyan,
+          textStyle: const TextStyle(
+            fontFamily: font,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      // Input decoration theme
+      inputDecorationTheme: InputDecorationTheme(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[700]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: cyan, width: 2),
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: font,
+          fontSize: 14,
+          color: Colors.grey,
+        ),
+        hintStyle: const TextStyle(
+          fontFamily: font,
+          fontSize: 14,
+          color: Colors.grey,
+        ),
+      ),
+
+      // Chip theme
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.grey[800]!,
+        labelStyle: const TextStyle(
+          fontFamily: font,
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+
+      // Dialog theme
+      dialogTheme: const DialogThemeData(
+        titleTextStyle: TextStyle(
+          fontFamily: font,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: font,
+          fontSize: 16,
+          color: Colors.white,
+        ),
+      ),
+
+      // Scaffold background
+      scaffoldBackgroundColor: const Color(0xFF1E1E2E),
+    );
+  }
+
   /// Get Fredoka text style with custom properties
   static TextStyle fredokaStyle({
     double fontSize = 16,
