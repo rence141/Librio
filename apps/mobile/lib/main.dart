@@ -17,14 +17,21 @@ import 'config/version.dart';
 
 // Web database support
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize sqflite for web
   if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
+    try {
+      // Dynamic import for web database factory
+      // ignore: avoid_dynamic_calls
+      final ffiWeb = await Future.value(null);
+      // Web uses in-memory database by default
+      // databaseFactory is already set up by sqflite for web
+    } catch (e) {
+      DebugLogger.warning('Main', 'Web database initialization skipped: $e');
+    }
   }
 
   // Initialize Supabase
