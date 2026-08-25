@@ -116,15 +116,16 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 inset-x-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14 sm:h-16 px-3 sm:px-4">
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer pl-4">
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer">
               <Image
                 src="/images/Logo-Text.png"
                 alt="Librio"
-                width={120}
-                height={40}
+                width={100}
+                height={32}
                 priority
+                className="w-24 sm:w-32 h-auto"
               />
             </Link>
             {/* Desktop Navigation */}
@@ -152,8 +153,8 @@ export default function LandingPage() {
               </Link>
             </div>
             {/* Mobile CTA */}
-            <div className="md:hidden pr-4">
-              <Link href="/download" className="ai-button ai-button-sm rounded-full">
+            <div className="md:hidden">
+              <Link href="/download" className="ai-button ai-button-sm rounded-full text-xs sm:text-sm px-3 sm:px-4 py-2">
                 Get the app
               </Link>
             </div>
@@ -161,18 +162,18 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden min-h-screen flex items-center justify-center" style={{backgroundImage: 'url(/images/Hero-Image.jpg)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
+      <section className="relative overflow-hidden min-h-screen flex items-center justify-center pt-16 sm:pt-20" style={{backgroundImage: 'url(/images/Hero-Image.jpg)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
         <div className="absolute inset-0 bg-black/40 z-0"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-12 sm:py-20">
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-4 sm:mb-6">
             Your AI Study <br className="hidden sm:block" /> Companion
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-gray-100 font-medium mb-10">
+          <p className="mt-2 sm:mt-4 max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-gray-100 font-medium mb-6 sm:mb-10">
             Master any subject with personalized explanations, smart practice, and effortless organization. Learn smarter, not harder.
           </p>
           <Link
             href="/download"
-            className="ai-button ai-button-lg rounded-full inline-flex items-center justify-center hover:scale-105 transform transition-all duration-200"
+            className="ai-button ai-button-lg rounded-full inline-flex items-center justify-center hover:scale-105 transform transition-all duration-200 text-sm sm:text-base"
           >
             Get Started
           </Link>
@@ -180,12 +181,12 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-librio-purple/5">
+      <section className="py-12 sm:py-20 bg-librio-purple/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Everything you need to study smarter</h2>
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Everything you need to study smarter</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {benefits.map((benefit, index) => {
               const IconComponent = benefit.icon;
               return (
@@ -203,10 +204,10 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section - Asymmetric Bento Grid */}
-      <section id="features" className="py-24 bg-white">
+      <section id="features" className="py-12 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Powerful tools that simplify your life</h2>
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Powerful tools that simplify your life</h2>
           </div>
 
           {/* Desktop/Tablet: Asymmetric CSS Grid */}
@@ -306,9 +307,9 @@ export default function LandingPage() {
           </div>
 
           {/* Mobile: Stacked Layout */}
-          <div className="md:hidden space-y-5">
+          <div className="md:hidden space-y-4">
             {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="group rounded-3xl overflow-hidden bg-gray-900 text-white shadow-2xl relative h-80">
+              <div key={index} className="group rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg relative h-64 sm:h-72">
                 {/* Background Image - fills entire card */}
                 <div className="absolute inset-0 overflow-hidden">
                   {feature.image && (
@@ -326,14 +327,14 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
                 
                 {/* Content - independent layer, never cropped */}
-                <div className="relative z-10 h-full flex flex-col justify-end p-6">
-                  <div className="max-w-xs">
-                    <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <div className="relative z-10 h-full flex flex-col justify-end p-4 sm:p-6">
+                  <div className="w-full">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2 flex items-center gap-2">
                       {feature.title}
                       {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
                     </h3>
-                    <p className="text-gray-200 leading-relaxed text-sm mb-4">{feature.description}</p>
-                    <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-sm font-semibold">
+                    <p className="text-gray-200 leading-relaxed text-xs sm:text-sm mb-3">{feature.description}</p>
+                    <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-xs sm:text-sm font-semibold">
                       Learn more <span className="ml-2">→</span>
                     </Link>
                   </div>
