@@ -1499,9 +1499,11 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                                 }
                                 Navigator.pop(context);
                                 _loadData();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Flashcard created!')),
-                                );
+                                if (mounted) {
+                                  ScaffoldMessenger.of(this.context).showSnackBar(
+                                    const SnackBar(content: Text('Flashcard created!')),
+                                  );
+                                }
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -1819,9 +1821,11 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                   }
                   Navigator.pop(context);
                   _loadData();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Flashcard updated!')),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(content: Text('Flashcard updated!')),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -1861,9 +1865,11 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
               if (mounted) {
                 Navigator.pop(context);
                 _loadData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Flashcard deleted')),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(content: Text('Flashcard deleted')),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(
