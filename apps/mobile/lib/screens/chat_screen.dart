@@ -2105,10 +2105,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         authToken: authToken,
       );
       
-      // Track token usage
+      // Track token usage — use API values if available, otherwise estimate
       if (response.inputTokens != null && response.outputTokens != null) {
         _contextWindow.addUsage(response.inputTokens!, response.outputTokens!);
+      } else {
+        // Fallback estimate: ~4 chars per token for input, output based on response length
+        final estimatedInput = (prompt.length / 4).ceil().clamp(50, 5000);
+        final estimatedOutput = (response.text.length / 4).ceil().clamp(20, 5000);
+        _contextWindow.addUsage(estimatedInput, estimatedOutput);
       }
+      // Always update UI so the ring shows
+      if (mounted) setState(() {});
       
       // Track rate limit
       if (response.remaining != null) {
