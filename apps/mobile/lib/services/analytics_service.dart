@@ -200,7 +200,7 @@ class AnalyticsService {
   /// Set user ID for analytics
   Future<void> setUserId(String userId) async {
     try {
-      await _analytics.setUserId(userId);
+      await _analytics.setUserProperty(name: 'user_id', value: userId);
       DebugLogger.info(_tag, 'User ID set: $userId');
     } catch (e) {
       DebugLogger.error(_tag, 'Failed to set user ID', e);
@@ -244,7 +244,7 @@ class AnalyticsService {
   /// Clear user ID (on logout)
   Future<void> clearUserId() async {
     try {
-      await _analytics.setUserId(null);
+      await _analytics.setUserProperty(name: 'user_id', value: null);
       DebugLogger.info(_tag, 'User ID cleared');
     } catch (e) {
       DebugLogger.error(_tag, 'Failed to clear user ID', e);
