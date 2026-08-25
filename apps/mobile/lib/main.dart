@@ -113,17 +113,24 @@ class LibroApp extends StatefulWidget {
 
 class _LibroAppState extends State<LibroApp> {
   bool _isDarkMode = false;
+  late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
-    _loadDarkModeSetting();
+    _initializePreferences();
   }
 
-  Future<void> _loadDarkModeSetting() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _initializePreferences() async {
+    _prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('darkMode') ?? false;
+      _isDarkMode = _prefs.getBool('darkMode') ?? false;
+    });
+  }
+
+  void _updateTheme() {
+    setState(() {
+      _isDarkMode = _prefs.getBool('darkMode') ?? false;
     });
   }
 
@@ -133,13 +140,13 @@ class _LibroAppState extends State<LibroApp> {
       create: (_) => AuthService(),
       child: MaterialApp(
         title: AppVersion.appName,
-        theme: _isDarkMode ? LibrioTheme.darkTheme : LibrioTheme.lightTheme,
+        theme: LibrioTheme.lightTheme,
         darkTheme: LibrioTheme.darkTheme,
         themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
         home: _AppEntry(
           llmService: widget.llmService,
           needsOnboarding: widget.needsOnboarding,
-          onThemeChanged: _loadDarkModeSetting,
+          onThemeChanged: _updateTheme,
         ),
         builder: (context, widget) {
           // Catch widget build errors

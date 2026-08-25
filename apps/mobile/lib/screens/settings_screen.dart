@@ -148,12 +148,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Switch(
                   value: _isDarkMode,
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     setState(() {
                       _isDarkMode = value;
                     });
-                    _saveSetting('darkMode', value);
-                    // Notify parent to update theme
+                    await _saveSetting('darkMode', value);
+                    // Notify parent to update theme after saving
+                    await Future.delayed(const Duration(milliseconds: 100));
                     widget.onThemeChanged?.call();
                   },
                   activeColor: Colors.purple,
