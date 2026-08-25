@@ -23,6 +23,7 @@ import '../widgets/context_meter.dart';
 import '../widgets/compact_context_indicator.dart';
 import '../widgets/ai_usage_panel.dart';
 import 'flashcard_review_screen.dart';
+import 'settings_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Librio
 ///
@@ -354,6 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _currentConversation = newConversation;
         _messages.clear();
+        _contextWindow = ContextWindow(conversationId: newConversation.id);
       });
       await _loadConversations();
       if (mounted) Navigator.pop(context);
@@ -366,6 +368,7 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _currentConversation = conversation;
       _messages.clear();
+      _contextWindow = ContextWindow(conversationId: conversation.id);
     });
     await _loadConversationHistory();
     if (mounted) Navigator.pop(context);
@@ -378,9 +381,15 @@ class _ChatScreenState extends State<ChatScreen> {
       if (conversation.id == _currentConversation.id) {
         if (_conversations.isEmpty) {
           _currentConversation = await _databaseService.createConversation('New Chat');
-          setState(() => _messages.clear());
+          setState(() {
+            _messages.clear();
+            _contextWindow = ContextWindow(conversationId: _currentConversation.id);
+          });
         } else {
           _currentConversation = _conversations.first;
+          setState(() {
+            _contextWindow = ContextWindow(conversationId: _currentConversation.id);
+          });
           await _loadConversationHistory();
         }
       }
@@ -1987,7 +1996,13 @@ class _ChatScreenState extends State<ChatScreen> {
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Colors.grey[600]),
             title: const Text('Settings', style: TextStyle(fontFamily: 'Fredoka')),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
         ],
       ),
