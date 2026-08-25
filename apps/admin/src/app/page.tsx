@@ -307,9 +307,9 @@ export default function LandingPage() {
           </div>
 
           {/* Mobile: Stacked Layout */}
-          <div className="md:hidden space-y-4">
+          <div className="md:hidden space-y-3">
             {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="group rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg relative h-64 sm:h-72">
+              <div key={index} className="group rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg relative h-56 sm:h-64">
                 {/* Background Image - fills entire card */}
                 <div className="absolute inset-0 overflow-hidden">
                   {feature.image && (
@@ -327,15 +327,15 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent pointer-events-none"></div>
                 
                 {/* Content - independent layer, never cropped */}
-                <div className="relative z-10 h-full flex flex-col justify-end p-4 sm:p-6">
+                <div className="relative z-10 h-full flex flex-col justify-end p-3 sm:p-5">
                   <div className="w-full">
-                    <h3 className="text-xl sm:text-2xl font-bold mb-2 flex items-center gap-2">
+                    <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2 flex items-center gap-2">
                       {feature.title}
-                      {index === 0 && <span className="text-lg bg-librio-gradient bg-clip-text text-transparent">✦</span>}
+                      {index === 0 && <span className="text-base bg-librio-gradient bg-clip-text text-transparent">✦</span>}
                     </h3>
-                    <p className="text-gray-200 leading-relaxed text-xs sm:text-sm mb-3">{feature.description}</p>
-                    <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-xs sm:text-sm font-semibold">
-                      Learn more <span className="ml-2">→</span>
+                    <p className="text-gray-200 leading-tight text-xs sm:text-sm mb-2">{feature.description}</p>
+                    <Link href="/download" className="inline-flex items-center text-white hover:text-librio-cyan transition-colors text-xs font-semibold">
+                      Learn more <span className="ml-1">→</span>
                     </Link>
                   </div>
                 </div>
