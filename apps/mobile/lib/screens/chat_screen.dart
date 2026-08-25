@@ -93,6 +93,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   static const Color _surfaceColor = Color(0xFFF7F7F8);
   static const Color _userBubbleColor = Color(0xFFF0F0F3);
 
+  // Theme-aware colors
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _textColor => _isDark ? Colors.white : Colors.black87;
+  Color get _bubbleColor => _isDark ? const Color(0xFF2A2A3E) : _userBubbleColor;
+
   @override
   void initState() {
     super.initState();
@@ -621,7 +626,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _buildDrawer(),
       appBar: _buildAppBar(),
       body: Column(
@@ -646,20 +651,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildLoadingScreen() {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildLogoMark(48),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Loading Librio...',
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: _textColor,
               ),
             ),
             const SizedBox(height: 8),
@@ -686,24 +691,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // ============ App Bar (minimal) ============
 
   PreferredSizeWidget _buildAppBar() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: Builder(
         builder: (ctx) => IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black87),
+          icon: Icon(Icons.menu, color: onSurface),
           onPressed: () => Scaffold.of(ctx).openDrawer(),
           tooltip: 'Menu',
         ),
       ),
-      title: const Text(
+      title: Text(
         'Librio',
         style: TextStyle(
           fontFamily: 'Fredoka',
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: onSurface,
         ),
       ),
       actions: [
@@ -722,7 +728,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
         // Overflow menu
         PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.black87),
+          icon: Icon(Icons.more_vert, color: onSurface),
           onSelected: (value) {
             switch (value) {
               case 'clear':
@@ -802,7 +808,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: _userBubbleColor,
+                color: _bubbleColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -853,9 +859,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   if (message.text.isNotEmpty)
                     Text(
                       message.text,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Fredoka',
-                        color: Colors.black87,
+                        color: _textColor,
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -929,56 +935,56 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   MarkdownStyleSheet _markdownStyle() {
     return MarkdownStyleSheet(
-      p: const TextStyle(
+      p: TextStyle(
         fontFamily: 'Fredoka',
-        color: Colors.black87,
+        color: _textColor,
         fontSize: 15,
         height: 1.6,
       ),
-      strong: const TextStyle(
+      strong: TextStyle(
         fontFamily: 'Fredoka',
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: _textColor,
         fontSize: 15,
       ),
-      em: const TextStyle(
+      em: TextStyle(
         fontFamily: 'Fredoka',
         fontStyle: FontStyle.italic,
-        color: Colors.black87,
+        color: _textColor,
         fontSize: 15,
       ),
       code: TextStyle(
         fontFamily: 'monospace',
-        backgroundColor: Colors.grey[100],
-        color: _deepPurple,
+        backgroundColor: _isDark ? Colors.grey[850] : Colors.grey[100],
+        color: _isDark ? _cyan : _deepPurple,
         fontSize: 14,
       ),
-      h1: const TextStyle(
+      h1: TextStyle(
         fontFamily: 'Fredoka',
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: _textColor,
       ),
-      h2: const TextStyle(
+      h2: TextStyle(
         fontFamily: 'Fredoka',
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: _textColor,
       ),
-      h3: const TextStyle(
+      h3: TextStyle(
         fontFamily: 'Fredoka',
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: _textColor,
       ),
       listBullet: TextStyle(
         fontFamily: 'Fredoka',
-        color: Colors.grey[700],
+        color: _isDark ? Colors.grey[300] : Colors.grey[700],
         fontSize: 15,
       ),
-      blockquote: const TextStyle(
+      blockquote: TextStyle(
         fontFamily: 'Fredoka',
-        color: Colors.black54,
+        color: _isDark ? Colors.white70 : Colors.black54,
         fontSize: 15,
         fontStyle: FontStyle.italic,
       ),
@@ -1039,10 +1045,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     children: [
                       Text(
                         'Q: ${card.question}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Fredoka',
                           fontSize: 13,
-                          color: Colors.black87,
+                          color: _textColor,
                         ),
                       ),
                       Text(
@@ -1274,8 +1280,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -1416,7 +1422,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.grey[200]!, width: 1),
+                  border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
                 child: TextField(
                   controller: _messageController,
@@ -1431,10 +1437,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 15,
-                    color: Colors.black87,
+                    color: _textColor,
                   ),
                   maxLines: null,
                   textInputAction: TextInputAction.newline,
@@ -1783,7 +1789,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         style: TextStyle(
           fontFamily: 'Fredoka',
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? _deepPurple : Colors.black87,
+          color: isSelected ? _deepPurple : _textColor,
         ),
       ),
       subtitle: Text(
@@ -1853,13 +1859,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             _buildLogoMark(56),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'What are you studying?',
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: _textColor,
               ),
             ),
             const SizedBox(height: 32),
@@ -1892,9 +1898,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _surfaceColor,
+          color: _isDark ? const Color(0xFF2A2A3E) : _surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1919,7 +1925,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildDrawer() {
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           // Header
@@ -1938,13 +1944,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   children: [
                     _buildLogoMark(32),
                     const SizedBox(width: 10),
-                    const Text(
+                    Text(
                       'Librio',
                       style: TextStyle(
                         fontFamily: 'Fredoka',
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: _textColor,
                       ),
                     ),
                   ],
@@ -2010,7 +2016,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             style: TextStyle(
                               fontFamily: 'Fredoka',
                               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                              color: isActive ? _deepPurple : Colors.black87,
+                              color: isActive ? _deepPurple : _textColor,
                               fontSize: 14,
                             ),
                           ),
