@@ -19,9 +19,7 @@ import '../models/context_window.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
-import '../widgets/context_meter.dart';
-import '../widgets/compact_context_indicator.dart';
-import '../widgets/ai_usage_panel.dart';
+
 import 'flashcard_review_screen.dart';
 import 'settings_screen.dart';
 
@@ -1361,42 +1359,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-            // Context window status (if online model and usage > 0)
-            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: _contextWindow.warningLevel == 2
-                    ? Colors.red[50]
-                    : _contextWindow.warningLevel == 1
-                        ? Colors.orange[50]
-                        : Colors.transparent,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _contextWindow.statusMessage,
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 12,
-                          color: _contextWindow.warningLevel == 2
-                              ? Colors.red[700]
-                              : _contextWindow.warningLevel == 1
-                                  ? Colors.orange[700]
-                                  : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    if (_contextWindow.warningLevel > 0)
-                      Icon(
-                        _contextWindow.warningLevel == 2 ? Icons.warning : Icons.info,
-                        size: 16,
-                        color: _contextWindow.warningLevel == 2 ? Colors.red[700] : Colors.orange[700],
-                      ),
-                  ],
-                ),
-              ),
             // Input row
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1424,38 +1386,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: TextField(
-                  controller: _messageController,
-                  focusNode: _inputFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Ask Librio anything...',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: Colors.grey[400],
-                      fontSize: 15,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _inputFocusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Ask Librio anything...',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Fredoka',
+                            color: Colors.grey[400],
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 15,
+                          color: _textColor,
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 15,
-                    color: _textColor,
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) => _sendMessage(),
+                    // Tiny context usage ring (unobtrusive, inside input bar)
+                    if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12, bottom: 12),
+                        child: _buildContextRing(),
+                      ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 4),
-            // Compact context indicator (tiny square percentage display)
-            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-              CompactContextIndicator(
-                usage: _contextWindow.usagePercentage,
-                tooltip: 'Context: ${(_contextWindow.usagePercentage * 100).toStringAsFixed(0)}% | Requests: ${_lastRateLimitRemaining ?? "?"} remaining',
-                onTap: () => showAiUsagePanel(context),
-              ),
             const SizedBox(width: 4),
             // Send / Stop button
             SizedBox(
@@ -1479,6 +1446,95 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ], // Column children
         ),
       ),
+    );
+  }
+
+  // ============ Context Usage Ring (inside input bar) ============
+
+  Widget _buildContextRing() {
+    final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
+    final color = usage >= 0.9
+        ? Colors.red[600]!
+        : usage >= 0.75
+            ? Colors.orange[600]!
+            : _deepPurple;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (details) => _showContextPopup(details.globalPosition),
+      child: SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          value: usage < 0.02 ? 0.02 : usage,
+          strokeWidth: 2.5,
+          backgroundColor: _isDark ? Colors.grey[700] : Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+        ),
+      ),
+    );
+  }
+
+  void _showContextPopup(Offset position) {
+    final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
+    final percent = (usage * 100).toStringAsFixed(0);
+    final color = usage >= 0.9
+        ? Colors.red[600]!
+        : usage >= 0.75
+            ? Colors.orange[600]!
+            : _deepPurple;
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx - 180,
+        position.dy - 130,
+        position.dx,
+        position.dy,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Context used: $percent%',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _textColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: usage,
+                  minHeight: 6,
+                  backgroundColor: _isDark ? Colors.grey[700] : Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_contextWindow.totalTokensUsed} / ${_contextWindow.maxTokens} tokens',
+                style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
+              ),
+              Text(
+                '${_contextWindow.remainingTokens} remaining',
+                style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
+              ),
+              if (_lastRateLimitRemaining != null)
+                Text(
+                  'Requests remaining: $_lastRateLimitRemaining',
+                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 11, color: Colors.grey[500]),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
