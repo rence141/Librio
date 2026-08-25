@@ -23,10 +23,26 @@ class AiResponse {
   });
 
   factory AiResponse.fromJson(Map<String, dynamic> json) {
+    // Parse usage data if available
+    int? inputTokens = json['usage']?['inputTokens'] as int?;
+    int? outputTokens = json['usage']?['outputTokens'] as int?;
+    
+    // Fallback: estimate tokens if not provided
+    // Rough estimate: ~4 characters per token
+    if (outputTokens == null && json['text'] != null) {
+      final text = json['text'] as String;
+      outputTokens = (text.length / 4).ceil();
+    }
+    
+    // Estimate input tokens if not provided (assume ~100 chars per prompt)
+    if (inputTokens == null) {
+      inputTokens = 50; // Conservative estimate for typical prompts
+    }
+    
     return AiResponse(
       text: json['text'] ?? '',
-      inputTokens: json['usage']?['inputTokens'] as int?,
-      outputTokens: json['usage']?['outputTokens'] as int?,
+      inputTokens: inputTokens,
+      outputTokens: outputTokens,
       totalTokens: json['usage']?['totalTokens'] as int?,
       model: json['model'] as String?,
       remaining: json['remaining'] as int?,
@@ -163,6 +179,7 @@ class OnlineLlmService {
 
       final data = jsonDecode(response.body);
       DebugLogger.success(tag, 'Response: ${data['text']?.length ?? 0} chars');
+      DebugLogger.info(tag, 'Usage data: ${data['usage']}');
       return AiResponse.fromJson(data);
     } catch (e, st) {
       DebugLogger.error(tag, 'Request failed', e, st);
