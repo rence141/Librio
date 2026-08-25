@@ -42,10 +42,9 @@ export default function DownloadPage() {
               <Image
                 src="/images/Phone-librio.png"
                 alt="Librio App"
-                width={280}
-                height={380}
+                fill
                 priority
-                className="relative z-10"
+                className="object-cover"
               />
             </div>
           </div>
