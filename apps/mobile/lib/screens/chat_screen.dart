@@ -23,7 +23,6 @@ import '../widgets/context_meter.dart';
 import '../widgets/compact_context_indicator.dart';
 import '../widgets/ai_usage_panel.dart';
 import 'flashcard_review_screen.dart';
-import 'settings_screen.dart';
 
 /// Chat screen — ChatGPT-inspired mobile UX for Librio
 ///
@@ -1991,13 +1990,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Colors.grey[600]),
             title: const Text('Settings', style: TextStyle(fontFamily: 'Fredoka')),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
+            onTap: () => Navigator.pop(context),
           ),
         ],
       ),
