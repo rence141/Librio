@@ -2,13 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Apple, Play, Mail, Shield, Zap } from 'lucide-react';
+import { Apple, Play } from 'lucide-react';
 
 export default function DownloadPage() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-stone-200 flex flex-col">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
+      <nav className="bg-stone-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
@@ -20,114 +20,67 @@ export default function DownloadPage() {
             />
           </Link>
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-gray-600 hover:text-gray-900 font-medium">
+            <Link href="/features" className="text-gray-700 hover:text-black font-medium">
               Features
             </Link>
-            <Link href="/how-it-works" className="text-gray-600 hover:text-gray-900 font-medium">
+            <Link href="/how-it-works" className="text-gray-700 hover:text-black font-medium">
               How It Works
             </Link>
-            <Link href="/faq" className="text-gray-600 hover:text-gray-900 font-medium">
+            <Link href="/faq" className="text-gray-700 hover:text-black font-medium">
               FAQ
             </Link>
           </div>
-
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-32">
-        <div className="max-w-6xl w-full flex items-center gap-20">
-          {/* Left: Phone Mockup */}
+      <main className="flex-1 flex items-center justify-center px-6 py-20">
+        <div className="max-w-6xl w-full flex items-center gap-16">
+          {/* Left: Gradient Box with Phone */}
           <div className="flex-1 flex justify-center">
-            <Image
-              src="/images/Phone-librio.png"
-              alt="Librio App"
-              width={350}
-              height={450}
-              priority
-              className="drop-shadow-2xl"
-            />
+            <div className="relative w-80 h-96 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-lime-700 via-lime-400 to-lime-300 flex items-center justify-center">
+              <Image
+                src="/images/Phone-librio.png"
+                alt="Librio App"
+                width={280}
+                height={380}
+                priority
+                className="relative z-10"
+              />
+            </div>
           </div>
 
           {/* Right: Content */}
           <div className="flex-1">
-            <h1 className="text-6xl font-bold mb-6 text-black">Get The App</h1>
+            <h1 className="text-7xl font-black mb-8 text-black leading-tight">Get The App</h1>
             
-            <p className="text-2xl text-gray-700 mb-8 leading-relaxed font-semibold">
-              Your AI study companion in your pocket.
+            <p className="text-2xl font-bold text-black mb-6 leading-relaxed">
+              Ready to transform your study experience?
             </p>
             
-            <p className="text-lg text-gray-600 mb-10 leading-relaxed">
-              Chat with Claude, study offline, generate flashcards. Get instant answers to any question, anytime, anywhere.
+            <p className="text-lg text-gray-800 mb-12 leading-relaxed font-medium">
+              Chat with Claude, study offline, and generate flashcards instantly. Get answers to any question, anytime, anywhere. Set up in seconds and start learning smarter today.
             </p>
             
             <div className="flex gap-4 flex-wrap">
               <a 
                 href="https://apps.apple.com/" 
-                className="px-8 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition flex items-center gap-2"
+                className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition flex items-center gap-2 text-lg"
               >
-                <Apple size={20} />
-                Download on App Store
+                <Apple size={24} />
+                App Store
               </a>
               <a 
                 href="https://play.google.com/" 
-                className="px-8 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition flex items-center gap-2"
+                className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition flex items-center gap-2 text-lg"
               >
-                <Play size={20} />
-                Get it on Google Play
+                <Play size={24} />
+                Google Play
               </a>
             </div>
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold mb-4">Product</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/features" className="hover:text-white">Features</Link></li>
-                <li><Link href="/how-it-works" className="hover:text-white">How It Works</Link></li>
-                <li><Link href="/download" className="hover:text-white">Download</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="/careers" className="hover:text-white">Careers</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Connect</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white flex items-center gap-2"><Mail size={16} /> Email</a></li>
-                <li><a href="#" className="hover:text-white">Twitter</a></li>
-                <li><a href="#" className="hover:text-white">LinkedIn</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 flex items-center justify-between">
-            <p className="text-sm text-gray-400">© 2026 Librio. All rights reserved.</p>
-            <div className="flex items-center gap-6 text-sm text-gray-400">
-              <a href="#" className="hover:text-white">Privacy</a>
-              <a href="#" className="hover:text-white">Terms</a>
-              <a href="#" className="hover:text-white">Cookies</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
