@@ -70,10 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Settings', style: TextStyle(fontFamily: 'Fredoka')),
         elevation: 0,
-        backgroundColor: _isDarkMode ? Colors.grey[900] : Colors.white,
-        foregroundColor: _isDarkMode ? Colors.white : Colors.black,
       ),
-      backgroundColor: _isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ListView(
         children: [
           // Theme Section
@@ -101,6 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
@@ -108,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: Colors.grey[600],
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
           fontFamily: 'Fredoka',
         ),
       ),
@@ -116,10 +115,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildThemeCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 0,
-      color: _isDarkMode ? Colors.grey[800] : Colors.white,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -131,8 +131,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(
                   children: [
                     Icon(
-                      _isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      color: _isDarkMode ? Colors.amber : Colors.orange,
+                      isDark ? Icons.dark_mode : Icons.light_mode,
+                      color: isDark ? Colors.amber : Colors.orange,
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -141,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Fredoka',
-                        color: _isDarkMode ? Colors.white : Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                   ],
@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Use dark theme for a comfortable viewing experience in low light',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
                 fontFamily: 'Fredoka',
               ),
             ),
@@ -177,10 +177,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildNotificationCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 0,
-      color: _isDarkMode ? Colors.grey[800] : Colors.white,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -202,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Fredoka',
-                        color: _isDarkMode ? Colors.white : Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                   ],
@@ -224,7 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Receive notifications for study reminders and updates',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
                 fontFamily: 'Fredoka',
               ),
             ),
@@ -235,10 +236,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPrivacyCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 0,
-      color: _isDarkMode ? Colors.grey[800] : Colors.white,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -260,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Fredoka',
-                        color: _isDarkMode ? Colors.white : Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                   ],
@@ -294,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Fredoka',
-                        color: _isDarkMode ? Colors.white : Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                   ],
@@ -316,7 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Allow collection of study data for personalization',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
                 fontFamily: 'Fredoka',
               ),
             ),
@@ -327,10 +329,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 0,
-      color: _isDarkMode ? Colors.grey[800] : Colors.white,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -343,7 +346,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Fredoka',
-                color: _isDarkMode ? Colors.white : Colors.black,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
             const SizedBox(height: 8),
@@ -351,7 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Version 1.0.0',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontFamily: 'Fredoka',
               ),
             ),
@@ -360,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Your AI study companion for smarter learning',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
                 fontFamily: 'Fredoka',
               ),
             ),
