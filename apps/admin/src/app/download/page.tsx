@@ -59,7 +59,7 @@ export default function DownloadPage() {
             </p>
             
             <p className="text-base sm:text-lg text-gray-800 mb-8 sm:mb-12 leading-relaxed font-medium">
-              Chat with Claude, study offline, and generate flashcards instantly. Get answers to any question, anytime, anywhere. Set up in seconds and start learning smarter today.
+              Chat with Multiple Ai models, study offline, and generate flashcards instantly. Get answers to any question, anytime, anywhere. Set up in seconds and start learning smarter today.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
