@@ -16,9 +16,12 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
     with TickerProviderStateMixin {
   List<Flashcard> _cards = [];
   List<String> _decks = [];
+  List<String> _tags = [];
   String? _selectedDeck;
+  String? _selectedTag;
   Set<String> _selectedDecksForGroup = {};
   bool _isGroupReviewMode = false;
+  bool _randomReviewOrder = false;
   bool _isLoading = true;
   bool _isReviewing = false;
   int _currentIndex = 0;
@@ -90,7 +93,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
   Future<void> _loadData() async {
     try {
       _decks = await widget.databaseService.getFlashcardDecks();
-      _cards = await widget.databaseService.getFlashcards(deck: _selectedDeck);
+      _tags = await widget.databaseService.getFlashcardTags();
+      _cards = await widget.databaseService.getFlashcards(deck: _selectedDeck, tag: _selectedTag);
       if (mounted) setState(() => _isLoading = false);
     } catch (e, st) {
       DebugLogger.error('FlashcardReview', 'Failed to load data', e, st);
@@ -103,7 +107,16 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
       _selectedDeck = deck;
       _isLoading = true;
     });
-    _cards = await widget.databaseService.getFlashcards(deck: deck);
+    _cards = await widget.databaseService.getFlashcards(deck: deck, tag: _selectedTag);
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _selectTag(String? tag) async {
+    setState(() {
+      _selectedTag = tag;
+      _isLoading = true;
+    });
+    _cards = await widget.databaseService.getFlashcards(deck: _selectedDeck, tag: tag);
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -127,6 +140,14 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
   void _startReview() {
     if (_cards.isEmpty) return;
     setState(() {
+      if (_randomReviewOrder) {
+        _cards = List<Flashcard>.from(_cards)..shuffle();
+      } else {
+        // Restore a predictable creation-order session after any prior random
+        // run (database queries themselves are newest-first).
+        _cards = List<Flashcard>.from(_cards)
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      }
       _isReviewing = true;
       _currentIndex = 0;
       _correct = 0;
@@ -193,6 +214,25 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
   }
 
   void _nextCard() {
+    if (_currentIndex >= _cards.length - 1) {
+      setState(() => _isReviewing = false);
+      _showResults();
+    } else {
+      _slideController.reset();
+      setState(() {
+        _currentIndex++;
+        _selectedOption = null;
+        _answeredCorrectly = null;
+        _textController.clear();
+        _showAnswer = false;
+        _frontSide = true;
+      });
+      _flipController.reset();
+      _slideController.forward();
+    }
+  }
+
+  void _skipCard() {
     if (_currentIndex >= _cards.length - 1) {
       setState(() => _isReviewing = false);
       _showResults();
@@ -412,6 +452,23 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  onPressed: _showBulkCreateFlashcardsDialog,
+                  icon: const Icon(Icons.playlist_add),
+                  label: const Text('Add Multiple Cards',
+                      style: TextStyle(fontFamily: 'Fredoka', fontSize: 16)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _deepPurple,
+                    side: const BorderSide(color: _deepPurple, width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
                   onPressed: () => Navigator.pop(context, 'generate'),
                   icon: const Icon(Icons.auto_awesome),
                   label: const Text('Generate from Chat',
@@ -436,21 +493,22 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
         // New flashcard button
         Padding(
           padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _showCreateFlashcardDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('New Flashcard',
-                  style: TextStyle(fontFamily: 'Fredoka', fontSize: 16, fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _deepPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+          child: Row(
+            children: [
+              Expanded(child: ElevatedButton.icon(
+                onPressed: _showCreateFlashcardDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('New Card', style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: _deepPurple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: OutlinedButton.icon(
+                onPressed: _showBulkCreateFlashcardsDialog,
+                icon: const Icon(Icons.playlist_add),
+                label: const Text('Add Multiple', style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(foregroundColor: _deepPurple, padding: const EdgeInsets.symmetric(vertical: 14)),
+              )),
+            ],
           ),
         ),
         // Deck filter / Group review toggle
@@ -499,6 +557,50 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
               ],
             ),
           ),
+        // Topic tags filter the same collection used for review sessions.
+        if (_tags.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  ChoiceChip(
+                    label: const Text('All topics'),
+                    selected: _selectedTag == null,
+                    onSelected: (_) => _selectTag(null),
+                  ),
+                  ..._tags.map((tag) => ChoiceChip(
+                    label: Text('#$tag'),
+                    selected: _selectedTag == tag,
+                    onSelected: (_) => _selectTag(_selectedTag == tag ? null : tag),
+                  )),
+                ],
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Text('Review order', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: _subTextColor)),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('Ordered'),
+                selected: !_randomReviewOrder,
+                onSelected: (_) => setState(() => _randomReviewOrder = false),
+              ),
+              const SizedBox(width: 6),
+              ChoiceChip(
+                label: const Text('Random'),
+                selected: _randomReviewOrder,
+                onSelected: (_) => setState(() => _randomReviewOrder = true),
+              ),
+            ],
+          ),
+        ),
         // Group review deck selector
         if (_isGroupReviewMode && _decks.length > 1)
           Container(
@@ -638,8 +740,14 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
             style: TextStyle(fontFamily: 'Fredoka', fontWeight: FontWeight.w600, color: _textColor)),
         subtitle: Row(
           children: [
-            Text('$typeLabel • ${card.deck}',
-                style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: _subTextColor)),
+            Expanded(
+              child: Text(
+                '$typeLabel • ${card.deck}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: 'Fredoka', fontSize: 12, color: _subTextColor),
+              ),
+            ),
             if (accuracy != null) ...[
               const SizedBox(width: 8),
               Container(
@@ -714,9 +822,16 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Card ${_currentIndex + 1} of $_total',
-                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor)),
+              Expanded(
+                child: Text(
+                  'Card ${_currentIndex + 1} of $_total',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: 'Fredoka', color: _subTextColor),
+                ),
+              ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_sessionBest > 0) ...[
                     Icon(Icons.local_fire_department, color: Colors.orange, size: 16),
@@ -807,16 +922,13 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                     // Show answer after answering or flip
                     if (_answeredCorrectly != null || _showAnswer) ...[
                       const SizedBox(height: 24),
-                      AnimatedBuilder(
-                        animation: _flipAnimation,
-                        builder: (context, child) {
-                          final angle = _showAnswer ? _flipAnimation.value * 3.14159 : 0;
-                          return Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.identity()..setEntry(3, 2, 0.001)..rotateX(angle.toDouble()),
-                            child: child,
-                          );
-                        },
+                      // Never rotate the answer surface itself. A single
+                      // surface rotated through 180° has no counter-rotated
+                      // back face, which is why its text appeared mirrored.
+                      // A fade keeps the reveal feedback without changing the
+                      // readable orientation of either side.
+                      FadeTransition(
+                        opacity: _flipAnimation,
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
@@ -904,6 +1016,18 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                   icon: Icon(Icons.arrow_back, color: _subTextColor),
                   tooltip: 'Previous',
                 ),
+              // Skip button
+              TextButton(
+                onPressed: _skipCard,
+                child: Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 14,
+                    color: _subTextColor,
+                  ),
+                ),
+              ),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _answeredCorrectly != null
@@ -1064,14 +1188,134 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
     );
   }
 
+  /// Adds several short-answer cards from a paste, avoiding repetitive forms.
+  /// Each card is a Q:/A: pair; blank lines separate cards.
+  void _showBulkCreateFlashcardsDialog() {
+    final deckController = TextEditingController();
+    final cardsController = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add Multiple Flashcards', style: TextStyle(fontFamily: 'Fredoka')),
+        content: SizedBox(
+          width: 520,
+          height: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: deckController,
+                decoration: const InputDecoration(labelText: 'Deck (optional)', hintText: 'Default'),
+              ),
+              const SizedBox(height: 12),
+              const Text('Paste one or more cards. Use a blank line between cards:', style: TextStyle(fontSize: 13)),
+              const SizedBox(height: 6),
+              Expanded(
+                child: TextField(
+                  controller: cardsController,
+                  expands: true,
+                  maxLines: null,
+                  textAlignVertical: TextAlignVertical.top,
+                  decoration: const InputDecoration(
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                    hintText: 'Q: What is photosynthesis?\nA: The process plants use to convert light energy into chemical energy.\n\nQ: What pigment absorbs light?\nA: Chlorophyll.',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final pairs = RegExp(
+                r'(?:^|\n)\s*(?:Q|Question)\s*:\s*(.+?)\s*\n\s*(?:A|Answer)\s*:\s*([\s\S]*?)(?=\n\s*\n|$)',
+                caseSensitive: false,
+              ).allMatches(cardsController.text);
+              final deck = deckController.text.trim().isEmpty ? 'Default' : deckController.text.trim();
+              final cards = pairs.map((match) => (
+                question: match.group(1)!.trim(),
+                answer: match.group(2)!.trim(),
+              )).where((pair) => pair.question.isNotEmpty && pair.answer.isNotEmpty).toList();
+              if (cards.isEmpty) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text('Use Q: and A: for each card.')));
+                return;
+              }
+              final now = DateTime.now();
+              for (var index = 0; index < cards.length; index++) {
+                final pair = cards[index];
+                await widget.databaseService.addFlashcard(Flashcard.identification(
+                  id: 'manual_${now.microsecondsSinceEpoch}_$index',
+                  question: pair.question,
+                  answer: pair.answer,
+                  deck: deck,
+                ));
+              }
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              await _loadData();
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${cards.length} flashcards added.')));
+            },
+            child: const Text('Add Cards'),
+          ),
+        ],
+      ),
+    ).whenComplete(() {
+      deckController.dispose();
+      cardsController.dispose();
+    });
+  }
+
   /// Show dialog to create a flashcard manually
   void _showCreateFlashcardDialog() {
     final questionController = TextEditingController();
     final answerController = TextEditingController();
+    final additionalAnswerControllers = <TextEditingController>[];
     final deckController = TextEditingController();
     String selectedType = 'identification';
     List<TextEditingController> choiceControllers = [];
     int correctChoiceIndex = 0;
+
+    Future<bool> saveCurrentCard() async {
+      final question = questionController.text.trim();
+      final deck = deckController.text.trim().isEmpty ? 'Default' : deckController.text.trim();
+      if (question.isEmpty) {
+        if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please enter a question')));
+        return false;
+      }
+      if (selectedType == 'identification') {
+        final answers = [answerController, ...additionalAnswerControllers]
+            .map((controller) => controller.text.trim())
+            .where((answer) => answer.isNotEmpty)
+            .toList();
+        if (answers.isEmpty) {
+          if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please enter an answer')));
+          return false;
+        }
+        await widget.databaseService.addFlashcard(Flashcard(
+          id: DateTime.now().microsecondsSinceEpoch.toString(), question: question,
+          answer: answers.length == 1 ? answers.single : answers.asMap().entries.map((entry) => '${entry.key + 1}. ${entry.value}').join('\n'),
+          type: answers.length == 1 ? FlashcardType.identification : FlashcardType.enumeration,
+          deck: deck, createdAt: DateTime.now(), updatedAt: DateTime.now(),
+        ));
+      } else {
+        final choices = choiceControllers.map((c) => c.text.trim()).where((c) => c.isNotEmpty).toList();
+        if (choices.length < 2) {
+          if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please add at least 2 choices')));
+          return false;
+        }
+        final correctIndex = correctChoiceIndex.clamp(0, choices.length - 1);
+        await widget.databaseService.addFlashcard(Flashcard(
+          id: DateTime.now().microsecondsSinceEpoch.toString(), question: question,
+          answer: choices[correctIndex], type: FlashcardType.multipleChoice, deck: deck,
+          createdAt: DateTime.now(), updatedAt: DateTime.now(), options: choices, correctOptionIndex: correctIndex,
+        ));
+      }
+      return true;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -1282,6 +1526,34 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                               style: TextStyle(fontFamily: 'Fredoka', color: textColor),
                               maxLines: 3,
                             ),
+                            ...additionalAnswerControllers.asMap().entries.map((entry) => Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(child: TextField(
+                                    controller: entry.value,
+                                    decoration: modernInput('Answer item ${entry.key + 2}'),
+                                    style: TextStyle(fontFamily: 'Fredoka', color: textColor),
+                                  )),
+                                  IconButton(
+                                    icon: Icon(Icons.close, size: 18, color: subTextColor),
+                                    onPressed: () => setState(() {
+                                      entry.value.dispose();
+                                      additionalAnswerControllers.removeAt(entry.key);
+                                    }),
+                                  ),
+                                ],
+                              ),
+                            )),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: () => setState(() => additionalAnswerControllers.add(TextEditingController())),
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text('Add answer item'),
+                                style: TextButton.styleFrom(foregroundColor: _deepPurple, visualDensity: VisualDensity.compact),
+                              ),
+                            ),
                           ] else ...[
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1406,11 +1678,21 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () {
-                              for (var c in choiceControllers) {
-                                c.dispose();
-                              }
-                              Navigator.pop(context);
+                            onPressed: () async {
+                              if (!await saveCurrentCard()) return;
+                              setState(() {
+                                questionController.clear();
+                                answerController.clear();
+                                for (final controller in additionalAnswerControllers) {
+                                  controller.dispose();
+                                }
+                                additionalAnswerControllers.clear();
+                                for (final controller in choiceControllers) {
+                                  controller.clear();
+                                }
+                                correctChoiceIndex = 0;
+                              });
+                              await _loadData();
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: subTextColor,
@@ -1418,7 +1700,7 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
-                            child: const Text('Cancel',
+                            child: const Text('Add another',
                                 style: TextStyle(fontFamily: 'Fredoka', fontSize: 16)),
                           ),
                         ),
