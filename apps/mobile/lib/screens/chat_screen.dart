@@ -1537,13 +1537,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-            // Context Usage Bar — SEPARATE rounded rectangle above the input
-            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildContextUsageBar(),
-              ),
-            // Input row — completely separate from the context bar
+            // Input row — context bar connected to the right of the text field
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -1559,7 +1553,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(width: 8),
-            // Text field — its own compact rounded rectangle, NO liquid inside
+            // Text field + context bar connected together
             Expanded(
               child: Container(
                 constraints: const BoxConstraints(
@@ -1570,27 +1564,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: TextField(
-                  controller: _messageController,
-                  focusNode: _inputFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Ask Librio anything...',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: Colors.grey[400],
-                      fontSize: 15,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Text field — its own compact area, NO liquid inside
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _inputFocusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Ask Librio anything...',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Fredoka',
+                            color: Colors.grey[400],
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 15,
+                          color: _textColor,
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 15,
-                    color: _textColor,
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) => _sendMessage(),
+                    // Context bar — connected to the right of the text field
+                    if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
+                      _buildContextUsageBar(),
+                  ],
                 ),
               ),
             ),
@@ -1620,12 +1625,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ============ Context Usage Bar (separate from input) ============
+  // ============ Context Usage Bar (connected to right of text field) ============
 
   Widget _buildContextUsageBar() {
     final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
-    const barHeight = 6.0;
-    const barRadius = Radius.circular(barHeight / 2);
+    const barWidth = 5.0;
 
     return GestureDetector(
       onTap: () => _showContextPopup(Offset(
@@ -1635,17 +1639,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Semantics(
         label: 'Context ${(usage * 100).round()} percent used',
         button: true,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.all(barRadius),
-          clipBehavior: Clip.antiAliasWithSaveLayer,
-          child: SizedBox(
-            height: barHeight,
+        child: Container(
+          width: barWidth,
+          // Fill the full height of the input container
+          constraints: const BoxConstraints(minHeight: 44),
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: _isDark ? Colors.grey[800] : Colors.grey[200],
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Background track
-                ColoredBox(color: _isDark ? Colors.grey[800]! : Colors.grey[200]!),
-                // Liquid fill — clipped to the bar's rounded shape
+                // Liquid fill — bottom-up by percentage, clipped to bar shape
                 LiquidContextIndicator(
                   usage: usage,
                 ),
