@@ -1553,9 +1553,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(width: 8),
-            // Input bar — compact rounded rectangle
+            // Input bar + context bar connected with a divider wall
             Expanded(
-              flex: 1,
               child: Container(
                 constraints: const BoxConstraints(
                   minHeight: 44,
@@ -1565,38 +1564,52 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: TextField(
-                  controller: _messageController,
-                  focusNode: _inputFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Ask Librio anything...',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Fredoka',
-                      color: Colors.grey[400],
-                      fontSize: 15,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Text field
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _inputFocusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Ask Librio anything...',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Fredoka',
+                            color: Colors.grey[400],
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 15,
+                          color: _textColor,
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 15,
-                    color: _textColor,
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) => _sendMessage(),
+                    // Context bar — connected, with divider wall
+                    if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0) ...[
+                      // Vertical divider wall
+                      Container(
+                        width: 1,
+                        height: 44,
+                        color: _isDark ? Colors.grey[700] : Colors.grey[300],
+                      ),
+                      // Context liquid bar
+                      SizedBox(
+                        width: 60,
+                        child: _buildContextUsageBar(),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
-            // Context bar — smaller than input bar
-            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0) ...[
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                child: _buildContextUsageBar(),
-              ),
-            ],
             const SizedBox(width: 4),
             // Send / Stop button
             SizedBox(
@@ -1638,10 +1651,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         button: true,
         child: Container(
           height: 44,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
-          ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(21),
             clipBehavior: Clip.antiAliasWithSaveLayer,
