@@ -585,6 +585,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Row(
             children: [
+              Icon(Icons.analytics_outlined, size: 16, color: _deepPurple),
+              const SizedBox(width: 6),
               Text('Review order', style: TextStyle(fontFamily: 'Fredoka', fontSize: 13, color: _subTextColor)),
               const SizedBox(width: 8),
               ChoiceChip(
@@ -631,17 +633,8 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
               }).toList(),
             ),
           ),
-        // Stats
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              _buildStatCard('Total', _cards.length.toString(), Icons.library_books),
-              const SizedBox(width: 12),
-              _buildStatCard('Decks', _decks.length.toString(), Icons.folder),
-            ],
-          ),
-        ),
+        // Flashcard Performance Dashboard
+        _buildPerformanceDashboard(),
         // Card list
         Expanded(
           child: ListView.builder(
@@ -675,6 +668,277 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
           ),
         ),
       ],
+    );
+  }
+
+  // ============ Flashcard Performance Dashboard ============
+
+  Widget _buildPerformanceDashboard() {
+    // Calculate metrics from loaded cards
+    final totalCards = _cards.length;
+    final reviewedCards = _cards.where((c) => c.reviewCount > 0).toList();
+    final totalReviews = _cards.fold<int>(0, (sum, c) => sum + c.reviewCount);
+    final totalCorrect = _cards.fold<int>(0, (sum, c) => sum + c.correctCount);
+    final accuracy = totalReviews > 0 ? (totalCorrect / totalReviews * 100).round() : 0;
+    final masteredCards = reviewedCards.where((c) {
+      if (c.reviewCount == 0) return false;
+      return (c.correctCount / c.reviewCount) >= 0.7;
+    }).length;
+    final masteryPercent = totalCards > 0 ? (masteredCards / totalCards * 100).round() : 0;
+    final cardsToReview = totalCards - masteredCards;
+
+    // Per-tag performance
+    final tagStats = <String, _TagStat>{};
+    for (final card in _cards) {
+      for (final tag in card.tags) {
+        final stat = tagStats.putIfAbsent(tag, () => _TagStat());
+        stat.total++;
+        if (card.reviewCount > 0) {
+          stat.reviewed++;
+          stat.correct += card.correctCount;
+          stat.reviews += card.reviewCount;
+        }
+      }
+    }
+
+    final strongAreas = <String>[];
+    final needsPractice = <String>[];
+    for (final entry in tagStats.entries) {
+      final stat = entry.value;
+      if (stat.reviews == 0) continue;
+      final tagAccuracy = (stat.correct / stat.reviews * 100).round();
+      if (tagAccuracy >= 70) {
+        strongAreas.add(entry.key);
+      } else {
+        needsPractice.add(entry.key);
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _divider, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(Icons.analytics, size: 18, color: _deepPurple),
+                const SizedBox(width: 8),
+                Text(
+                  'Flashcard Performance',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _textColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Mastery circle + percentage
+            Row(
+              children: [
+                // Circular progress
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: masteryPercent / 100,
+                        strokeWidth: 6,
+                        backgroundColor: _divider,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          masteryPercent >= 70 ? Colors.green : _deepPurple,
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          '$masteryPercent%',
+                          style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _textColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mastery',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 14,
+                        color: _subTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$masteredCards / $totalCards Cards Mastered',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _textColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: totalCards > 0 ? masteredCards / totalCards : 0,
+                minHeight: 8,
+                backgroundColor: _divider,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  masteryPercent >= 70 ? Colors.green : _deepPurple,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Stats grid
+            Row(
+              children: [
+                _buildMetricChip('Accuracy', '$accuracy%'),
+                const SizedBox(width: 8),
+                _buildMetricChip('Cards to Review', '$cardsToReview'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildMetricChip('Total Reviews', '$totalReviews'),
+                const SizedBox(width: 8),
+                _buildMetricChip('Decks', '${_decks.length}'),
+              ],
+            ),
+            // Strong areas
+            if (strongAreas.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Strong Areas',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _textColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: strongAreas.map((tag) => _buildAreaChip(tag, true)).toList(),
+              ),
+            ],
+            // Needs practice
+            if (needsPractice.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Needs Practice',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _textColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: needsPractice.map((tag) => _buildAreaChip(tag, false)).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricChip(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: _isDark ? Colors.grey[850] : Colors.grey[50],
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _divider, width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 12,
+                color: _subTextColor,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: _textColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAreaChip(String tag, bool isStrong) {
+    final color = isStrong ? Colors.green : Colors.orange;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isStrong ? Icons.check_circle : Icons.warning_amber,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            tag,
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2165,4 +2429,12 @@ class _FlashcardReviewScreenState extends State<FlashcardReviewScreen>
       ),
     );
   }
+}
+
+/// Helper class for per-tag performance statistics.
+class _TagStat {
+  int total = 0;
+  int reviewed = 0;
+  int correct = 0;
+  int reviews = 0;
 }
