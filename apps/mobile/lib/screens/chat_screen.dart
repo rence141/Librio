@@ -1537,7 +1537,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-            // Input row — context bar connected to the right of the text field
+            // Input row — input bar and context bar side by side, equal size
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -1553,8 +1553,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(width: 8),
-            // Text field + context bar connected together
+            // Input bar — compact rounded rectangle
             Expanded(
+              flex: 1,
               child: Container(
                 constraints: const BoxConstraints(
                   minHeight: 44,
@@ -1564,41 +1565,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Text field — its own compact area, NO liquid inside
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        focusNode: _inputFocusNode,
-                        decoration: InputDecoration(
-                          hintText: 'Ask Librio anything...',
-                          hintStyle: TextStyle(
-                            fontFamily: 'Fredoka',
-                            color: Colors.grey[400],
-                            fontSize: 15,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 15,
-                          color: _textColor,
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
+                child: TextField(
+                  controller: _messageController,
+                  focusNode: _inputFocusNode,
+                  decoration: InputDecoration(
+                    hintText: 'Ask Librio anything...',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Fredoka',
+                      color: Colors.grey[400],
+                      fontSize: 15,
                     ),
-                    // Context bar — connected to the right of the text field
-                    if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-                      _buildContextUsageBar(),
-                  ],
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 15,
+                    color: _textColor,
+                  ),
+                  maxLines: null,
+                  textInputAction: TextInputAction.newline,
+                  onSubmitted: (_) => _sendMessage(),
                 ),
               ),
             ),
+            // Context bar — same height and width as input bar, connected
+            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 1,
+                child: _buildContextUsageBar(),
+              ),
+            ],
             const SizedBox(width: 4),
             // Send / Stop button
             SizedBox(
@@ -1625,11 +1623,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ============ Context Usage Bar (connected to right of text field) ============
+  // ============ Context Usage Bar (same size as input bar) ============
 
   Widget _buildContextUsageBar() {
     final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
-    const barWidth = 5.0;
 
     return GestureDetector(
       onTap: () => _showContextPopup(Offset(
@@ -1640,26 +1637,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         label: 'Context ${(usage * 100).round()} percent used',
         button: true,
         child: Container(
-          width: barWidth,
-          // Fill the full height of the input container
-          constraints: const BoxConstraints(minHeight: 44),
-          margin: const EdgeInsets.symmetric(vertical: 4),
+          constraints: const BoxConstraints(
+            minHeight: 44,
+            maxHeight: 120,
+          ),
           decoration: BoxDecoration(
-            color: _isDark ? Colors.grey[800] : Colors.grey[200],
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
           ),
           child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
+            borderRadius: BorderRadius.circular(21),
             clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Stack(
               fit: StackFit.expand,
               children: [
+                // Background track
+                ColoredBox(color: _isDark ? Colors.grey[850]! : Colors.grey[100]!),
                 // Liquid fill — bottom-up by percentage, clipped to bar shape
                 LiquidContextIndicator(
                   usage: usage,
