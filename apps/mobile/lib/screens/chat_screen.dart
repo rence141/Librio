@@ -1637,16 +1637,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         label: 'Context ${(usage * 100).round()} percent used',
         button: true,
         child: Container(
-          constraints: const BoxConstraints(
-            minHeight: 24,
-            maxHeight: 60,
-          ),
+          height: 44,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(21),
             clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Stack(
               fit: StackFit.expand,
