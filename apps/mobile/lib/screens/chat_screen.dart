@@ -14,11 +14,13 @@ import '../services/rag_service.dart';
 import '../services/embeddings_service.dart';
 import '../services/document_upload_service.dart';
 import '../services/flashcard_generator.dart';
+import '../services/conversation_context.dart';
 import '../models/conversation.dart';
 import '../models/context_window.dart';
 import '../utils/debug_logger.dart';
 import '../widgets/crystal_loader.dart';
 import '../widgets/llm_markdown.dart';
+import '../widgets/liquid_context_indicator.dart';
 
 import 'flashcard_review_screen.dart';
 import 'settings_screen.dart';
@@ -156,11 +158,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _currentConversation = await _databaseService.createConversation('New Chat');
       } else {
         _currentConversation = _conversations.first;
+        _contextWindow = ContextWindow(conversationId: _currentConversation.id);
         await _loadConversationHistory();
       }
 
       // Initialize context window tracker
-      _contextWindow = ContextWindow(conversationId: _currentConversation.id);
+      _contextWindow = ContextWindow(conversationId: _currentConversation.id)
+        ..setCurrentUsage(_estimateVisibleContextTokens());
 
       // Check model status
       _isOffline = !widget.llmService.isInitialized;
@@ -210,12 +214,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             timestamp: msg.createdAt,
           ));
         }
+        _contextWindow.setCurrentUsage(_estimateVisibleContextTokens());
       });
       _scrollToBottom();
     } catch (e, st) {
       DebugLogger.error('ChatScreen', 'Failed to load history', e, st);
     }
   }
+
+  int _estimateVisibleContextTokens() => _messages.fold<int>(
+        0,
+        (total, message) => total + ConversationContextBuilder.estimateTokens(message.text),
+      );
 
   // ============ Message Sending (with streaming) ============
 
@@ -538,7 +548,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (_isGenerating) {
         final response = responseBuffer.toString();
         // Parse flashcards from the AI response
-        final parsed = FlashcardGenerator.parse(response);
+        List<ParsedFlashcard> parsed = const [];
+        String? generationError;
+        try {
+          parsed = FlashcardGenerator.parse(response);
+        } on FlashcardGenerationException catch (error) {
+          generationError = error.message;
+        }
 
         setState(() {
           _messages.last.text = response;
@@ -549,6 +565,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           _showFlashcardSavePrompt = parsed.isNotEmpty;
         });
         await _databaseService.addMessage(_currentConversation.id, response, false);
+        if (generationError != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$generationError Tap “Make Flashcards” to retry.'),
+              action: SnackBarAction(label: 'Retry', onPressed: _generateFlashcards),
+            ),
+          );
+        }
         _scrollToBottom();
       } else {
         // Cancelled
@@ -1540,40 +1564,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        focusNode: _inputFocusNode,
-                        decoration: InputDecoration(
-                          hintText: 'Ask Librio anything...',
-                          hintStyle: TextStyle(
-                            fontFamily: 'Fredoka',
-                            color: Colors.grey[400],
-                            fontSize: 15,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(21),
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Liquid fill layer — fills the entire inner area, bottom-up by percentage
+                      if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
+                        LiquidContextIndicator(
+                          usage: _contextWindow.usagePercentage.clamp(0.0, 1.0),
+                          onTap: () => _showContextPopup(Offset(
+                            MediaQuery.of(context).size.width - 40,
+                            MediaQuery.of(context).size.height - 140,
+                          )),
+                        ),
+                      // Input controls on top
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              focusNode: _inputFocusNode,
+                              decoration: InputDecoration(
+                                hintText: 'Ask Librio anything...',
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Fredoka',
+                                  color: Colors.grey[400],
+                                  fontSize: 15,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              style: TextStyle(
+                                fontFamily: 'Fredoka',
+                                fontSize: 15,
+                                color: _textColor,
+                              ),
+                              maxLines: null,
+                              textInputAction: TextInputAction.newline,
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 15,
-                          color: _textColor,
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => _sendMessage(),
+                        ],
                       ),
-                    ),
-                    // Tiny context usage ring (unobtrusive, inside input bar)
-                    if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 12, bottom: 12),
-                        child: _buildContextRing(),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1603,30 +1640,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ============ Context Usage Ring (inside input bar) ============
-
-  Widget _buildContextRing() {
-    final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
-    final color = usage >= 0.9
-        ? Colors.red[600]!
-        : usage >= 0.75
-            ? Colors.orange[600]!
-            : _deepPurple;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (details) => _showContextPopup(details.globalPosition),
-      child: SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          value: usage < 0.02 ? 0.02 : usage,
-          strokeWidth: 2.5,
-          backgroundColor: _isDark ? Colors.grey[700] : Colors.grey[300],
-          valueColor: AlwaysStoppedAnimation<Color>(color),
-        ),
-      ),
-    );
-  }
+  // ============ Context Usage Popup ============
 
   void _showContextPopup(Offset position) {
     final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
@@ -2094,6 +2108,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   /// Stream response from either local or online model based on current selection.
   /// Passes image attachments to online vision models.
   Stream<String> _streamLlmResponse(String prompt, {List<String> imagePaths = const []}) async* {
+    // The current prompt was appended to `_messages` before this method runs.
+    // Exclude it so it is sent exactly once, while retaining the stable
+    // conversation's earlier turns in chronological order.
+    final history = _messages.where((message) => !message.isStreaming).toList();
+    if (history.isNotEmpty && history.last.isUser && history.last.text == prompt) {
+      history.removeLast();
+    }
+    final context = ConversationContextBuilder.build(
+      history: history,
+      currentPrompt: prompt,
+      maxContextTokens: _currentModelIsOnline ? _contextWindow.maxTokens : 2048,
+      reserveOutputTokens: _currentModelIsOnline ? 768 : 384,
+    );
     if (_currentModelIsOnline) {
       // Use online model via Supabase Edge Function — supports vision
       // Get response with token usage data
@@ -2102,17 +2129,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         prompt,
         model: _currentModelId,
         imagePaths: imagePaths,
+        conversationContext: context.messages,
         authToken: authToken,
       );
       
       // Track token usage — use API values if available, otherwise estimate
       if (response.inputTokens != null && response.outputTokens != null) {
-        _contextWindow.addUsage(response.inputTokens!, response.outputTokens!);
+        _contextWindow.setCurrentUsage(response.inputTokens!, response.outputTokens!);
       } else {
         // Fallback estimate: ~4 chars per token for input, output based on response length
         final estimatedInput = (prompt.length / 4).ceil().clamp(50, 5000);
         final estimatedOutput = (response.text.length / 4).ceil().clamp(20, 5000);
-        _contextWindow.addUsage(estimatedInput, estimatedOutput);
+        _contextWindow.setCurrentUsage(estimatedInput, estimatedOutput);
       }
       // Always update UI so the ring shows
       if (mounted) setState(() {});
@@ -2129,11 +2157,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // Use local on-device LLM — no vision support, just text
       // If images were attached, note that they can't be processed locally
       if (imagePaths.isNotEmpty) {
-        yield* _streamLocalResponse('$prompt\n\n[Note: ${imagePaths.length} image(s) were attached but local model cannot process images. Switch to an online model for image understanding.]');
+        yield* _streamLocalResponse('${_localPromptWithContext(context, prompt)}\n\n[Note: ${imagePaths.length} image(s) were attached but local model cannot process images. Switch to an online model for image understanding.]');
       } else {
-        yield* _streamLocalResponse(prompt);
+        yield* _streamLocalResponse(_localPromptWithContext(context, prompt));
       }
     }
+  }
+
+  String _localPromptWithContext(ConversationContext context, String prompt) {
+    if (context.messages.isEmpty) return prompt;
+    final transcript = context.messages
+        .map((message) => '${message['role'] == 'user' ? 'Student' : 'Librio'}: ${message['content']}')
+        .join('\n\n');
+    return 'Conversation so far:\n$transcript\n\nStudent: $prompt\n\nRespond to the latest student message while preserving the conversation context.';
   }
 
   /// Stream from local on-device LLM
