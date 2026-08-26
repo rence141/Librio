@@ -1565,7 +1565,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Text field
                     Expanded(
@@ -1594,10 +1594,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                     // Context bar — connected, with divider wall
                     if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0) ...[
-                      // Vertical divider wall
+                      // Vertical divider wall — stretches full height
                       Container(
                         width: 1,
-                        height: 44,
                         color: _isDark ? Colors.grey[700] : Colors.grey[300],
                       ),
                       // Context liquid bar
@@ -1650,7 +1649,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         label: 'Context ${(usage * 100).round()} percent used',
         button: true,
         child: Container(
-          height: 44,
           child: ClipRRect(
             // Only round the right side — left side is flat (divider wall)
             borderRadius: const BorderRadius.only(
