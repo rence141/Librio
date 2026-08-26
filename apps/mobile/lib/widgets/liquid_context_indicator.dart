@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 
 /// A liquid fill indicator that fills its parent container from the bottom up.
 ///
-/// Place this inside a clipped container (e.g. ClipRRect). It expands to fill
-/// the available area and paints a purple liquid that rises from the bottom
-/// according to [usage]. The liquid is clipped to the widget bounds, which
-/// should match the parent's rounded-rectangle shape.
+/// Place this inside a clipped container (e.g. ClipRRect with StackFit.expand).
+/// It expands to fill the available area and paints a purple liquid that rises
+/// from the bottom according to [usage]. The liquid is clipped to the widget
+/// bounds, which should match the parent's rounded-rectangle shape.
 class LiquidContextIndicator extends StatefulWidget {
   final double usage; // 0.0 to 1.0
   final VoidCallback? onTap;
@@ -36,27 +36,18 @@ class _LiquidContextIndicatorState extends State<LiquidContextIndicator>
     final usage = widget.usage.clamp(0.0, 1.0);
     const color = Color(0xFF7B2CBF);
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      behavior: HitTestBehavior.translucent,
-      child: Semantics(
-        label: 'Context ${(usage * 100).round()} percent used',
-        button: widget.onTap != null,
-        child: RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _wave,
-            builder: (context, _) {
-              return CustomPaint(
-                // No fixed size — fills the parent Stack/ClipRRect entirely
-                painter: _LiquidContextPainter(
-                  usage: usage,
-                  phase: _wave.value,
-                  color: color,
-                ),
-              );
-            },
-          ),
-        ),
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _wave,
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _LiquidContextPainter(
+              usage: usage,
+              phase: _wave.value,
+              color: color,
+            ),
+          );
+        },
       ),
     );
   }
@@ -75,20 +66,15 @@ class _LiquidContextPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // The parent ClipRRect already clips to the rounded-rectangle.
-    // We just paint within the given bounds.
-
-    // 0% — nothing to draw
     if (usage <= 0.001) return;
 
-    // The fill level: liquid rises from the bottom.
-    // At 100%, the liquid covers the entire height.
+    // Fill rises from the bottom. At 100%, covers entire height.
     final fillHeight = size.height * usage;
-    final surfaceY = size.height - fillHeight; // y-coordinate of the liquid surface
+    final surfaceY = size.height - fillHeight;
 
     // Build the liquid path: wavy surface, then fill down to bottom.
+    final waveAmplitude = math.min(1.5, size.height * 0.15);
     final liquid = Path()..moveTo(0, surfaceY);
-    final waveAmplitude = math.min(2.0, size.height * 0.08);
     for (double x = 0; x <= size.width; x += 1) {
       final y = surfaceY +
           math.sin((x / size.width * math.pi * 2) + phase * math.pi * 2) * waveAmplitude;
@@ -100,22 +86,7 @@ class _LiquidContextPainter extends CustomPainter {
       ..close();
 
     // Draw the liquid fill
-    canvas.drawPath(liquid, Paint()..color = color.withValues(alpha: 0.18));
-
-    // Draw a brighter surface line on top of the liquid
-    final surface = Path()..moveTo(0, surfaceY);
-    for (double x = 0; x <= size.width; x += 1) {
-      final y = surfaceY +
-          math.sin((x / size.width * math.pi * 2) + phase * math.pi * 2) * waveAmplitude;
-      surface.lineTo(x, y);
-    }
-    canvas.drawPath(
-      surface,
-      Paint()
-        ..color = color.withValues(alpha: 0.6)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
-    );
+    canvas.drawPath(liquid, Paint()..color = color.withValues(alpha: 0.85));
   }
 
   @override

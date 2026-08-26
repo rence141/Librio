@@ -1537,7 +1537,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-            // Input row
+            // Context Usage Bar — SEPARATE rounded rectangle above the input
+            if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _buildContextUsageBar(),
+              ),
+            // Input row — completely separate from the context bar
             Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -1553,7 +1559,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(width: 8),
-            // Text field
+            // Text field — its own compact rounded rectangle, NO liquid inside
             Expanded(
               child: Container(
                 constraints: const BoxConstraints(
@@ -1564,53 +1570,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(21),
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Liquid fill layer — fills the entire inner area, bottom-up by percentage
-                      if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0)
-                        LiquidContextIndicator(
-                          usage: _contextWindow.usagePercentage.clamp(0.0, 1.0),
-                          onTap: () => _showContextPopup(Offset(
-                            MediaQuery.of(context).size.width - 40,
-                            MediaQuery.of(context).size.height - 140,
-                          )),
-                        ),
-                      // Input controls on top
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _messageController,
-                              focusNode: _inputFocusNode,
-                              decoration: InputDecoration(
-                                hintText: 'Ask Librio anything...',
-                                hintStyle: TextStyle(
-                                  fontFamily: 'Fredoka',
-                                  color: Colors.grey[400],
-                                  fontSize: 15,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              ),
-                              style: TextStyle(
-                                fontFamily: 'Fredoka',
-                                fontSize: 15,
-                                color: _textColor,
-                              ),
-                              maxLines: null,
-                              textInputAction: TextInputAction.newline,
-                              onSubmitted: (_) => _sendMessage(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                child: TextField(
+                  controller: _messageController,
+                  focusNode: _inputFocusNode,
+                  decoration: InputDecoration(
+                    hintText: 'Ask Librio anything...',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Fredoka',
+                      color: Colors.grey[400],
+                      fontSize: 15,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 15,
+                    color: _textColor,
+                  ),
+                  maxLines: null,
+                  textInputAction: TextInputAction.newline,
+                  onSubmitted: (_) => _sendMessage(),
                 ),
               ),
             ),
@@ -1635,6 +1615,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ], // Row children
             ), // Row
           ], // Column children
+        ),
+      ),
+    );
+  }
+
+  // ============ Context Usage Bar (separate from input) ============
+
+  Widget _buildContextUsageBar() {
+    final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
+    const barHeight = 6.0;
+    const barRadius = Radius.circular(barHeight / 2);
+
+    return GestureDetector(
+      onTap: () => _showContextPopup(Offset(
+        MediaQuery.of(context).size.width - 40,
+        MediaQuery.of(context).size.height - 140,
+      )),
+      child: Semantics(
+        label: 'Context ${(usage * 100).round()} percent used',
+        button: true,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.all(barRadius),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: SizedBox(
+            height: barHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background track
+                ColoredBox(color: _isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                // Liquid fill — clipped to the bar's rounded shape
+                LiquidContextIndicator(
+                  usage: usage,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
