@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 
 /// A liquid fill indicator that fills its parent container from the bottom up.
 ///
-/// Place this inside a clipped container (e.g. ClipRRect with StackFit.expand).
-/// It expands to fill the available area and paints a purple liquid that rises
-/// from the bottom according to [usage]. The liquid is clipped to the widget
-/// bounds, which should match the parent's rounded-rectangle shape.
+/// The liquid color smoothly transitions:
+///   purple (< 75%) → orange (75-90%) → red (≥ 90%)
 class LiquidContextIndicator extends StatefulWidget {
   final double usage; // 0.0 to 1.0
   final VoidCallback? onTap;
@@ -31,10 +29,30 @@ class _LiquidContextIndicatorState extends State<LiquidContextIndicator>
     super.dispose();
   }
 
+  /// Smoothly interpolate color based on usage level.
+  Color _liquidColor(double usage) {
+    const purple = Color(0xFF7B2CBF);
+    const orange = Color(0xFFE8590C);
+    const red = Color(0xFFD90429);
+
+    if (usage < 0.75) {
+      // Purple → stays purple (could fade toward orange near 75%)
+      return purple;
+    } else if (usage < 0.90) {
+      // Purple → orange between 75% and 90%
+      final t = (usage - 0.75) / 0.15; // 0.0 to 1.0
+      return Color.lerp(purple, orange, t)!;
+    } else {
+      // Orange → red between 90% and 100%
+      final t = (usage - 0.90) / 0.10; // 0.0 to 1.0
+      return Color.lerp(orange, red, t)!;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final usage = widget.usage.clamp(0.0, 1.0);
-    const color = Color(0xFF7B2CBF);
+    final color = _liquidColor(usage);
 
     return RepaintBoundary(
       child: AnimatedBuilder(
