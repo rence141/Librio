@@ -536,7 +536,7 @@ Deno.serve(async (req: Request) => {
   const startTime = Date.now();
   let result: FreeLLMResponse;
   try {
-    result = await callFreeLLMAPI(apiMessages, model, false, 2048);
+    result = await callFreeLLMAPI(apiMessages, model, false, planLimits.maxOutputTokens);
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
     const latencyMs = Date.now() - startTime;

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ import '../services/rag_service.dart';
 import '../services/embeddings_service.dart';
 import '../services/document_upload_service.dart';
 import '../services/flashcard_generator.dart';
+import '../models/flashcard.dart';
 import '../services/conversation_context.dart';
 import '../models/conversation.dart';
 import '../models/context_window.dart';
@@ -498,12 +500,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   /// Generate flashcards from the last AI response.
-  /// Asks the AI to create flashcards, then parses and offers to save.
+  /// Asks the AI to create flashcards, then parses, validates, and offers to save.
+  /// If flashcards are truncated, attempts one automatic repair pass.
   Future<void> _generateFlashcards() async {
     if (_isGenerating) return;
 
     final lastAiMessage = _messages.lastWhere((m) => !m.isUser);
-    final prompt = FlashcardGenerator.buildPrompt(lastAiMessage.text);
+    final source = lastAiMessage.text;
+    final prompt = FlashcardGenerator.buildPrompt(source);
 
     // Send as a user message and generate
     _messageController.text = 'Make flashcards from this';
@@ -554,6 +558,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           parsed = FlashcardGenerator.parse(response);
         } on FlashcardGenerationException catch (error) {
           generationError = error.message;
+          // Attempt one automatic repair pass if the response looks like
+          // it was truncated (not a format error). This re-asks the AI to
+          // complete the truncated fields using the original source.
+          if (_isGenerating && error.message.contains('truncated')) {
+            try {
+              final repaired = await _attemptFlashcardRepair(response, source);
+              if (repaired != null && repaired.isNotEmpty) {
+                parsed = repaired;
+                generationError = null; // repair succeeded
+              }
+            } catch (_) {
+              // Repair failed — keep the original error
+            }
+          }
         }
 
         setState(() {
@@ -589,6 +607,91 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _isGenerating = false;
         _canStop = false;
       });
+    }
+  }
+
+  /// Attempt to repair truncated flashcards by re-asking the AI to complete them.
+  /// Returns repaired flashcards, or null if repair failed.
+  Future<List<ParsedFlashcard>?> _attemptFlashcardRepair(String rawResponse, String source) async {
+    try {
+      final trimmed = rawResponse.trim();
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(trimmed);
+      } catch (_) {
+        // Can't parse JSON — re-generate with a stronger prompt
+        final repairPrompt = FlashcardGenerator.buildPrompt(source) +
+            '\n\nIMPORTANT: Your previous response was truncated. Ensure ALL fields are complete sentences with proper ending punctuation. Do not cut off any text.';
+        final repairBuffer = StringBuffer();
+        await for (final chunk in _streamLlmResponse(repairPrompt)) {
+          if (!_isGenerating) break;
+          repairBuffer.write(chunk);
+        }
+        if (!_isGenerating) return null;
+        return FlashcardGenerator.parse(repairBuffer.toString());
+      }
+
+      if (decoded is! Map<String, dynamic> || decoded['cards'] is! List) {
+        return null;
+      }
+
+      final cards = decoded['cards'] as List;
+      final repairedCards = <ParsedFlashcard>[];
+
+      for (final card in cards) {
+        if (card is! Map<String, dynamic>) continue;
+        final question = (card['question'] as String?)?.trim() ?? '';
+        final answer = (card['answer'] as String?)?.trim() ?? '';
+        final tags = card['tags'] as List? ?? [];
+        final enumeration = card['enumeration'] as List? ?? [];
+
+        // If this card is already complete, keep it as-is
+        if (!ParsedFlashcard.needsRepair(question, answer)) {
+          try {
+            repairedCards.add(ParsedFlashcard.fromJson(card));
+          } catch (_) {
+            // Skip malformed cards
+          }
+          continue;
+        }
+
+        // Card is truncated — ask the AI to repair it
+        final repairPrompt = FlashcardGenerator.buildRepairPrompt(source, question, answer);
+        final repairBuffer = StringBuffer();
+        await for (final chunk in _streamLlmResponse(repairPrompt)) {
+          if (!_isGenerating) break;
+          repairBuffer.write(chunk);
+        }
+        if (!_isGenerating) return null;
+
+        try {
+          final repairResponse = repairBuffer.toString().trim();
+          final repairJson = jsonDecode(repairResponse);
+          if (repairJson is Map<String, dynamic> &&
+              repairJson['question'] is String &&
+              repairJson['answer'] is String) {
+            final repairedQuestion = (repairJson['question'] as String).trim();
+            final repairedAnswer = (repairJson['answer'] as String).trim();
+            if (!ParsedFlashcard.needsRepair(repairedQuestion, repairedAnswer) &&
+                repairedQuestion.isNotEmpty &&
+                repairedAnswer.isNotEmpty) {
+              repairedCards.add(ParsedFlashcard(
+                question: repairedQuestion,
+                answer: repairedAnswer,
+                enumeration: enumeration.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                tags: Flashcard.normalizeTags(tags.whereType<String>()),
+              ));
+            }
+          }
+        } catch (_) {
+          // Repair of this card failed — skip it
+        }
+      }
+
+      return repairedCards.isEmpty ? null : repairedCards;
+    } catch (e, st) {
+      DebugLogger.error('ChatScreen', 'Flashcard repair failed', e, st);
+      return null;
     }
   }
 
