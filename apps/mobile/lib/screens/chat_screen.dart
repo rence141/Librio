@@ -1589,11 +1589,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            // Context bar — same height and width as input bar, connected
+            // Context bar — smaller than input bar
             if (_currentModelIsOnline && _contextWindow.totalTokensUsed > 0) ...[
               const SizedBox(width: 8),
-              Expanded(
-                flex: 1,
+              SizedBox(
+                width: 60,
                 child: _buildContextUsageBar(),
               ),
             ],
@@ -1638,15 +1638,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         button: true,
         child: Container(
           constraints: const BoxConstraints(
-            minHeight: 44,
-            maxHeight: 120,
+            minHeight: 24,
+            maxHeight: 60,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(21),
+            borderRadius: BorderRadius.circular(11),
             clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Stack(
               fit: StackFit.expand,
