@@ -1558,7 +1558,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(22),
+                    bottomLeft: Radius.circular(22),
+                  ),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
                 child: Row(
