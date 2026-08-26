@@ -1562,7 +1562,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Text field
                     Expanded(
@@ -1577,7 +1577,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             fontSize: 15,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          isCollapsed: false,
+                          isDense: true,
                         ),
                         style: TextStyle(
                           fontFamily: 'Fredoka',
