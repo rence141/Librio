@@ -1556,10 +1556,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             // Input bar + context bar connected with a divider wall
             Expanded(
               child: Container(
-                constraints: const BoxConstraints(
-                  minHeight: 44,
-                  maxHeight: 120,
-                ),
+                height: 44,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
@@ -1639,6 +1636,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildContextUsageBar() {
     final usage = _contextWindow.usagePercentage.clamp(0.0, 1.0);
+    final percent = (usage * 100).round();
+    // Text is white when liquid covers the center, black otherwise
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = usage > 0.5
+        ? Colors.white
+        : (isDark ? Colors.white70 : Colors.black87);
 
     return GestureDetector(
       onTap: () => _showContextPopup(Offset(
@@ -1646,7 +1649,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         MediaQuery.of(context).size.height - 140,
       )),
       child: Semantics(
-        label: 'Context ${(usage * 100).round()} percent used',
+        label: 'Context $percent percent used',
         button: true,
         child: Container(
           child: ClipRRect(
@@ -1664,6 +1667,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 // Liquid fill — contained within this separated area
                 LiquidContextIndicator(
                   usage: usage,
+                ),
+                // Percentage display at center
+                Center(
+                  child: Text(
+                    '$percent%',
+                    style: TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
                 ),
               ],
             ),
