@@ -1652,14 +1652,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         child: Container(
           height: 44,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(21),
+            // Only round the right side — left side is flat (divider wall)
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(21),
+              bottomRight: Radius.circular(21),
+            ),
             clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 // Background track
                 ColoredBox(color: _isDark ? Colors.grey[850]! : Colors.grey[100]!),
-                // Liquid fill — bottom-up by percentage, clipped to bar shape
+                // Liquid fill — contained within this separated area
                 LiquidContextIndicator(
                   usage: usage,
                 ),
