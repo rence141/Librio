@@ -1558,10 +1558,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(22),
-                    bottomLeft: Radius.circular(22),
-                  ),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: _isDark ? Colors.grey[700]! : Colors.grey[200]!, width: 1),
                 ),
                 child: Row(
@@ -1654,37 +1651,35 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Semantics(
         label: 'Context $percent percent used',
         button: true,
-        child: Container(
-          child: ClipRRect(
-            // Only round the right side — left side is flat (divider wall)
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(21),
-              bottomRight: Radius.circular(21),
-            ),
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Background track
-                ColoredBox(color: _isDark ? Colors.grey[850]! : Colors.grey[100]!),
-                // Liquid fill — contained within this separated area
-                LiquidContextIndicator(
-                  usage: usage,
-                ),
-                // Percentage display at center
-                Center(
-                  child: Text(
-                    '$percent%',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
+        child: ClipRRect(
+          // Only round the right side — left side is flat (divider wall)
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(21),
+            bottomRight: Radius.circular(21),
+          ),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background track
+              ColoredBox(color: _isDark ? Colors.grey[850]! : Colors.grey[100]!),
+              // Liquid fill — contained within this separated area
+              LiquidContextIndicator(
+                usage: usage,
+              ),
+              // Percentage display at center
+              Center(
+                child: Text(
+                  '$percent%',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
